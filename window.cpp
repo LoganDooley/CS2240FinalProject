@@ -47,8 +47,8 @@ int Window::start(){
     }
     
     int width, height;
-    glfwGetWindowSize(m_GLFWwindow, &width, &height);
-    //glfwGetFramebufferSize(m_GLFWwindow, &width, &height);
+    glfwGetFramebufferSize(m_GLFWwindow, &width, &height);
+    glViewport(0, 0, width, height);
 
     glfwSwapInterval(1);
 

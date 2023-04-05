@@ -90,7 +90,7 @@ void Core::scrollEvent(double distance){
 }
 
 void Core::framebufferResizeEvent(int width, int height){
-
+    glViewport(0, 0, width, height);
 }
 
 void Core::windowResizeEvent(int width, int height){
