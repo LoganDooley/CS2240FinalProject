@@ -26,6 +26,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/External/glm)
 # ImGui includes
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
     )
 
 # Specifies .cpp and .h files to be passed to the compiler
@@ -35,6 +36,7 @@ add_executable(${PROJECT_NAME}
     core.cpp
     camera.cpp
     water.cpp
+    cubemap.cpp
 
     window.h
     core.h
@@ -42,6 +44,7 @@ add_executable(${PROJECT_NAME}
     camera.h
     water.h
     debug.h
+    cubemap.h
 
     # IMGUI files
     external/imgui/imconfig.h
@@ -60,6 +63,9 @@ add_executable(${PROJECT_NAME}
     external/imgui/backends/imgui_impl_opengl3_loader.h
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_glfw.h
+
+    # STB files
+    external/stb/stb_image.h
 )
 
 # Specifies libraries to be linked (Qt components, glew, etc)
