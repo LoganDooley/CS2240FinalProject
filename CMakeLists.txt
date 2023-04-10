@@ -20,8 +20,13 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/External/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/External/glad)
-add_subdirectory(${PROJECT_SOURCE_DIR}/External/imgui)
+#add_subdirectory(${PROJECT_SOURCE_DIR}/External/imgui)
 add_subdirectory(${PROJECT_SOURCE_DIR}/External/glm)
+
+# ImGui includes
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
+    )
 
 # Specifies .cpp and .h files to be passed to the compiler
 add_executable(${PROJECT_NAME}
@@ -37,13 +42,30 @@ add_executable(${PROJECT_NAME}
     camera.h
     water.h
     debug.h
+
+    # IMGUI files
+    external/imgui/imconfig.h
+    external/imgui/imgui.cpp
+    external/imgui/imgui.h
+    external/imgui/imgui_demo.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_internal.h
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/imstb_rectpack.h
+    external/imgui/imstb_textedit.h
+    external/imgui/imstb_truetype.h
+    external/imgui/backends/imgui_impl_opengl3.cpp
+    external/imgui/backends/imgui_impl_opengl3.h
+    external/imgui/backends/imgui_impl_opengl3_loader.h
+    external/imgui/backends/imgui_impl_glfw.cpp
+    external/imgui/backends/imgui_impl_glfw.h
 )
 
 # Specifies libraries to be linked (Qt components, glew, etc)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw
     glad
-    imgui
     glm
 )
 

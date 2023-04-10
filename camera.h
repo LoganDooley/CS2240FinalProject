@@ -1,9 +1,13 @@
 #pragma once
 
+#define GLFW_INCLUDE_NONE
+#include <glfw/glfw3.h>
+#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-#include <glad/glad.h>
+#include <set>
 
 class Camera{
 public:
@@ -14,15 +18,19 @@ public:
     glm::mat4 getView();
 
     void resize(int width, int height);
-    void translate(glm::vec3 move);
-    void rotate(float angle, glm::vec3 axis);
 
     glm::vec3 getLook();
     glm::vec3 getPos();
 
     void setCameraUniforms(GLuint shader);
     
+    void move(std::set<int>& keysDown, float dt);
+    void rotate(glm::vec2 deltaMousePos);
+
 private:
+    void translate(glm::vec3 move);
+    void angleAxis(float angle, glm::vec3 axis);
+
     void calculateProjection();
     void calculateView();
 

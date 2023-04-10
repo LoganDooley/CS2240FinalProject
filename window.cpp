@@ -1,5 +1,11 @@
 #include "window.h"
 
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+
+#ifndef IMGUI_DISABLE
+
 Window::Window(){
 
 }
@@ -79,6 +85,17 @@ int Window::start(){
     
     glfwFocusWindow(m_GLFWwindow);
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(m_GLFWwindow, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
     return 0;
 }
 
@@ -97,6 +114,36 @@ int Window::loop(){
         if(drawResult != 0){
             return drawResult;
         }
+
+        // feed inputs to dear imgui, start new frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        // render your GUI
+        ImGui::Begin("Editor Window");
+
+        const char* items[] = { "COMBO", "BOX", "SUPREMACY" };
+        static const char* current_item = NULL;
+
+        if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+        {
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(items[n], is_selected))
+                    current_item = items[n];
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::End();
+
+        // Render dear imgui into screen
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwSwapBuffers(m_GLFWwindow);
     }
 
@@ -135,3 +182,5 @@ void Window::framebufferSizeCallback(GLFWwindow* window, int width, int height){
     Core* ptr = (Core*)glfwGetWindowUserPointer(window);
     ptr->framebufferResizeEvent(width, height);
 }
+
+#endif

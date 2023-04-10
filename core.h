@@ -1,8 +1,5 @@
 #pragma once
 
-#define GLFW_INCLUDE_NONE
-#include <glfw/glfw3.h>
-
 #include <iostream>
 #include <memory>
 #include "camera.h"
@@ -31,5 +28,6 @@ private:
     std::unique_ptr<Camera> m_camera;
 
     bool m_mouseDown = false;
+    glm::vec2 m_mousePos = glm::vec2(0, 0);
     std::set<int> m_keysDown = std::set<int>();
 };

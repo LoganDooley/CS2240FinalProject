@@ -23,33 +23,7 @@ Core::~Core(){
 }
 
 int Core::update(float seconds){
-    glm::vec3 moveDir = glm::vec3(0);
-    glm::vec3 front = glm::vec3(m_camera->getLook().x, 0, m_camera->getLook().z);
-    glm::vec3 side = glm::vec3(front.z, 0, -front.x);
-    glm::vec3 up = glm::vec3(0, 1, 0);
-    if(m_keysDown.count(GLFW_KEY_W) != 0){
-        moveDir += front;
-    }
-    if(m_keysDown.count(GLFW_KEY_S) != 0){
-        moveDir -= front;
-    }
-    if(m_keysDown.count(GLFW_KEY_A) != 0){
-        moveDir += side;
-    }
-    if(m_keysDown.count(GLFW_KEY_D) != 0){
-        moveDir -= side;
-    }
-    if(m_keysDown.count(GLFW_KEY_SPACE) != 0){
-        moveDir += up;
-    }
-    if(m_keysDown.count(GLFW_KEY_LEFT_SHIFT) != 0){
-        moveDir -= up;
-    }
-
-    if(moveDir != glm::vec3(0)){
-        moveDir = glm::normalize(moveDir);
-        m_camera->translate(moveDir * seconds);
-    }
+    m_camera->move(m_keysDown, seconds);
 
     return 0;
 }
@@ -78,11 +52,19 @@ void Core::keyEvent(int key, int action){
 }
 
 void Core::mousePosEvent(double xpos, double ypos){
-
+    if(m_mouseDown){
+        m_camera->rotate(glm::vec2(xpos, ypos) - m_mousePos);
+    }
+    m_mousePos = glm::vec2(xpos, ypos);
 }
 
 void Core::mouseButtonEvent(int button, int action){
-
+    if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+        m_mouseDown = true;
+    }
+    else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE){
+        m_mouseDown = false;
+    }
 }
 
 void Core::scrollEvent(double distance){
@@ -94,5 +76,5 @@ void Core::framebufferResizeEvent(int width, int height){
 }
 
 void Core::windowResizeEvent(int width, int height){
-
+    m_camera->resize(width, height);
 }
