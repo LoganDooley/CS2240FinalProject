@@ -37,6 +37,8 @@ add_executable(${PROJECT_NAME}
     camera.cpp
     water.cpp
     cubemap.cpp
+    wavelet/grid.h
+    wavelet/grid.cpp
 
     window.h
     core.h
