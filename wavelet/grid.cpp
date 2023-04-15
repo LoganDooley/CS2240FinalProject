@@ -3,50 +3,15 @@
 #include <iterator>
 #include <math.h>
 
-Grid::Grid() : _resolution({0, 0, 0, 0}), _data() {}
-
-float &Grid::operator()(int xIndex, int yIndex, int kIndex, int thetaIndex) {
-    // compile these out of release for efficiency
-    assert(xIndex >= 0 && xIndex < _resolution[0]);
-    assert(yIndex >= 0 && yIndex < _resolution[1]);
-    assert(kIndex >= 0 && kIndex < _resolution[2]);
-    assert(thetaIndex >= 0 && thetaIndex < _resolution[3]);
-
-    return _data[xIndex + yIndex * _resolution[0] +
-        kIndex * _resolution[1] * _resolution[0] +
-        thetaIndex * _resolution[0] * _resolution[1] * _resolution[2]];
-}
-
-float const &Grid::operator()(int xIndex, int yIndex, int kIndex,
-        int thetaIndex) const {
-    // compile these out of release for efficiency
-    assert(xIndex >= 0 && xIndex < _resolution[0]);
-    assert(yIndex >= 0 && yIndex < _resolution[1]);
-    assert(kIndex >= 0 && kIndex < _resolution[2]);
-    assert(thetaIndex >= 0 && thetaIndex < _resolution[3]);
-
-    return _data[xIndex + yIndex * _resolution[0] +
-        kIndex * _resolution[1] * _resolution[0] +
-        thetaIndex * _resolution[0] * _resolution[1] * _resolution[2]];
-}
-
-int Grid::getResolution(int dimension) { return _resolution[dimension]; }
-
-void Grid::resize(std::array<int, 4> newResolution) {
-    _resolution = newResolution;
-    _data.resize(_resolution[0] * _resolution[1] * _resolution[2] *
-            _resolution[3]);
-}
-
 // wavelet grid
 
-WaveletGrid::WaveletGrid(std::array<int, 4> resolution)
-    : _minParam(-size, -size, 0, minZeta), _maxParam(size, size, tau, maxZeta),
-    _resolution(resolution) {
+WaveletGrid::WaveletGrid(std::array<unsigned int, 4> resolution)
+    : m_minParam(-size, -size, 0, minZeta), m_maxParam(size, size, tau, maxZeta),
+    m_resolution(resolution) {
 
-        glm::vec4 resolutionVec(resolution[0], resolution[1], resolution[2],
-                resolution[3]);
-        _pixelParam = (_maxParam - _minParam) / resolutionVec;
+        glm::vec4 resolutionVec(resolution[Parameter::X], resolution[Parameter::Y], resolution[Parameter::THETA],
+                resolution[Parameter::K]);
+        m_pixelParam = (m_maxParam - m_minParam) / resolutionVec;
     }
 
 float WaveletGrid::angularFrequency(float wavenumber) {
@@ -72,24 +37,27 @@ float WaveletGrid::dispersionSpeed(float wavenumber) {
     return numerator / denom;
 }
 
-void WaveletGrid::diffusionStep(float deltaTime) {
-    float spacialResolution = _pixelParam[X] * _pixelParam[Y];
+void WaveletGrid::advectionStep(float deltaTime) {
 
-    for (int i_x = 0; i_x < amplitudes.getResolution(X); i_x++) {
-        for (int i_y = 0; i_y < amplitudes.getResolution(Y); i_y++) {
-            for (int i_theta = 0; i_theta < amplitudes.getResolution(THETA);
-                    i_theta++) {
-                for (int i_k = 0; i_k < amplitudes.getResolution(K); i_k++) {
+}
+
+void WaveletGrid::diffusionStep(float deltaTime) {
+    float spacialResolution = m_pixelParam[Parameter::X] * m_pixelParam[Parameter::Y];
+
+    for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++) {
+        for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
+            for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++) {
+                for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
                     glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
-                    float wavenumber = pos[K];
+                    float wavenumber = pos[Parameter::K];
 
                     // found on bottom of page 6
                     float delta = 1e-5 * spacialResolution * spacialResolution *
-                        (_pixelParam[K] * _pixelParam[K]) * dispersionSpeed(wavenumber);
+                        (m_pixelParam[Parameter::K] * m_pixelParam[Parameter::K]) * dispersionSpeed(wavenumber);
 
                     // found on bottom of page 6
-                    float gamma = 0.025 * advectionSpeed(wavenumber) * _pixelParam[THETA] *
-                        _pixelParam[THETA] / spacialResolution;
+                    float gamma = 0.025 * advectionSpeed(wavenumber) * m_pixelParam[Parameter::THETA] *
+                        m_pixelParam[Parameter::THETA] / spacialResolution;
 
                     // TODO: write code to determine if a position is at least 2 away from
                     // boundary
@@ -108,7 +76,7 @@ void WaveletGrid::diffusionStep(float deltaTime) {
     std::swap(amplitudes, amplitudes_nxt);
 }
 
-glm::vec4 WaveletGrid::getPositionAtIndex(std::array<int, 4> index) {
+glm::vec4 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 4> index) {
     glm::vec4 indexVec(index[0], index[1], index[2], index[3]);
-    return _minParam + (indexVec + glm::vec4(0.5)) * _pixelParam;
+    return m_minParam + (indexVec + glm::vec4(0.5)) * m_pixelParam;
 }

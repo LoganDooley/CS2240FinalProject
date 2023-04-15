@@ -1,28 +1,11 @@
 #pragma once
 
-#include <array>
-#include <vector>
+#include "amplitude.h"
+
 #include <cmath>
 #include <glm/vec4.hpp>
 
-class Grid {
-    public: 
-        Grid();
-
-        int getResolution(int dimension);
-        void resize(std::array<int, 4> newResolution);
-
-        float &operator()(int xIndex, int yIndex, int kIndex, int thetaIndex);
-        float const &operator()(int xIndex, int yIndex, int kIndex, int thetaIndex) const;
-    private:
-        std::vector<float> _data;
-        std::array<int, 4> _resolution;
-};
-
 class WaveletGrid {
-        // this is pretty nice from the paper's implementation
-        const int X = 0, Y = 1, THETA = 2, K = 3;
-
         constexpr static float tau = 6.28318530718f;
         const float gravity = 9.81;
         const float surfaceTension = 72.8 / 1000; // surface tension of water
@@ -30,10 +13,10 @@ class WaveletGrid {
         const float maxZeta = log(10) / log(2);
         const float size = 50;
     private:
-        std::array<int,4> _resolution;
-        glm::vec4   _minParam,
-                    _maxParam,
-                    _pixelParam;
+        std::array<unsigned int,4> m_resolution;
+        glm::vec4   m_minParam,
+                    m_maxParam,
+                    m_pixelParam;
 
     public:
         /**
@@ -43,13 +26,13 @@ class WaveletGrid {
          * The last two values represents the frequency resolution, in terms of theta and
          * the wavenumber.
          */
-        WaveletGrid(std::array<int, 4> resolution);
+        WaveletGrid(std::array<unsigned int, 4> resolution);
 
         void takeStep(float dt);
         void heightFieldEvaluation(); // please change parameters to this
     private:
-        Grid amplitudes;
-        Grid amplitudes_nxt;
+        Amplitude amplitudes;
+        Amplitude amplitudes_nxt;
 
         /**
          * Obtains a position, in spacial x frequency space, with the specified 
@@ -57,7 +40,7 @@ class WaveletGrid {
          *
          * @param index the specified index.
          */
-        glm::vec4 getPositionAtIndex(std::array<int,4> index);
+        glm::vec4 getPositionAtIndex(std::array<unsigned int,4> index);
 
         void advectionStep(float dt); // see section 4.2 of paper
         void diffusionStep(float dt); // see section 4.2 of paper

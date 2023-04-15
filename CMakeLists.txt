@@ -39,6 +39,7 @@ add_executable(${PROJECT_NAME}
     cubemap.cpp
     wavelet/grid.h
     wavelet/grid.cpp
+    wavelet/amplitude.h
 
     window.h
     core.h
@@ -47,6 +48,7 @@ add_executable(${PROJECT_NAME}
     water.h
     debug.h
     cubemap.h
+    wavelet/amplitude.cpp
 
     # IMGUI files
     external/imgui/imconfig.h
