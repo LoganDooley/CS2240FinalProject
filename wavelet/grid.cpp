@@ -76,6 +76,30 @@ void WaveletGrid::diffusionStep(float deltaTime) {
     std::swap(amplitudes, amplitudes_nxt);
 }
 
+glm::vec3 WaveletGrid::surfaceAtPoint(glm::vec2 pos) const {
+    glm::vec3 finalPos = glm::vec3(0, 0, 0);
+
+    for(int ik = 0; ik < m_resolution[Parameter::K]; ik++){
+        float zeta = idxToPos(ik, Parameter::K);
+
+        int DIR_NUM = m_resolution[Parameter::THETA];
+        int N = 4 * DIR_NUM;
+        float da = 1.f/N;
+        float dx = DIR_NUM * tau / N;
+
+        for(float a = 0; a < 1; a += da) {
+            float angle = a * tau;
+            glm::vec2 kdir = glm::vec2(cosf(angle), sinf(angle));
+            float kdir_x = glm::dot(kdir, pos);
+
+        }
+    }
+}
+
+float WaveletGrid::idxToPos(const unsigned int idx, Parameter p) const{
+    return m_minParam[p] + (idx + 0.5) * m_resolution[p];
+}
+
 glm::vec4 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 4> index) {
     glm::vec4 indexVec(index[0], index[1], index[2], index[3]);
     return m_minParam + (indexVec + glm::vec4(0.5)) * m_pixelParam;

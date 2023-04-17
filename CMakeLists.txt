@@ -40,6 +40,8 @@ add_executable(${PROJECT_NAME}
     wavelet/grid.h
     wavelet/grid.cpp
     wavelet/amplitude.h
+    wavelet/spectrum.h
+    wavelet/profilebuffer.h
 
     window.h
     core.h
@@ -49,6 +51,8 @@ add_executable(${PROJECT_NAME}
     debug.h
     cubemap.h
     wavelet/amplitude.cpp
+    wavelet/spectrum.cpp
+    wavelet/profilebuffer.cpp
 
     # IMGUI files
     external/imgui/imconfig.h

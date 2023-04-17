@@ -3,7 +3,7 @@
 #include "amplitude.h"
 
 #include <cmath>
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 
 class WaveletGrid {
         constexpr static float tau = 6.28318530718f;
@@ -44,6 +44,9 @@ class WaveletGrid {
 
         void advectionStep(float dt); // see section 4.2 of paper
         void diffusionStep(float dt); // see section 4.2 of paper
+        glm::vec3 surfaceAtPoint(glm::vec2 pos) const;
+
+        float idxToPos(const unsigned int idx, Parameter p) const;
 
         /**
          * @brief Computes the angular frequency at a certain wavenumber.
