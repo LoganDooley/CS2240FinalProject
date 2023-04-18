@@ -22,6 +22,7 @@ private:
     static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 
     GLFWwindow* m_GLFWwindow;
+    GLFWwindow* m_guiGLFWwindow;
     bool m_windowAllocated = false;
     bool m_glfwInitialized = false;
     Core* m_core;
