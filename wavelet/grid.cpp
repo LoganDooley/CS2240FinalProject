@@ -42,6 +42,11 @@ float WaveletGrid::dispersionSpeed(float wavenumber) {
     return numerator / denom;
 }
 
+glm::vec2 WaveletGrid::getWaveDirection(glm::vec4 pos) const {
+  float theta = pos[Parameter::THETA];
+  return glm::vec2(cosf(theta), sinf(theta));
+}
+
 void WaveletGrid::advectionStep(float deltaTime) {
     // lookup the interpolated value at position x, y. Note that while i_theta and i_k are
     // indices into amplitude, (x,y) is a position, which might be shifted from (x,y) the index
@@ -65,18 +70,28 @@ void WaveletGrid::advectionStep(float deltaTime) {
     };
 
 
-    for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
-    for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
-        std::array<unsigned int, 2> i_xy = {i_x, i_y};
-        glm::vec2 pos = getPositionAtIndex(i_xy);
-        // we need not compute the advection for points outside of the domain.
-        if (m_environment.inDomain(pos)) {
-            for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
-            for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
-
+    for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++) {
+        for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
+            std::array<unsigned int, 2> i_xy = {i_x, i_y};
+            glm::vec2 pos = getPositionAtIndex(i_xy);
+            // we need not compute the advection for points outside of the domain.
+            if (m_environment.inDomain(pos)) {
+                for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++) {
+                    for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
+                        glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
+                        glm::vec2 kb = getWaveDirection(pos);
+                        glm::vec4 lagrangianPos = pos;
+                        lagrangianPos[Parameter::X] -= deltaTime * kb[0];
+                        lagrangianPos[Parameter::Y] -= deltaTime * kb[1];
+                        amplitudes_nxt(i_x, i_y, i_theta, i_k) = lookup_interpolated_amplitude(
+                                        lagrangianPos[Parameter::X], lagrangianPos[Parameter::Y],
+                                        i_theta, i_k);
+                    }
+                }
             }
         }
     }
+    std::swap(amplitudes, amplitudes_nxt);
 }
 
 void WaveletGrid::diffusionStep(float deltaTime) {

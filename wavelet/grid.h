@@ -95,6 +95,15 @@ class WaveletGrid {
          */
         float dispersionSpeed(float wavenumber);
 
+        /**
+         * @brief Returns the wave direction (\hat{k}_b) given some position (and therefore angle).
+         *
+         * @param position, specifically theta term.
+         *
+         * see equation 17 in the paper and the following paragraph. Used for advection step.
+         */
+        glm::vec2 getWaveDirection(glm::vec4 pos) const;
+
         // TODO: make inline
         /**
          * @brief Determine if a position is out of bounds of our grid
