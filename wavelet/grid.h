@@ -2,6 +2,7 @@
 
 #include "amplitude.h"
 #include "profilebuffer.h"
+#include "wavelet/environment.h"
 
 #include <cmath>
 #include <glm/glm.hpp>
@@ -14,7 +15,6 @@ struct GridSettings {
 
 class WaveletGrid {
         constexpr static float tau = 6.28318530718f;
-        GridSettings settings;
 
         const float gravity = 9.81;
         const float surfaceTension = 72.8 / 1000; // surface tension of water
@@ -42,6 +42,9 @@ class WaveletGrid {
     private:
         Amplitude amplitudes;
         Amplitude amplitudes_nxt;
+
+        GridSettings settings;
+        Environment m_environment;
 
         /**
          * Obtains a position, in spacial x frequency space, with the specified 
@@ -104,4 +107,26 @@ class WaveletGrid {
          * @return <float,float> the indices with the fractional component.
          */
         std::tuple<float,float> posToIdx(float x, float y) const;
+
+        /**
+         * @brief Obtain the default ambient amplitude, used as boundary conditions for 
+         * the amplitude table calculations
+         *
+         * @param x the x position.
+         * @param y the y position.
+         * @param i_theta the angle index.
+         * @param i_k the wavenumber index.
+         * @return the ambient amplitude of the specified wave frequency at that position.
+         * @note that while i_theta and i_k are indices, (x,y) are cartesian coordinates
+         */
+        float ambientAmplitude(float x, float y, int i_theta, int i_k) const;
+
+        /**
+         * @brief Obtain the reflected (position,wavevector) pair correponding to the input (x,k) pair
+         * and the environment.
+         *
+         * @param pos the (x,y,theta,wavenumber) position.
+         * @return glm::vec4 the reflected position.
+         */
+        glm::vec4 getReflected(glm::vec4 pos) const;
 };

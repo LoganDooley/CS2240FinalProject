@@ -47,10 +47,7 @@ void WaveletGrid::advectionStep(float deltaTime) {
     // indices into amplitude, (x,y) is a position, which might be shifted from (x,y) the index
     // this is why we make use of posToIdx
     auto lookup_interpolated_amplitude = [this](float x, float y, int i_theta, int i_k) {
-        if (outOfBounds(glm::vec2(x,y))) {
-            // TODO: actuallly return the default amplitude for wavevector specified by i_theta and i_k
-            return 0.0f;
-        }
+        if (outOfBounds(glm::vec2(x,y))) return ambientAmplitude(x,y,i_theta,i_k);
 
         // convert (x,y) into index positions
         std::tie(x,y) = posToIdx(x,y);
@@ -58,8 +55,7 @@ void WaveletGrid::advectionStep(float deltaTime) {
         auto f = [this, i_theta, i_k](int i_x, int i_y) -> float {
             if (i_x < 0 || i_x >= m_resolution[Parameter::X] || i_y < 0 || i_y >= m_resolution[Y]) {
                 // we need an amplitude for a point outside of the simulation box
-                // TODO: actuallly return the default amplitude for wavevector specified by i_theta and i_k
-                return 0.0f;
+                return ambientAmplitude(idxToPos(i_x, Parameter::X), idxToPos(i_y, Parameter::Y), i_theta, i_k);
             }
 
             return amplitudes(i_x, i_y, i_theta, i_k);
@@ -88,8 +84,7 @@ void WaveletGrid::diffusionStep(float deltaTime) {
 
         if (i_x < 0 || i_x >= m_resolution[Parameter::X] || i_y < 0 || i_y >= m_resolution[Y]) {
             // we need an amplitude for a point outside of the simulation box
-            // TODO: actuallly return the default amplitude for wavevector specified by i_theta and i_k
-            return 0.0f;
+            return ambientAmplitude(idxToPos(i_x, Parameter::X), idxToPos(i_y, Parameter::Y), i_theta, i_k);
         }
 
         return amplitudes(i_x, i_y, i_theta, i_k);
@@ -199,4 +194,33 @@ std::tuple<float,float> WaveletGrid::posToIdx(float x, float y) const {
 glm::vec4 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 4> index) const {
     glm::vec4 indexVec(index[0], index[1], index[2], index[3]);
     return m_minParam + (indexVec + glm::vec4(0.5)) * m_unitParam;
+}
+
+float WaveletGrid::ambientAmplitude(float x, float y, int i_theta, int i_k) const {
+    // TODO: figure out this ambient term
+    return 0.0f;
+}
+
+glm::vec4 WaveletGrid::getReflected(glm::vec4 pos) const {
+    glm::vec2 posxy = glm::vec2(pos);
+
+    float distanceToBoundary = m_environment.levelSet(posxy);
+    // 0 is on the boundary and we only simulate anything below 0, so we don't need
+    // to reflect if this is higher or equal
+    if (distanceToBoundary >= 0)
+        return pos;
+
+    glm::vec2 normal = m_environment.levelSetGradient(posxy);
+    float theta = pos[Parameter::THETA];
+    glm::vec2 wavedirection = glm::vec2(std::cos(theta), std::sin(theta));
+
+    glm::vec2 reflectedPos = posxy - 2.f * normal * distanceToBoundary;
+    glm::vec2 reflectedDirection = wavedirection - 2.f * (glm::dot(normal, wavedirection) * normal);
+
+    float reflectedTheta = std::atan2(reflectedDirection.y, reflectedDirection.x);
+
+    // this should be in the domain (like right on the edge)
+    assert(m_environment.inDomain(pos));
+
+    return glm::vec4(reflectedPos.x, reflectedPos.y, reflectedTheta, pos[Parameter::K]);
 }

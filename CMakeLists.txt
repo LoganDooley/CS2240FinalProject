@@ -42,6 +42,8 @@ add_executable(${PROJECT_NAME}
     wavelet/amplitude.h
     wavelet/spectrum.h
     wavelet/profilebuffer.h
+    wavelet/environment.h
+    wavelet/mathutil.h
 
     window.h
     core.h
@@ -53,6 +55,8 @@ add_executable(${PROJECT_NAME}
     wavelet/amplitude.cpp
     wavelet/spectrum.cpp
     wavelet/profilebuffer.cpp
+    wavelet/environment.cpp
+    wavelet/mathutil.cpp
 
     # IMGUI files
     external/imgui/imconfig.h
