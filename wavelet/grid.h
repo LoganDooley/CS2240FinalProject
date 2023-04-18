@@ -1,6 +1,7 @@
 #pragma once
 
 #include "amplitude.h"
+#include "profilebuffer.h"
 
 #include <cmath>
 #include <glm/glm.hpp>
@@ -17,6 +18,7 @@ class WaveletGrid {
         glm::vec4   m_minParam,
                     m_maxParam,
                     m_pixelParam;
+        std::vector<ProfileBuffer> m_profileBuffers;
 
     public:
         /**

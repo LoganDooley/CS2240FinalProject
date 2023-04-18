@@ -80,7 +80,8 @@ glm::vec3 WaveletGrid::surfaceAtPoint(glm::vec2 pos) const {
     glm::vec3 finalPos = glm::vec3(0, 0, 0);
 
     for(int ik = 0; ik < m_resolution[Parameter::K]; ik++){
-        float zeta = idxToPos(ik, Parameter::K);
+        float k = idxToPos(ik, Parameter::K);
+        auto& profile = m_profileBuffers[k];
 
         int DIR_NUM = m_resolution[Parameter::THETA];
         int N = 4 * DIR_NUM;

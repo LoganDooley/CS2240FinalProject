@@ -1,7 +1,8 @@
 #pragma once
 
 #include <array>
-#include <vector>}
+#include <vector>
+#include <math.h>
 
 class ProfileBuffer
 {
@@ -9,10 +10,15 @@ public:
     ProfileBuffer(float windSpeed);
     ~ProfileBuffer();
 
-    void precompute(float time, float k_min, float k_max, int resolution, int periodicity, int integration_nodes);
+    void precompute(float t, float k_min, float k_max, int resolution, int periodicity, int integration_nodes);
 
 private:
-    float density(float k) const;
+    float psi(float k) const;
+
+    float w(float k) const;
+
+    float psiBarIntegrand(float k, float p, float t);
+    float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
 
     template <typename Function>
     auto integrate(int integration_nodes, double x_min, double x_max, Function const &function){
@@ -30,5 +36,5 @@ private:
 
     float m_windSpeed = 1;
     float m_period;
-    std::vector<std::array<float, 4>> m_data;
+    std::vector<float> m_data;
 };
