@@ -1,9 +1,10 @@
 #include "mathutil.h"
 #include <cmath>
+#include <functional>
 
 namespace Math {
 
-    float interpolate(float t, std::function<float (float)> f) {
+    float interpolate(float t, std::function<float(int)> f) {
         // we use the monotonic cubic interpolation from https://dl.acm.org/doi/pdf/10.1145/383259.383260
         int tk = t;
         // if t lies on an integral point
@@ -39,5 +40,12 @@ namespace Math {
         }
 
         return f_t;
+    }
+
+    float interpolate2D(float x, float y, std::function<float(int, int)> f) {
+        // we do 16 calls to f in total, and 5 calls to interpolate
+        return interpolate(x, [&](int x) -> float {
+            return interpolate(y, std::bind(f, x, std::placeholders::_1));
+        });
     }
 }
