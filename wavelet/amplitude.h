@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <glm/vec2.hpp>
 
 enum Parameter{
     X = 0,
@@ -9,6 +10,7 @@ enum Parameter{
     THETA = 2,
     K = 3
 };
+
 
 class Amplitude
 {

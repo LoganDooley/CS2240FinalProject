@@ -6,18 +6,25 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
+struct GridSettings {
+    float size = 50;
+    glm::vec2 k_range = glm::vec2(0.01, 10);
+    float initialTime = 100;
+};
+
 class WaveletGrid {
         constexpr static float tau = 6.28318530718f;
+        GridSettings settings;
+
         const float gravity = 9.81;
         const float surfaceTension = 72.8 / 1000; // surface tension of water
-        const float minZeta = log(0.03) / log(2);
-        const float maxZeta = log(10) / log(2);
-        const float size = 50;
     private:
         std::array<unsigned int,4> m_resolution;
+
+        // important: max is exclusive
         glm::vec4   m_minParam,
                     m_maxParam,
-                    m_pixelParam;
+                    m_unitParam;
         std::vector<ProfileBuffer> m_profileBuffers;
 
     public:
@@ -42,7 +49,7 @@ class WaveletGrid {
          *
          * @param index the specified index.
          */
-        glm::vec4 getPositionAtIndex(std::array<unsigned int,4> index);
+        glm::vec4 getPositionAtIndex(std::array<unsigned int,4> index) const;
 
         void advectionStep(float dt); // see section 4.2 of paper
         void diffusionStep(float dt); // see section 4.2 of paper
@@ -78,6 +85,7 @@ class WaveletGrid {
          */
         float dispersionSpeed(float wavenumber);
 
+        // TODO: make inline
         /**
          * @brief Determine if a position is out of bounds of our grid
          *
@@ -85,7 +93,7 @@ class WaveletGrid {
          * @return true if out of bounds.
          * @return false otherwise.
          */
-        bool outOfBounds(glm::vec2 pos);
+        bool outOfBounds(glm::vec2 pos) const;
 
         /**
          * @brief Remap a position in 2D to indices for x and y, keeping the fractional
@@ -95,5 +103,5 @@ class WaveletGrid {
          * @param y the y position.
          * @return <float,float> the indices with the fractional component.
          */
-        std::tuple<float,float> posToIdx(float x, float y);
+        std::tuple<float,float> posToIdx(float x, float y) const;
 };
