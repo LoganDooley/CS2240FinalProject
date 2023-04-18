@@ -66,15 +66,21 @@ void WaveletGrid::advectionStep(float deltaTime) {
 
 
     for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
-    for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++)
-    for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
-    for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
+    for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
+        std::array<unsigned int, 2> i_xy = {i_x, i_y};
+        glm::vec2 pos = getPositionAtIndex(i_xy);
+        // we need not compute the advection for points outside of the domain.
+        if (m_environment.inDomain(pos)) {
+            for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
+            for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
 
+            }
+        }
     }
 }
 
 void WaveletGrid::diffusionStep(float deltaTime) {
-    float spacialResolution = m_unitParam[Parameter::X] * m_unitParam[Parameter::Y];
+    float spacialResolution = m_unitParam[Parameter::X];
 
     auto lookup_amplitude = [this](int i_x, int i_y, int i_theta, int i_k) {
         i_theta = (i_theta + m_resolution[Parameter::THETA]) % m_resolution[Parameter::THETA];
@@ -91,64 +97,67 @@ void WaveletGrid::diffusionStep(float deltaTime) {
     };
 
     for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
-    for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++)
-    for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
-    for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
-        glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
-        float wavenumber = pos[K];
-        float theta = pos[THETA];
+    for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
 
-        // TODO: precompute this
-        glm::vec2 k_hat(cos(theta), sin(theta));
+        std::array<unsigned int, 2> i_xy = {i_x, i_y};
+        float distanceToBoundary = m_environment.levelSet(getPositionAtIndex(i_xy));
 
-        // TODO: write code to determine if a position is at least 2 away from
-        // boundary
-        bool atLeast2AwayFromBoundary = true;
-        
-        float amplitude = amplitudes(i_x, i_y, i_theta, i_k);
+        for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
+        for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
+            glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
+            float wavenumber = pos[K];
+            float theta = pos[THETA];
 
-        if (atLeast2AwayFromBoundary) {
-            // found on bottom of page 6
-            float delta = 1e-5 * spacialResolution * spacialResolution *
-                (m_unitParam[Parameter::K] * m_unitParam[Parameter::K]) * dispersionSpeed(wavenumber);
+            // TODO: precompute this
+            glm::vec2 k_hat(cos(theta), sin(theta));
 
-            // found on bottom of page 6
-            float gamma = 0.025 * advectionSpeed(wavenumber) * m_unitParam[Parameter::THETA] *
-                m_unitParam[Parameter::THETA] / spacialResolution;
+            bool atLeast2AwayFromBoundary = distanceToBoundary >= 4 * spacialResolution;
+            
+            float amplitude = amplitudes(i_x, i_y, i_theta, i_k);
 
-            int h = 1; // step size
+            if (atLeast2AwayFromBoundary) {
+                // found on bottom of page 6
+                float delta = 1e-5 * spacialResolution * spacialResolution *
+                    (m_unitParam[Parameter::K] * m_unitParam[Parameter::K]) * dispersionSpeed(wavenumber);
 
-            // caching some values common to the calculations below
-            float inverseH2 = 1.0f / (h*h);
-            float inverse2H = 1.0f / (2*h);
+                // found on bottom of page 6
+                float gamma = 0.025 * advectionSpeed(wavenumber) * m_unitParam[Parameter::THETA] *
+                    m_unitParam[Parameter::THETA] / spacialResolution;
 
-            float lookup_xh_y_theta_k = lookup_amplitude(i_x + h, i_y, i_theta, i_k);
-            float lookup_xnegh_y_theta_k = lookup_amplitude(i_x - h, i_y, i_theta, i_k);
+                int h = 1; // step size
 
-            float lookup_x_yh_theta_k = lookup_amplitude(i_x, i_y + h, i_theta, i_k);
-            float lookup_x_ynegh_theta_k = lookup_amplitude(i_x, i_y - h, i_theta, i_k);
+                // caching some values common to the calculations below
+                float inverseH2 = 1.0f / (h*h);
+                float inverse2H = 1.0f / (2*h);
 
-            // we are actually using a step size of h/2 here
-            // use central difference to obtain d2A / dtheta^2 numerically
-            float secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h, i_k) + lookup_amplitude(i_x, i_y, i_theta - h, i_k) - 2 * amplitude) * inverseH2;
+                float lookup_xh_y_theta_k = lookup_amplitude(i_x + h, i_y, i_theta, i_k);
+                float lookup_xnegh_y_theta_k = lookup_amplitude(i_x - h, i_y, i_theta, i_k);
 
-            // use central difference to obtain (k dot V_x)
-            float partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
-            float partialDerivativeWRTY = (lookup_x_yh_theta_k - lookup_x_ynegh_theta_k) * inverse2H;
-            float directionalDerivativeWRTK = glm::dot(k_hat, glm::vec2(partialDerivativeWRTX, partialDerivativeWRTY));
+                float lookup_x_yh_theta_k = lookup_amplitude(i_x, i_y + h, i_theta, i_k);
+                float lookup_x_ynegh_theta_k = lookup_amplitude(i_x, i_y - h, i_theta, i_k);
 
-            // central difference to obtain (k dot V_x)^2
-            float secondPartialDerivativeWRTX = (lookup_xh_y_theta_k + lookup_xnegh_y_theta_k - 2 * amplitude) * inverseH2;
-            float secondPartialDerivativeWRTY = (lookup_x_yh_theta_k + lookup_x_ynegh_theta_k - 2 * amplitude) * inverseH2;
-            float secondDirectionalDerivativeWRTK = glm::dot(k_hat * k_hat, glm::vec2(secondPartialDerivativeWRTX, secondPartialDerivativeWRTY));
+                // we are actually using a step size of h/2 here
+                // use central difference to obtain d2A / dtheta^2 numerically
+                float secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h, i_k) + lookup_amplitude(i_x, i_y, i_theta - h, i_k) - 2 * amplitude) * inverseH2;
 
-            // equation 18
-            float derivativeWRTt = -advectionSpeed(wavenumber) * directionalDerivativeWRTK + delta * secondDirectionalDerivativeWRTK + gamma * secondPartialDerivativeWRTtheta;
+                // use central difference to obtain (k dot V_x)
+                float partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
+                float partialDerivativeWRTY = (lookup_x_yh_theta_k - lookup_x_ynegh_theta_k) * inverse2H;
+                float directionalDerivativeWRTK = glm::dot(k_hat, glm::vec2(partialDerivativeWRTX, partialDerivativeWRTY));
 
-            amplitude += derivativeWRTt * deltaTime;
+                // central difference to obtain (k dot V_x)^2
+                float secondPartialDerivativeWRTX = (lookup_xh_y_theta_k + lookup_xnegh_y_theta_k - 2 * amplitude) * inverseH2;
+                float secondPartialDerivativeWRTY = (lookup_x_yh_theta_k + lookup_x_ynegh_theta_k - 2 * amplitude) * inverseH2;
+                float secondDirectionalDerivativeWRTK = glm::dot(k_hat * k_hat, glm::vec2(secondPartialDerivativeWRTX, secondPartialDerivativeWRTY));
+
+                // equation 18
+                float derivativeWRTt = -advectionSpeed(wavenumber) * directionalDerivativeWRTK + delta * secondDirectionalDerivativeWRTK + gamma * secondPartialDerivativeWRTtheta;
+
+                amplitude += derivativeWRTt * deltaTime;
+            }
+
+            amplitudes_nxt(i_x, i_y, i_theta, i_k) = amplitude;
         }
-
-        amplitudes_nxt(i_x, i_y, i_theta, i_k) = amplitude;
     }
 
     std::swap(amplitudes, amplitudes_nxt);
@@ -194,6 +203,10 @@ std::tuple<float,float> WaveletGrid::posToIdx(float x, float y) const {
 glm::vec4 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 4> index) const {
     glm::vec4 indexVec(index[0], index[1], index[2], index[3]);
     return m_minParam + (indexVec + glm::vec4(0.5)) * m_unitParam;
+}
+
+glm::vec2 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 2> index) const {
+    return glm::vec2(idxToPos(index[0], Parameter::X), idxToPos(index[1], Parameter::Y));
 }
 
 float WaveletGrid::ambientAmplitude(float x, float y, int i_theta, int i_k) const {

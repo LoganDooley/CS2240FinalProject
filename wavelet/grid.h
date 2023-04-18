@@ -54,6 +54,13 @@ class WaveletGrid {
          */
         glm::vec4 getPositionAtIndex(std::array<unsigned int,4> index) const;
 
+        /**
+         * Obtains a spacial position with the specified table index
+         *
+         * @param index the specified index.
+         */
+        glm::vec2 getPositionAtIndex(std::array<unsigned int, 2> index) const;
+
         void advectionStep(float dt); // see section 4.2 of paper
         void diffusionStep(float dt); // see section 4.2 of paper
         glm::vec3 surfaceAtPoint(glm::vec2 pos) const;
@@ -130,3 +137,4 @@ class WaveletGrid {
          */
         glm::vec4 getReflected(glm::vec4 pos) const;
 };
+
