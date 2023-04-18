@@ -4,6 +4,8 @@
 #include <iterator>
 #include <math.h>
 #include <glm/vec2.hpp>
+#include "mathutil.h"
+#include <tuple>
 
 // wavelet grid
 WaveletGrid::WaveletGrid(std::array<unsigned int, 4> resolution)
@@ -39,7 +41,38 @@ float WaveletGrid::dispersionSpeed(float wavenumber) {
 }
 
 void WaveletGrid::advectionStep(float deltaTime) {
+    // lookup the interpolated value at position x, y. Note that while i_theta and i_k are
+    // indices into amplitude, (x,y) is a position, which might be shifted from (x,y) the index
+    // this is why we make use of posToIdx
+    auto lookup_interpolated_amplitude = [this](float x, float y, int i_theta, int i_k) {
+        if (outOfBounds(glm::vec2(x,y))) {
+            // TODO: actuallly return the default amplitude for wavevector specified by i_theta and i_k
+            return 0.0f;
+        }
 
+        // convert (x,y) into index positions
+        std::tie(x,y) = posToIdx(x,y);
+
+        auto f = [this, i_theta, i_k](int i_x, int i_y) -> float {
+            if (i_x < 0 || i_x >= m_resolution[Parameter::X] || i_y < 0 || i_y >= m_resolution[Y]) {
+                // we need an amplitude for a point outside of the simulation box
+                // TODO: actuallly return the default amplitude for wavevector specified by i_theta and i_k
+                return 0.0f;
+            }
+
+            return amplitudes(i_x, i_y, i_theta, i_k);
+        };
+
+        return Math::interpolate2D(x, y, f);
+    };
+
+
+    for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
+    for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++)
+    for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
+    for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
+
+    }
 }
 
 void WaveletGrid::diffusionStep(float deltaTime) {

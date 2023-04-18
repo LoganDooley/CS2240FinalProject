@@ -77,4 +77,23 @@ class WaveletGrid {
          * see equation 18 in the paper. We use this to compute the diffusion amount.
          */
         float dispersionSpeed(float wavenumber);
+
+        /**
+         * @brief Determine if a position is out of bounds of our grid
+         *
+         * @param pos the position.
+         * @return true if out of bounds.
+         * @return false otherwise.
+         */
+        bool outOfBounds(glm::vec2 pos);
+
+        /**
+         * @brief Remap a position in 2D to indices for x and y, keeping the fractional
+         * component
+         *
+         * @param x the x position.
+         * @param y the y position.
+         * @return <float,float> the indices with the fractional component.
+         */
+        std::tuple<float,float> posToIdx(float x, float y);
 };
