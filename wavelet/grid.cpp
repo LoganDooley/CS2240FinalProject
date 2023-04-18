@@ -92,18 +92,24 @@ void WaveletGrid::diffusionStep(float deltaTime) {
             float inverseH2 = 1.0f / (h*h);
             float inverse2H = 1.0f / (2*h);
 
+            float lookup_xh_y_theta_k = lookup_amplitude(i_x + h, i_y, i_theta, i_k);
+            float lookup_xnegh_y_theta_k = lookup_amplitude(i_x - h, i_y, i_theta, i_k);
+
+            float lookup_x_yh_theta_k = lookup_amplitude(i_x, i_y + h, i_theta, i_k);
+            float lookup_x_ynegh_theta_k = lookup_amplitude(i_x, i_y - h, i_theta, i_k);
+
             // we are actually using a step size of h/2 here
             // use central difference to obtain d2A / dtheta^2 numerically
             float secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h, i_k) + lookup_amplitude(i_x, i_y, i_theta - h, i_k) - 2 * amplitude) * inverseH2;
 
             // use central difference to obtain (k dot V_x)
-            float partialDerivativeWRTX = (lookup_amplitude(i_x + h, i_y, i_theta, i_k) - lookup_amplitude(i_x - h, i_y, i_theta, i_k)) * inverse2H;
-            float partialDerivativeWRTY = (lookup_amplitude(i_x, i_y + h, i_theta, i_k) - lookup_amplitude(i_x, i_y - h, i_theta, i_k)) * inverse2H;
+            float partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
+            float partialDerivativeWRTY = (lookup_x_yh_theta_k - lookup_x_ynegh_theta_k) * inverse2H;
             float directionalDerivativeWRTK = glm::dot(k_hat, glm::vec2(partialDerivativeWRTX, partialDerivativeWRTY));
 
             // central difference to obtain (k dot V_x)^2
-            float secondPartialDerivativeWRTX = (lookup_amplitude(i_x + h, i_y, i_theta, i_k) + lookup_amplitude(i_x - h, i_y, i_theta, i_k) - 2 * amplitude) * inverseH2;
-            float secondPartialDerivativeWRTY = (lookup_amplitude(i_x, i_y + h, i_theta, i_k) + lookup_amplitude(i_x, i_y - h, i_theta, i_k) - 2 * amplitude) * inverseH2;
+            float secondPartialDerivativeWRTX = (lookup_xh_y_theta_k + lookup_xnegh_y_theta_k - 2 * amplitude) * inverseH2;
+            float secondPartialDerivativeWRTY = (lookup_x_yh_theta_k + lookup_x_ynegh_theta_k - 2 * amplitude) * inverseH2;
             float secondDirectionalDerivativeWRTK = glm::dot(k_hat * k_hat, glm::vec2(secondPartialDerivativeWRTX, secondPartialDerivativeWRTY));
 
             // equation 18
