@@ -1,5 +1,6 @@
 #pragma once
 
+#include "wavelet/environment.h"
 #include <functional>
 
 namespace Math {
@@ -31,5 +32,5 @@ namespace Math {
      * @param domain the domain function that tells if something is inside the domain. f values outside of the domain
      * are undefined, and is not considered in the interpolation.
      */
-    float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float(int,int,int,int)> f, std::function<bool(float,float,float,float)> domain);
+    float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float(int,int,int,int)> f, Environment environment);
 }

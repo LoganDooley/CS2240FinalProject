@@ -51,24 +51,22 @@ namespace Math {
     }
 
     float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float (int, int, int, int)> f, 
-            std::function<bool(float,float,float,float)> domain) {
+            Environment environment) {
         auto lerp = [](float v, std::function<glm::vec2(int)> f) {
             int iv = v; // should floor it
             float fractional  = v - iv;
             // this weird ternary opt is to avoid calling f unless neccessary
             return (fractional ? f(iv) * fractional : glm::vec2(0)) + (1 - fractional ? f(iv+1) * (1 - fractional) : glm::vec2(0));
         };
-        auto g = [&f, &domain](int i_x, int i_y, int i_theta, int i_wavenumber) -> glm::vec2 {
-            if (domain(i_x, i_y, i_theta, i_wavenumber))
-                return glm::vec2(f(i_x, i_y, i_theta, i_wavenumber), 1);
-            // essentially, we ignore values outside of the domain and remove their weight from the interpolation
-            return glm::vec2(0,0);
+        auto g = [&f](int i_x, int i_y, int i_theta, int i_wavenumber) -> glm::vec2 {
+            return glm::vec2(f(i_x, i_y, i_theta, i_wavenumber), 1);
         };
         // horribly inefficient? just eyeing this it takes 8 evaluations of f, which isn't that bad except for the fact that
         // it's wrapped around in multiple lambdas
         // TODO: unwrap these from horrible lambda hell by making these all named functions
-        glm::vec2 result = lerp(x, [&g, &lerp, y, theta, wavenumber](int x) -> glm::vec2 {
-            return lerp(y, [&g, &lerp, x, theta, wavenumber](int y) -> glm::vec2 {
+        glm::vec2 result = lerp(x, [&g, &environment, &lerp, y, theta, wavenumber](int x) -> glm::vec2 {
+            return lerp(y, [&g, &environment, &lerp, x, theta, wavenumber](int y) -> glm::vec2 {
+                if (!environment.inDomain(glm::vec2(x,y))) return glm::vec2(0,0);
                 return lerp(theta, [&g, x, y, wavenumber](int theta) -> glm::vec2 {
                     int iwavenumber = (int) round(wavenumber);
                     return g(x,y,theta,wavenumber);

@@ -126,6 +126,7 @@ class WaveletGrid {
          * @return <float,float> the indices with the fractional component.
          */
         std::tuple<float,float> posToIdx(float x, float y) const;
+        glm::vec4 posToIdx(glm::vec4 pos4) const;
 
         /**
          * @brief Obtain the default ambient amplitude, used as boundary conditions for 
@@ -148,5 +149,29 @@ class WaveletGrid {
          * @return glm::vec4 the reflected position.
          */
         glm::vec4 getReflected(glm::vec4 pos) const;
+
+
+        /**
+         * @brief Obtain an interpolated amplitude at a non-grid position.
+         * 
+         * @param x the x coordinate.
+         * @param y the y coordinate.
+         * @param i_theta the theta index.
+         * @param i_k the wavenumber index.
+         *
+         * @return float the interpolated amplitude.
+         */
+        float lookup_interpolated_amplitude(float x, float y, int i_theta, int i_k);
+
+        /**
+         * @brief Obtain the wave amplitude at a certain index.
+         *
+         * @param i_x the x index.
+         * @param i_y the y index.
+         * @param i_theta the theta index.
+         * @param i_k the wavenumber index.
+         * @return float the amplitude at that index, or the ambient amplitude if index is not in the grid.
+         */
+        float lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) const;
 };
 
