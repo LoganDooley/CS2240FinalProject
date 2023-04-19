@@ -7,18 +7,21 @@
 class ProfileBuffer
 {
 public:
+    ProfileBuffer(){};
     ProfileBuffer(float windSpeed);
     ~ProfileBuffer();
 
-    void precompute(float t, float k_min, float k_max, int resolution, int periodicity, int integration_nodes);
+    void precompute(float t, float k_min, float k_max, int resolution = 4096, int periodicity = 2, int integration_nodes = 100);
 
+    float operator()(float p) const;
+
+    float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
 private:
     float psi(float k) const;
 
     float w(float k) const;
 
     float psiBarIntegrand(float k, float p, float t);
-    float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
 
     template <typename Function>
     auto integrate(int integration_nodes, double x_min, double x_max, Function const &function){
@@ -35,6 +38,6 @@ private:
     }
 
     float m_windSpeed = 1;
-    float m_period;
-    std::vector<float> m_data;
+    float m_period = 0;
+    std::vector<float> m_data = {};
 };

@@ -25,7 +25,8 @@ class WaveletGrid {
         glm::vec4   m_minParam,
                     m_maxParam,
                     m_unitParam;
-        std::vector<ProfileBuffer> m_profileBuffers;
+        ProfileBuffer m_profileBuffer;
+        float time = 0;
 
     public:
         /**
@@ -46,6 +47,8 @@ class WaveletGrid {
         GridSettings settings;
         Environment m_environment;
 
+        float amplitude(std::array<float, 4> index) const;
+
         /**
          * Obtains a position, in spacial x frequency space, with the specified 
          * table index.
@@ -63,7 +66,7 @@ class WaveletGrid {
 
         void advectionStep(float dt); // see section 4.2 of paper
         void diffusionStep(float dt); // see section 4.2 of paper
-        glm::vec3 surfaceAtPoint(glm::vec2 pos) const;
+        float surfaceAtPoint(glm::vec2 pos) const;
 
         float idxToPos(const unsigned int idx, Parameter p) const;
 

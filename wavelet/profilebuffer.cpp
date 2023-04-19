@@ -8,6 +8,17 @@ ProfileBuffer::ProfileBuffer(float windSpeed):
 
 }
 
+float ProfileBuffer::operator()(float p) const{
+    const int N = m_data.size(); // num entries
+    float pi = N * p / m_period; // target "index" (between 2 indices)
+    pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)
+
+    // Lerp
+    int pLower = int(floor(pi));
+    float wpUpper = pi - pLower; // weight towards ceiling index of pi
+    return wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower];
+}
+
 float ProfileBuffer::w(float k) const{
     constexpr float g = 9.81;
     return sqrt(k * g);
@@ -23,14 +34,15 @@ float ProfileBuffer::psiBarIntegrand(float k, float p, float t){
     return psi(k) * cosf(k * p - w(k) * t) * k;
 }
 
+// Numerically integrate equation 21 with midpoint rectangle method
 float ProfileBuffer::psiBar(float p, float t, int integration_nodes, float k_min, float k_max){
     float dk = (k_max - k_min) / integration_nodes;
     float k = k_min + 0.5 * dk;
 
-    float result = dk * psiBarIntegrand(k, p, t);
-    for(int i = 1; i<integration_nodes; i++) {
+    float result = 0;
+    for(int i = 0; i<integration_nodes; i++) {
+        result += psiBarIntegrand(k, p, t) * dk;
         k += dk;
-        result += dk * psiBarIntegrand(k, p, t);
     }
 
     return result;
