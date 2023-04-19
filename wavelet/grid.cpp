@@ -89,6 +89,8 @@ void WaveletGrid::advectionStep(float deltaTime) {
                         glm::vec4 lagrangianPos = pos;
                         lagrangianPos[Parameter::X] -= deltaTime * kb[0];
                         lagrangianPos[Parameter::Y] -= deltaTime * kb[1];
+                        // handle reflection over terrain.
+                        lagrangianPos = getReflected(lagrangianPos);
                         amplitudes_nxt(i_x, i_y, i_theta, i_k) = lookup_interpolated_amplitude(
                                         lagrangianPos[Parameter::X], lagrangianPos[Parameter::Y],
                                         i_theta, i_k);
@@ -246,8 +248,9 @@ glm::vec4 WaveletGrid::getReflected(glm::vec4 pos) const {
     float distanceToBoundary = m_environment.levelSet(posxy);
     // 0 is on the boundary and we only simulate anything below 0, so we don't need
     // to reflect if this is higher or equal
-    if (distanceToBoundary >= 0)
+    if (distanceToBoundary >= 0) {
         return pos;
+    }
 
     glm::vec2 normal = m_environment.levelSetGradient(posxy);
     float theta = pos[Parameter::THETA];
