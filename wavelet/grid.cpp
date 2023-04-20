@@ -64,9 +64,11 @@ void WaveletGrid::advectionStep(float deltaTime) {
                     for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
                         glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
                         glm::vec2 kb = getWaveDirection(pos);
+                        // ought also use advectionSpeed here? representing omega in equation 17?
+                        float omega = advectionSpeed(i_k);
                         glm::vec4 lagrangianPos = pos;
-                        lagrangianPos[Parameter::X] -= deltaTime * kb[0];
-                        lagrangianPos[Parameter::Y] -= deltaTime * kb[1];
+                        lagrangianPos[Parameter::X] -= deltaTime * kb[0] * omega;
+                        lagrangianPos[Parameter::Y] -= deltaTime * kb[1] * omega;
                         // handle reflection over terrain.
                         lagrangianPos = getReflected(lagrangianPos);
                         amplitudes_nxt(i_x, i_y, i_theta, i_k) = lookup_interpolated_amplitude(
