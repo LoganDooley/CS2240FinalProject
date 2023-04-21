@@ -24,7 +24,7 @@ private:
     float psiBarIntegrand(float k, float p, float t);
 
     template <typename Function>
-    auto integrate(int integration_nodes, double x_min, double x_max, Function const &function){
+    auto integrate(int integration_nodes, float x_min, float x_max, Function const &function){
         float dx = (x_max - x_min) / integration_nodes;
         float x = x_min + 0.5 * dx;
 

@@ -8,23 +8,22 @@
 #include <tuple>
 
 // wavelet grid
-WaveletGrid::WaveletGrid(std::array<unsigned int, 4> resolution)
-    : m_resolution(resolution) {
+WaveletGrid::WaveletGrid(glm::vec4 minParams, glm::vec4 maxParams, glm::uvec4 resolution)
+    : m_minParams(minParams), m_maxParams(maxParams), m_resolution(resolution)
+{
+    //m_minParam = glm::vec4(-settings.size, -settings.size, 0, settings.k_range[0]);
+    //m_maxParam = glm::vec4(settings.size, settings.size, tau, settings.k_range[1]);
+    glm::vec4 resolutionVec(m_resolution[Parameter::X], m_resolution[Parameter::Y], m_resolution[Parameter::THETA],
+            m_resolution[Parameter::K]);
+    m_unitParams = (m_maxParams - m_minParams) / resolutionVec;
 
-        glm::vec4 resolutionVec(resolution[Parameter::X], resolution[Parameter::Y], resolution[Parameter::THETA],
-                resolution[Parameter::K]);
-
-        m_minParam = glm::vec4(-settings.size, -settings.size, 0, settings.k_range[0]);
-        m_maxParam = glm::vec4(settings.size, settings.size, tau, settings.k_range[1]);
-        m_unitParam = (m_maxParam - m_minParam) / resolutionVec;
-
-        m_profileBuffer = std::make_unique<ProfileBuffer>(5);
+    m_profileBuffer = std::make_unique<ProfileBuffer>(5);
 }
 
 void WaveletGrid::takeStep(float dt){
     time += dt;
 
-    m_profileBuffer->precompute(time, m_minParam[Parameter::K], m_maxParam[Parameter::K]);
+    m_profileBuffer->precompute(time, m_minParams[Parameter::K], m_maxParams[Parameter::K]);
 }
 
 float WaveletGrid::angularFrequency(float wavenumber) {
@@ -85,7 +84,7 @@ void WaveletGrid::advectionStep(float deltaTime) {
 }
 
 void WaveletGrid::diffusionStep(float deltaTime) {
-    float spacialResolution = m_unitParam[Parameter::X];
+    float spacialResolution = m_unitParams[Parameter::X];
 
 
     for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
@@ -110,11 +109,11 @@ void WaveletGrid::diffusionStep(float deltaTime) {
             if (atLeast2AwayFromBoundary) {
                 // found on bottom of page 6
                 float delta = 1e-5 * spacialResolution * spacialResolution *
-                    (m_unitParam[Parameter::K] * m_unitParam[Parameter::K]) * dispersionSpeed(wavenumber);
+                    (m_unitParams[Parameter::K] * m_unitParams[Parameter::K]) * dispersionSpeed(wavenumber);
 
                 // found on bottom of page 6
-                float gamma = 0.025 * advectionSpeed(wavenumber) * m_unitParam[Parameter::THETA] *
-                    m_unitParam[Parameter::THETA] / spacialResolution;
+                float gamma = 0.025 * advectionSpeed(wavenumber) * m_unitParams[Parameter::THETA] *
+                    m_unitParams[Parameter::THETA] / spacialResolution;
 
                 int h = 1; // step size
 
@@ -122,15 +121,15 @@ void WaveletGrid::diffusionStep(float deltaTime) {
                 float inverseH2 = 1.0f / (h*h);
                 float inverse2H = 1.0f / (2*h);
 
-                float lookup_xh_y_theta_k = lookup_amplitude(i_x + h, i_y, i_theta, i_k);
-                float lookup_xnegh_y_theta_k = lookup_amplitude(i_x - h, i_y, i_theta, i_k);
+                float lookup_xh_y_theta_k = lookup_amplitude(glm::uvec4(i_x + h, i_y, i_theta, i_k));
+                float lookup_xnegh_y_theta_k = lookup_amplitude(glm::uvec4(i_x - h, i_y, i_theta, i_k));
 
-                float lookup_x_yh_theta_k = lookup_amplitude(i_x, i_y + h, i_theta, i_k);
-                float lookup_x_ynegh_theta_k = lookup_amplitude(i_x, i_y - h, i_theta, i_k);
+                float lookup_x_yh_theta_k = lookup_amplitude(glm::uvec4(i_x, i_y + h, i_theta, i_k));
+                float lookup_x_ynegh_theta_k = lookup_amplitude(glm::uvec4(i_x, i_y - h, i_theta, i_k));
 
                 // we are actually using a step size of h/2 here
                 // use central difference to obtain d2A / dtheta^2 numerically
-                float secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h, i_k) + lookup_amplitude(i_x, i_y, i_theta - h, i_k) - 2 * amplitude) * inverseH2;
+                float secondPartialDerivativeWRTtheta = (lookup_amplitude(glm::uvec4(i_x, i_y, i_theta + h, i_k)) + lookup_amplitude(glm::uvec4(i_x, i_y, i_theta - h, i_k)) - 2 * amplitude) * inverseH2;
 
                 // use central difference to obtain (k dot V_x)
                 float partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
@@ -158,8 +157,8 @@ void WaveletGrid::diffusionStep(float deltaTime) {
 float WaveletGrid::amplitude(std::array<float, 4> pos) const{
     glm::vec4 indexPos = posToIdx(glm::vec4(pos[0], pos[1], pos[2], pos[3]));
 
-    std::function<float(int,int,int,int)> f = std::bind(&WaveletGrid::lookup_amplitude, this, 
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+    std::function<float(glm::uvec4)> f = std::bind(&WaveletGrid::lookup_amplitude, this,
+        std::placeholders::_1);
 
     return Math::interpolate4D(indexPos[Parameter::X], indexPos[Parameter::Y], indexPos[Parameter::THETA], indexPos[Parameter::K], 
         f, m_environment
@@ -186,28 +185,28 @@ float WaveletGrid::surfaceAtPoint(glm::vec2 pos) {
 }
 
 float WaveletGrid::idxToPos(const unsigned int idx, Parameter p) const{
-    return m_minParam[p] + (idx + 0.5) * m_unitParam[p];
+    return m_minParams[p] + (idx + 0.5) * m_unitParams[p];
 }
 
 bool WaveletGrid::outOfBounds(glm::vec2 pos) const {
     for (int dim = 0; dim < 2; dim++)
-        if ( m_minParam[dim] > pos[dim] || m_maxParam[dim] < pos[dim] )
+        if ( m_minParams[dim] > pos[dim] || m_maxParams[dim] < pos[dim] )
             return false;
     return true;
 }
 
 std::tuple<float,float> WaveletGrid::posToIdx(float x, float y) const {
     // we are doing inverse of idxToPos
-    return { (x - m_minParam.x) / m_unitParam.x - 0.5, (y - m_minParam.y) / m_unitParam.y - 0.5};
+    return { (x - m_minParams.x) / m_unitParams.x - 0.5, (y - m_minParams.y) / m_unitParams.y - 0.5};
 }
 
 glm::vec4 WaveletGrid::posToIdx(glm::vec4 pos4) const {
-    return (pos4 - m_minParam) / m_unitParam - glm::vec4(0.5);
+    return (pos4 - m_minParams) / m_unitParams - glm::vec4(0.5);
 }
 
 glm::vec4 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 4> index) const {
     glm::vec4 indexVec(index[0], index[1], index[2], index[3]);
-    return m_minParam + (indexVec + glm::vec4(0.5)) * m_unitParam;
+    return m_minParams + (indexVec + glm::vec4(0.5)) * m_unitParams;
 }
 
 glm::vec2 WaveletGrid::getPositionAtIndex(std::array<unsigned int, 2> index) const {
@@ -262,15 +261,15 @@ float WaveletGrid::lookup_interpolated_amplitude(float x, float y, int i_theta, 
     return Math::interpolate2D(x, y, f);
 }
 
-float WaveletGrid::lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) const {
-    i_theta = (i_theta + m_resolution[Parameter::THETA]) % m_resolution[Parameter::THETA];
+float WaveletGrid::lookup_amplitude(glm::uvec4 index) const {
+    index[Parameter::THETA] = (index[Parameter::THETA] + m_resolution[Parameter::THETA]) % m_resolution[Parameter::THETA];
 
-    if (i_k < 0 || i_k >= m_resolution[Parameter::K])
+    if (index[Parameter::K] < 0 || index[Parameter::K] >= m_resolution[Parameter::K])
         return 0.0f;
 
-    if (i_x < 0 || i_x >= m_resolution[Parameter::X] || i_y < 0 || i_y >= m_resolution[Y])
+    if (index[Parameter::X] < 0 || index[Parameter::X] >= m_resolution[Parameter::X] || index[Parameter::Y] < 0 || index[Parameter::Y] >= m_resolution[Y])
         // we need an amplitude for a point outside of the simulation box
-        return ambientAmplitude(idxToPos(i_x, Parameter::X), idxToPos(i_y, Parameter::Y), i_theta, i_k);
+        return ambientAmplitude(idxToPos(index[Parameter::X], Parameter::X), idxToPos(index[Parameter::Y], Parameter::Y), index[Parameter::THETA], index[Parameter::K]);
 
-    return amplitudes(i_x, i_y, i_theta, i_k);
+    return amplitudes(index[Parameter::X], index[Parameter::Y], index[Parameter::THETA], index[Parameter::K]);
 };

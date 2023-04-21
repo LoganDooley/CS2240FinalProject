@@ -3,6 +3,8 @@
 #include "wavelet/environment.h"
 #include <functional>
 
+#include <glm/vec4.hpp>
+
 namespace Math {
     /**
      * @brief Interpolate a function defined on integer coordiantes using cubic interpolation.
@@ -32,5 +34,5 @@ namespace Math {
      * @param domain the domain function that tells if something is inside the domain. f values outside of the domain
      * are undefined, and is not considered in the interpolation.
      */
-    float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float(int,int,int,int)> f, Environment environment);
+    float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float(glm::uvec4)> f, Environment environment);
 }

@@ -50,7 +50,7 @@ namespace Math {
         });
     }
 
-    float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float (int, int, int, int)> f, 
+    float interpolate4D(float x, float y, float theta, float wavenumber, std::function<float (glm::uvec4)> f,
             Environment environment) {
         auto lerp = [](float v, std::function<glm::vec2(int)> f) {
             int iv = v; // should floor it
@@ -59,7 +59,7 @@ namespace Math {
             return (fractional ? f(iv) * fractional : glm::vec2(0)) + (1 - fractional ? f(iv+1) * (1 - fractional) : glm::vec2(0));
         };
         auto g = [&f](int i_x, int i_y, int i_theta, int i_wavenumber) -> glm::vec2 {
-            return glm::vec2(f(i_x, i_y, i_theta, i_wavenumber), 1);
+            return glm::vec2(f(glm::uvec4(i_x, i_y, i_theta, i_wavenumber)), 1);
         };
         // horribly inefficient? just eyeing this it takes 8 evaluations of f, which isn't that bad except for the fact that
         // it's wrapped around in multiple lambdas

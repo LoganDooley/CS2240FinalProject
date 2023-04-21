@@ -20,17 +20,8 @@ class WaveletGrid {
 
         const float gravity = 9.81;
         const float surfaceTension = 72.8 / 1000; // surface tension of water
-    private:
-        std::array<unsigned int,4> m_resolution;
 
-        // important: max is exclusive
-        glm::vec4   m_minParam,
-                    m_maxParam,
-                    m_unitParam;
-        std::unique_ptr<ProfileBuffer> m_profileBuffer;
-        float time = 0;
-
-    public:
+public:
         /**
          * Create a new wavelet grid, with the specified resolution.
          * The first two values in the resolution represents the spacial resolution
@@ -38,19 +29,14 @@ class WaveletGrid {
          * The last two values represents the frequency resolution, in terms of theta and
          * the wavenumber.
          */
-        WaveletGrid(std::array<unsigned int, 4> resolution);
+        WaveletGrid(glm::vec4 minParams, glm::vec4 maxParams, glm::uvec4 resolution);
 
         void takeStep(float dt);
         void heightFieldEvaluation(); // please change parameters to this
 
         float surfaceAtPoint(glm::vec2 pos);
-    private:
-        Amplitude amplitudes;
-        Amplitude amplitudes_nxt;
 
-        GridSettings settings;
-        Environment m_environment;
-
+private:
         float amplitude(std::array<float, 4> index) const;
 
         /**
@@ -175,6 +161,21 @@ class WaveletGrid {
          * @param i_k the wavenumber index.
          * @return float the amplitude at that index, or the ambient amplitude if index is not in the grid.
          */
-        float lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) const;
+        float lookup_amplitude(glm::uvec4 index) const;
+
+
+        glm::uvec4 m_resolution;
+        // important: max is exclusive
+        glm::vec4 m_minParams;
+        glm::vec4 m_maxParams;
+        glm::vec4 m_unitParams;
+        std::unique_ptr<ProfileBuffer> m_profileBuffer;
+        float time = 0;
+
+        Amplitude amplitudes;
+        Amplitude amplitudes_nxt;
+
+        GridSettings settings;
+        Environment m_environment;
 };
 
