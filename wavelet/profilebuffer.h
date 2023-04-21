@@ -9,7 +9,7 @@ class ProfileBuffer
 public:
     ProfileBuffer(){};
     ProfileBuffer(float windSpeed);
-    ~ProfileBuffer();
+    ~ProfileBuffer(){};
 
     void precompute(float t, float k_min, float k_max, int resolution = 4096, int periodicity = 2, int integration_nodes = 100);
 
