@@ -13,7 +13,7 @@ public:
 
     void precompute(float t, float k_min, float k_max, int resolution = 4096, int periodicity = 2, int integration_nodes = 100);
 
-    float operator()(float p) const;
+    float value(float p) const;
 
     float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
 private:

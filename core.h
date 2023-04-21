@@ -3,7 +3,7 @@
 #include <iostream>
 #include <memory>
 #include "camera.h"
-#include "water.h"
+#include "wavelet/wavegeometry.h"
 #include "shaderloader.h"
 
 #include <set>
@@ -24,8 +24,9 @@ public:
 
 private:
     GLuint m_shader;
-    std::unique_ptr<Water> m_water;
+    std::unique_ptr<WaveGeometry> m_waveGeometry;
     std::unique_ptr<Camera> m_camera;
+    std::shared_ptr<WaveletGrid> m_waveletGrid;
 
     bool m_mouseDown = false;
     glm::vec2 m_mousePos = glm::vec2(0, 0);

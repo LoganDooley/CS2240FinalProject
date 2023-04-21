@@ -3,19 +3,19 @@
 #include "debug.h"
 
 Core::Core(int width, int height){
-    m_shader = ShaderLoader::createShaderProgram("Shaders/gerstnerWave.vert", "Shaders/gerstnerWave.frag");
+    m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
     Debug::checkGLError();
     m_camera = std::make_unique<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
     Debug::checkGLError();
-    m_water = std::make_unique<Water>(glm::vec2(5, 5), 100);
+    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(5, 5), 100);
     Debug::checkGLError();
-    m_water->addWave(6, 0.25, glm::vec2(1, 1));
-    m_water->addWave(3.1, 0.25, glm::vec2(1, 0.6));
-    m_water->addWave(1.8, 0.25, glm::vec2(1, 1.13));
     glDisable(GL_CULL_FACE);
     Debug::checkGLError();
     glViewport(0, 0, width, height);
     Debug::checkGLError();
+    m_waveletGrid = std::make_shared<WaveletGrid>(std::array<unsigned int, 4>({100, 100, 8, 4}));
+    m_waveletGrid->takeStep(0);
+    m_waveGeometry->update(m_waveletGrid);
 }
 
 Core::~Core(){
@@ -32,12 +32,10 @@ int Core::draw(){
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
-    m_water->bind();
-    m_water->setWaveUniforms(m_shader);
+    m_waveGeometry->bind();
     m_camera->setCameraUniforms(m_shader);
-    glUniform1f(glGetUniformLocation(m_shader, "t"), float(glfwGetTime()));
-    glDrawArrays(GL_TRIANGLES, 0, m_water->getNumVerts());
-    m_water->unbind();
+    glDrawArrays(GL_TRIANGLES, 0, m_waveGeometry->getNumVerts());
+    m_waveGeometry->unbind();
     glUseProgram(0);
     return 0;
 }

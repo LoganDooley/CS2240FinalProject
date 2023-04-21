@@ -7,6 +7,8 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
+#include <memory>
+
 struct GridSettings {
     float size = 50;
     glm::vec2 k_range = glm::vec2(0.01, 10);
@@ -25,7 +27,7 @@ class WaveletGrid {
         glm::vec4   m_minParam,
                     m_maxParam,
                     m_unitParam;
-        ProfileBuffer m_profileBuffer;
+        std::unique_ptr<ProfileBuffer> m_profileBuffer;
         float time = 0;
 
     public:
@@ -40,6 +42,8 @@ class WaveletGrid {
 
         void takeStep(float dt);
         void heightFieldEvaluation(); // please change parameters to this
+
+        float surfaceAtPoint(glm::vec2 pos);
     private:
         Amplitude amplitudes;
         Amplitude amplitudes_nxt;
@@ -66,7 +70,6 @@ class WaveletGrid {
 
         void advectionStep(float dt); // see section 4.2 of paper
         void diffusionStep(float dt); // see section 4.2 of paper
-        float surfaceAtPoint(glm::vec2 pos) const;
 
         float idxToPos(const unsigned int idx, Parameter p) const;
 

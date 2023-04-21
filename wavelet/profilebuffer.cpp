@@ -8,7 +8,7 @@ ProfileBuffer::ProfileBuffer(float windSpeed):
 
 }
 
-float ProfileBuffer::operator()(float p) const{
+float ProfileBuffer::value(float p) const{
     const int N = m_data.size(); // num entries
     float pi = N * p / m_period; // target "index" (between 2 indices)
     pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)

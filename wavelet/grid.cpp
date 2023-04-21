@@ -17,12 +17,14 @@ WaveletGrid::WaveletGrid(std::array<unsigned int, 4> resolution)
         m_minParam = glm::vec4(-settings.size, -settings.size, 0, settings.k_range[0]);
         m_maxParam = glm::vec4(settings.size, settings.size, tau, settings.k_range[1]);
         m_unitParam = (m_maxParam - m_minParam) / resolutionVec;
+
+        m_profileBuffer = std::make_unique<ProfileBuffer>(5);
 }
 
 void WaveletGrid::takeStep(float dt){
     time += dt;
 
-    m_profileBuffer.precompute(time, m_minParam[Parameter::K], m_maxParam[Parameter::K]);
+    m_profileBuffer->precompute(time, m_minParam[Parameter::K], m_maxParam[Parameter::K]);
 }
 
 float WaveletGrid::angularFrequency(float wavenumber) {
@@ -164,23 +166,19 @@ float WaveletGrid::amplitude(std::array<float, 4> pos) const{
     );
 }
 
-float WaveletGrid::surfaceAtPoint(glm::vec2 pos) const {
+float WaveletGrid::surfaceAtPoint(glm::vec2 pos) {
     float height = 0;
 
+    int DIR_NUM = m_resolution[Parameter::THETA];
     for(int ik = 0; ik < m_resolution[Parameter::K]; ik++){
-        float k = idxToPos(ik, Parameter::K);
+        float da = tau/DIR_NUM;
 
-        int DIR_NUM = m_resolution[Parameter::THETA];
-        int N = 4 * DIR_NUM;
-        float da = 1.f/N;
-        float dx = DIR_NUM * tau / N;
-
-        for(float a = 0; a < 1; a += da) {
-            float angle = a * tau;
+        for(int itheta = 0; itheta < DIR_NUM; itheta++) {
+            float angle = itheta * da * tau;
             glm::vec2 kdir = glm::vec2(cosf(angle), sinf(angle));
             float kdir_x = glm::dot(kdir, pos);
 
-            height += dx * amplitude({pos.x, pos.y, angle, k}) * m_profileBuffer(kdir_x);
+            height += da * lookup_interpolated_amplitude(pos.x, pos.y, angle, ik) * m_profileBuffer->value(kdir_x);
         }
     }
 
