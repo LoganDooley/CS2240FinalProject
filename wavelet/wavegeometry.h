@@ -9,7 +9,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "grid.h"
+#include "waveletgrid.h"
 #include <memory>
 
 struct Triangle{

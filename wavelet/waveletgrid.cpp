@@ -1,4 +1,4 @@
-#include "grid.h"
+#include "waveletgrid.h"
 #include "wavelet/amplitude.h"
 #include <assert.h>
 #include <iterator>
