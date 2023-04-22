@@ -181,7 +181,10 @@ float WaveletGrid::surfaceAtPoint(glm::vec2 pos) {
             float kdir_x = glm::dot(kdir, pos);
 
             //height += da * lookup_interpolated_amplitude(pos.x, pos.y, angle, ik) * m_profileBuffer->value(kdir_x);
-            height += da * 0.01 * m_profileBuffer->value(kdir_x);
+            //height += da * 0.01 * m_profileBuffer->value(kdir_x);
+            if(ik == 0 && itheta == 0){
+                height += da * m_profileBuffer->value(kdir_x);
+            }
             //std::cout<<"Profile Buffer: "<<m_profileBuffer->value(kdir_x)<<", amplitude: "<<lookup_interpolated_amplitude(pos.x, pos.y, angle, ik)<<std::endl;
         }
     }

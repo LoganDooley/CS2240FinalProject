@@ -10,17 +10,22 @@ ProfileBuffer::ProfileBuffer(float windSpeed):
 }
 
 float ProfileBuffer::value(float p) const{
+    p = abs(p);
     const int N = m_data.size(); // num entries
     float pi = N * p / m_period; // target "index" (between 2 indices)
     pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)
 
-    pi = fmaxf(0.5f, pi);
+    //pi = fmaxf(0.5f, pi);
+    if(pi < 0){
+        pi += N;
+    }
     // Lerp
     int pLower = int(floor(pi));
+    int pUpper = fmodf(pLower + 1, N);
     float wpUpper = pi - pLower; // weight towards ceiling index of pi
     //std::cout<<"wUpper: "<<wpUpper<<" wLower: "<<1 - wpUpper<<" value: "<<wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower]<<std::endl;
     //std::cout<<"data size: "<<m_data.size()<<", pLower: "<<pLower<<std::endl;
-    return wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower];
+    return wpUpper * m_data[pUpper] + (1-wpUpper) * m_data[pLower];
 }
 
 float ProfileBuffer::w(float k) const{

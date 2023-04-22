@@ -7,5 +7,5 @@ out vec4 fragColor;
 void main() {
     float value = abs(worldSpace_pos.y);
     value = max(min(value, 1), 0);
-    fragColor = vec4(vec3(value), 1);
+    fragColor = vec4(vec3(0.5 + 0.5 * value), 1);
 }
