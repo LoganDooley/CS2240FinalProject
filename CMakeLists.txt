@@ -35,7 +35,6 @@ add_executable(${PROJECT_NAME}
     window.cpp
     core.cpp
     camera.cpp
-    water.cpp
     cubemap.cpp
     wavelet/waveletgrid.h
     wavelet/amplitude.h
@@ -49,7 +48,6 @@ add_executable(${PROJECT_NAME}
     core.h
     shaderloader.h
     camera.h
-    water.h
     debug.h
     cubemap.h
     wavelet/waveletgrid.cpp

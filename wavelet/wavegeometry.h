@@ -26,7 +26,7 @@ struct Triangle{
 
 struct Tile{
     Tile(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3):
-        t1(Triangle(v0, v1, v2)), t2(Triangle(v2, v3, v0))
+        t1(Triangle(v1, v0, v2)), t2(Triangle(v3, v2, v0))
     {
 
     }

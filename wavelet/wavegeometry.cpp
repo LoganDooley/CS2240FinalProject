@@ -1,6 +1,5 @@
 #include "wavegeometry.h"
 
-#include "water.h"
 #include <iostream>
 #include "debug.h"
 #include <string>
@@ -69,6 +68,7 @@ void WaveGeometry::update(std::shared_ptr<WaveletGrid> waveletGrid){
             glm::vec3 v4 = anchor + zoffset;
 
             v1.y = waveletGrid->surfaceAtPoint(glm::vec2(v1.x, v1.z));
+            //std::cout<<v1.y<<std::endl;
             v2.y = waveletGrid->surfaceAtPoint(glm::vec2(v2.x, v2.z));
             v3.y = waveletGrid->surfaceAtPoint(glm::vec2(v3.x, v3.z));
             v4.y = waveletGrid->surfaceAtPoint(glm::vec2(v4.x, v4.z));

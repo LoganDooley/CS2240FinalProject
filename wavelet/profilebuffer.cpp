@@ -1,6 +1,7 @@
 #include "profilebuffer.h"
 
 #include <math.h>
+#include <iostream>
 
 ProfileBuffer::ProfileBuffer(float windSpeed):
     m_windSpeed(windSpeed)
@@ -13,9 +14,12 @@ float ProfileBuffer::value(float p) const{
     float pi = N * p / m_period; // target "index" (between 2 indices)
     pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)
 
+    pi = fmaxf(0.5f, pi);
     // Lerp
     int pLower = int(floor(pi));
     float wpUpper = pi - pLower; // weight towards ceiling index of pi
+    //std::cout<<"wUpper: "<<wpUpper<<" wLower: "<<1 - wpUpper<<" value: "<<wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower]<<std::endl;
+    //std::cout<<"data size: "<<m_data.size()<<", pLower: "<<pLower<<std::endl;
     return wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower];
 }
 
@@ -42,9 +46,10 @@ float ProfileBuffer::psiBar(float p, float t, int integration_nodes, float k_min
     float result = 0;
     for(int i = 0; i<integration_nodes; i++) {
         result += psiBarIntegrand(k, p, t) * dk;
+        //std::cout<<"psibarIntegrand: "<<psiBarIntegrand(k, p, t)<<" dk: "<<dk<<std::endl;
         k += dk;
     }
-
+    //std::cout<<"result: "<<result<<std::endl;
     return result;
 }
 
@@ -56,6 +61,6 @@ void ProfileBuffer::precompute(float t, float k_min, float k_max, int resolution
         constexpr float tau = 6.28318530718;
         float p   = (i * m_period) / resolution;
 
-        m_data[i] = psiBar(p, t, integration_nodes, k_min, k_max);;
+        m_data[i] = psiBar(p, t, integration_nodes, k_min, k_max);
     }
 }

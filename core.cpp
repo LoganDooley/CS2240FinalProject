@@ -9,11 +9,11 @@ Core::Core(int width, int height){
     Debug::checkGLError();
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(5, 5), 100);
     Debug::checkGLError();
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     Debug::checkGLError();
     glViewport(0, 0, width, height);
     Debug::checkGLError();
-    m_waveletGrid = std::make_shared<WaveletGrid>(std::array<unsigned int, 4>({100, 100, 8, 4}));
+    m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 5), glm::uvec4(100, 100, 8, 4));
     m_waveletGrid->takeStep(0);
     m_waveGeometry->update(m_waveletGrid);
 }
@@ -35,6 +35,7 @@ int Core::draw(){
     m_waveGeometry->bind();
     m_camera->setCameraUniforms(m_shader);
     glDrawArrays(GL_TRIANGLES, 0, m_waveGeometry->getNumVerts());
+    Debug::checkGLError();
     m_waveGeometry->unbind();
     glUseProgram(0);
     return 0;

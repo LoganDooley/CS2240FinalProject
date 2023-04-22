@@ -16,12 +16,12 @@ struct GridSettings {
 };
 
 class WaveletGrid {
-        constexpr static float tau = 6.28318530718f;
-
         const float gravity = 9.81;
         const float surfaceTension = 72.8 / 1000; // surface tension of water
 
-public:
+    public:
+        constexpr static float tau = 6.28318530718f;
+
         /**
          * Create a new wavelet grid, with the specified resolution.
          * The first two values in the resolution represents the spacial resolution
@@ -29,18 +29,18 @@ public:
          * The last two values represents the frequency resolution, in terms of theta and
          * the wavenumber.
          */
-        WaveletGrid(glm::vec4 minParams, glm::vec4 maxParams, glm::uvec4 resolution);
+        WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 resolution);
 
         void takeStep(float dt);
         void heightFieldEvaluation(); // please change parameters to this
 
         float surfaceAtPoint(glm::vec2 pos);
 
-private:
+    private:
         float amplitude(std::array<float, 4> index) const;
 
         /**
-         * Obtains a position, in spacial x frequency space, with the specified 
+         * Obtains a position, in spacial x frequency space, with the specified
          * table index.
          *
          * @param index the specified index.
@@ -118,7 +118,7 @@ private:
         glm::vec4 posToIdx(glm::vec4 pos4) const;
 
         /**
-         * @brief Obtain the default ambient amplitude, used as boundary conditions for 
+         * @brief Obtain the default ambient amplitude, used as boundary conditions for
          * the amplitude table calculations
          *
          * @param x the x position.
@@ -142,7 +142,7 @@ private:
 
         /**
          * @brief Obtain an interpolated amplitude at a non-grid position.
-         * 
+         *
          * @param x the x coordinate.
          * @param y the y coordinate.
          * @param i_theta the theta index.
@@ -161,14 +161,16 @@ private:
          * @param i_k the wavenumber index.
          * @return float the amplitude at that index, or the ambient amplitude if index is not in the grid.
          */
-        float lookup_amplitude(glm::uvec4 index) const;
+        float lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) const;
 
 
         glm::uvec4 m_resolution;
+
         // important: max is exclusive
-        glm::vec4 m_minParams;
-        glm::vec4 m_maxParams;
-        glm::vec4 m_unitParams;
+        glm::vec4 m_minParam;
+        glm::vec4 m_maxParam;
+        glm::vec4 m_unitParam;
+
         std::unique_ptr<ProfileBuffer> m_profileBuffer;
         float time = 0;
 
@@ -178,4 +180,3 @@ private:
         GridSettings settings;
         Environment m_environment;
 };
-
