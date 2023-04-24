@@ -10,19 +10,28 @@ ProfileBuffer::ProfileBuffer(float windSpeed):
 }
 
 float ProfileBuffer::value(float p) const{
-    p = abs(p);
     const int N = m_data.size(); // num entries
     float pi = N * p / m_period; // target "index" (between 2 indices)
-    pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)
+    //pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)
 
     //pi = fmaxf(0.5f, pi);
-    if(pi < 0){
-        pi += N;
-    }
+    //if(pi < 0){
+        //pi += N;
+    //}
     // Lerp
     int pLower = int(floor(pi));
-    int pUpper = fmodf(pLower + 1, N);
     float wpUpper = pi - pLower; // weight towards ceiling index of pi
+    pLower %= N;
+    if(pLower < 0){
+        pLower += N;
+    }
+    int pUpper = int(ceil(pi));
+    pUpper %= N;
+    if(pUpper < 0){
+        pUpper += N;
+    }
+
+    //int pUpper = fmodf(pLower + 1, N);
     //std::cout<<"wUpper: "<<wpUpper<<" wLower: "<<1 - wpUpper<<" value: "<<wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower]<<std::endl;
     //std::cout<<"data size: "<<m_data.size()<<", pLower: "<<pLower<<std::endl;
     return wpUpper * m_data[pUpper] + (1-wpUpper) * m_data[pLower];
@@ -41,7 +50,9 @@ float ProfileBuffer::psi(float k) const {
 }
 
 float ProfileBuffer::psiBarIntegrand(float k, float p, float t){
-    return psi(k) * cosf(k * p - w(k) * t) * pow(2, k);
+    float waveLength = pow(2, k);
+    float waveNumber = 6.28318530718 / waveLength;
+    return psi(k) * cosf(waveNumber * p - w(waveNumber) * t) * waveLength;
 }
 
 // Numerically integrate equation 21 with midpoint rectangle method
