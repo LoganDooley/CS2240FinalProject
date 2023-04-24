@@ -295,3 +295,11 @@ void WaveletGrid::precomputeProfileBuffers(){
         m_profileBuffers[ik]->precompute(time, mink, maxk);
     }
 }
+
+float WaveletGrid::k(float zeta){
+    return powf(2, zeta);
+}
+
+float WaveletGrid::zeta(float k){
+    return log2f(k);
+}

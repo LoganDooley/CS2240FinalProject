@@ -166,6 +166,9 @@ class WaveletGrid {
 
         void precomputeProfileBuffers();
 
+        float k(float zeta);
+        float zeta(float k);
+
         glm::uvec4 m_resolution;
 
         // important: max is exclusive
