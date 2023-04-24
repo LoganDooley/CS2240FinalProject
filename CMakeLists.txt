@@ -36,6 +36,7 @@ add_executable(${PROJECT_NAME}
     core.cpp
     camera.cpp
     cubemap.cpp
+    fullscreenquad.h
     wavelet/waveletgrid.h
     wavelet/amplitude.h
     wavelet/spectrum.h
@@ -50,6 +51,7 @@ add_executable(${PROJECT_NAME}
     camera.h
     debug.h
     cubemap.h
+    fullscreenquad.cpp
     wavelet/waveletgrid.cpp
     wavelet/amplitude.cpp
     wavelet/spectrum.cpp

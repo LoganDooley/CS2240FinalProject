@@ -2,11 +2,27 @@
 
 #include <math.h>
 #include <iostream>
+#include "debug.h"
 
-ProfileBuffer::ProfileBuffer(float windSpeed):
-    m_windSpeed(windSpeed)
+ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float z_min, int z_resolution, float unit_z):
+    m_windSpeed(windSpeed),
+    m_zResolution(z_resolution),
+    m_pResolution(p_resolution),
+    m_minZ(z_min),
+    m_unitZ(unit_z)
 {
+    m_pbShader = ShaderLoader::createShaderProgram("Shaders/precomputeProfileBuffers.vert", "Shaders/precomputeProfileBuffers.frag");
+    Debug::checkGLError();
 
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, p_resolution, z_resolution, 0, GL_RED, GL_FLOAT, nullptr);
+    Debug::checkGLError();
 }
 
 float ProfileBuffer::value(float p) const{
@@ -38,7 +54,7 @@ float ProfileBuffer::value(float p) const{
 }
 
 float ProfileBuffer::w(float k){
-    return 1;
+    //return 1;
     constexpr float g = 9.81;
     return sqrt(k * g);
 }
@@ -82,4 +98,28 @@ void ProfileBuffer::precompute(float t, float k_min, float k_max, int resolution
 
         m_data[i] = psiBar(p, t, integration_nodes, k_min, k_max);
     }
+}
+
+float ProfileBuffer::cubicBump(float x) const{
+    if (abs(x) >= 1){
+      return 0.0f;
+    }
+    return x * x * (2 * abs(x) - 3) + 1;
+}
+
+// GPU IMPLEMENTATION:
+
+void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_nodes){
+    glUseProgram(m_pbShader);
+    glUniform1f(glGetUniformLocation(m_pbShader, "t"), t);
+    GLfloat z[m_zResolution];
+    for(int i = 0; i < m_zResolution; i++){
+        z[i] = m_minZ + i * m_unitZ;
+    }
+    glUniform1fv(glGetUniformLocation(m_pbShader, "z"), m_zResolution, z);
+    glUniform1i(glGetUniformLocation(m_pbShader, "resolution"), m_pResolution);
+    glUniform1i(glGetUniformLocation(m_pbShader, "periodicity"), periodicity);
+    glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), integration_nodes);
+    glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
+    glUniform1f(glGetUniformLocation(m_pbShader, "unitZ"), m_unitZ);
 }

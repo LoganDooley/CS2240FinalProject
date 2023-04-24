@@ -4,11 +4,13 @@
 #include <vector>
 #include <math.h>
 
+#include "shaderloader.h"
+
 class ProfileBuffer
 {
 public:
     ProfileBuffer(){};
-    ProfileBuffer(float windSpeed);
+    ProfileBuffer(float windSpeed, int p_resolution, float z_min, int z_resolution, float unit_z);
     ~ProfileBuffer(){};
 
     void precompute(float t, float k_min, float k_max, int resolution = 4096, int periodicity = 2, int integration_nodes = 100);
@@ -22,6 +24,8 @@ public:
     float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
 private:
     float psiBarIntegrand(float k, float p, float t);
+
+    float cubicBump(float x) const;
 
     template <typename Function>
     auto integrate(int integration_nodes, float x_min, float x_max, Function const &function){
@@ -40,4 +44,17 @@ private:
     float m_windSpeed = 1;
     float m_period = 0;
     std::vector<float> m_data = {};
+
+// GPU Implementation
+
+public:
+    void precomputeGPU(float t, int periodicity = 2, int integration_nodes = 100);
+
+private:
+    GLuint m_pbShader;
+    GLuint m_texture;
+    int m_zResolution;
+    int m_pResolution;
+    float m_minZ;
+    float m_unitZ;
 };
