@@ -1,4 +1,5 @@
 #include "wavelet/environment.h"
+#include <cfloat>
 
 bool Environment::inDomain(glm::vec2 pos) const { return levelSet(pos) >= 0; }
 
@@ -19,6 +20,6 @@ glm::vec2 Environment::levelSetGradient(glm::vec2 pos) const {
   } else if (pos.x == 1 || pos.x == -1 || pos.y == 1 || pos.y == -1) {
     return glm::vec2(FLT_MAX, FLT_MAX);
   } else {
-    return -1;
+    return glm::vec2(-1, -1);
   }
 }

@@ -15,12 +15,12 @@ public:
 
     float value(float p) const;
 
-    float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
-private:
+    static float w(float k);
+
     float psi(float k) const;
 
-    float w(float k) const;
-
+    float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
+private:
     float psiBarIntegrand(float k, float p, float t);
 
     template <typename Function>

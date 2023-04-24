@@ -28,7 +28,8 @@ float ProfileBuffer::value(float p) const{
     return wpUpper * m_data[pUpper] + (1-wpUpper) * m_data[pLower];
 }
 
-float ProfileBuffer::w(float k) const{
+float ProfileBuffer::w(float k){
+    return 1;
     constexpr float g = 9.81;
     return sqrt(k * g);
 }
@@ -40,7 +41,7 @@ float ProfileBuffer::psi(float k) const {
 }
 
 float ProfileBuffer::psiBarIntegrand(float k, float p, float t){
-    return psi(k) * cosf(k * p - w(k) * t) * k;
+    return psi(k) * cosf(k * p - w(k) * t) * pow(2, k);
 }
 
 // Numerically integrate equation 21 with midpoint rectangle method
@@ -55,12 +56,14 @@ float ProfileBuffer::psiBar(float p, float t, int integration_nodes, float k_min
         k += dk;
     }
     //std::cout<<"result: "<<result<<std::endl;
+    //std::cout<<"p = "<<p<<" result = "<<result<<std::endl;
     return result;
 }
 
 void ProfileBuffer::precompute(float t, float k_min, float k_max, int resolution, int periodicity, int integration_nodes){
     m_data.resize(resolution);
     m_period = periodicity * pow(2, k_max);
+    //std::cout<<m_period<<std::endl;
 
     for(int i = 0; i<resolution; i++){
         constexpr float tau = 6.28318530718;

@@ -2,7 +2,8 @@
 
 #include "amplitude.h"
 #include "profilebuffer.h"
-#include "wavelet/environment.h"
+#include "environment.h"
+#include "spectrum.h"
 
 #include <cmath>
 #include <glm/glm.hpp>
@@ -163,6 +164,7 @@ class WaveletGrid {
          */
         float lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) const;
 
+        void precomputeProfileBuffers();
 
         glm::uvec4 m_resolution;
 
@@ -171,7 +173,7 @@ class WaveletGrid {
         glm::vec4 m_maxParam;
         glm::vec4 m_unitParam;
 
-        std::unique_ptr<ProfileBuffer> m_profileBuffer;
+        std::vector<std::unique_ptr<ProfileBuffer>> m_profileBuffers;
         float time = 0;
 
         Amplitude amplitudes;
@@ -179,4 +181,6 @@ class WaveletGrid {
 
         GridSettings settings;
         Environment m_environment;
+
+        std::shared_ptr<Spectrum> m_spectrum;
 };

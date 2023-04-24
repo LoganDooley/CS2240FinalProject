@@ -5,18 +5,20 @@
 Core::Core(int width, int height){
     m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
     Debug::checkGLError();
-    m_camera = std::make_unique<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 20.f);
+    m_camera = std::make_unique<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
     Debug::checkGLError();
-    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(5, 5), 100);
+    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(50, 50), 100);
     Debug::checkGLError();
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     Debug::checkGLError();
     glViewport(0, 0, width, height);
     Debug::checkGLError();
-    m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 5), glm::uvec4(100, 100, 8, 4));
+    m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 2), glm::uvec4(100, 100, 16, 4));
     m_waveletGrid->takeStep(0);
     m_waveGeometry->update(m_waveletGrid);
+
+    std::cout<<-15 % 8<<std::endl;
 }
 
 Core::~Core(){
@@ -25,6 +27,8 @@ Core::~Core(){
 
 int Core::update(float seconds){
     m_camera->move(m_keysDown, seconds);
+    m_waveletGrid->takeStep(seconds);
+    m_waveGeometry->update(m_waveletGrid);
 
     return 0;
 }
