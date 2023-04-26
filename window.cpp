@@ -105,6 +105,7 @@ int Window::loop(){
     {
         glfwPollEvents();
         double current = glfwGetTime();
+        float dt = current - previous;
         int updateResult = m_core->update(current - previous);
         previous = current;
         if(updateResult != 0){
@@ -121,6 +122,8 @@ int Window::loop(){
         ImGui::NewFrame();
         // render your GUI
         ImGui::Begin("Editor Window");
+        std::string fps = std::string("FPS: ")+std::to_string(1/dt);
+        ImGui::Text(fps.c_str());
 
         const char* items[] = { "COMBO", "BOX", "SUPREMACY" };
         static const char* current_item = NULL;

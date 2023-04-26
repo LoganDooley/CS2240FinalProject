@@ -11,6 +11,7 @@ Core::Core(int width, int height){
     Debug::checkGLError();
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(50, 50), 100);
     Debug::checkGLError();
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 1, 4, 1);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     Debug::checkGLError();
@@ -19,8 +20,9 @@ Core::Core(int width, int height){
     m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 2), glm::uvec4(100, 100, 16, 4));
     m_waveletGrid->takeStep(0);
     m_waveGeometry->update(m_waveletGrid);
-
-    std::cout<<-15 % 8<<std::endl;
+    m_fullscreenQuad = std::make_shared<FullscreenQuad>();
+    m_fullscreenQuad->bind();
+    m_profileBuffer->precomputeGPU(0, 2, 100);
 }
 
 Core::~Core(){
@@ -28,16 +30,23 @@ Core::~Core(){
 }
 
 int Core::update(float seconds){
+    /*
     m_camera->move(m_keysDown, seconds);
     if (timeSinceLastUpdate += seconds >= 1.0f/FPS) {
         m_waveletGrid->takeStep(seconds);
         m_waveGeometry->update(m_waveletGrid);
         timeSinceLastUpdate = 0;
     }
+    */
+    m_profileBuffer->precomputeGPU(glfwGetTime(), 2, 100);
     return 0;
 }
 
 int Core::draw(){
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0, 0, 0, 1);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    /*
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_shader);
@@ -47,6 +56,7 @@ int Core::draw(){
     Debug::checkGLError();
     m_waveGeometry->unbind();
     glUseProgram(0);
+    */
     return 0;
 }
 

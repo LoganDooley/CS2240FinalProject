@@ -49,10 +49,14 @@ private:
 
 public:
     void precomputeGPU(float t, int periodicity = 2, int integration_nodes = 100);
+    std::vector<float> getPeriods();
+    void bindProfilebufferTexture();
 
 private:
     GLuint m_pbShader;
     GLuint m_texture;
+    GLuint m_fbo;
+    GLuint m_rbo;
     int m_zResolution;
     int m_pResolution;
     float m_minZ;

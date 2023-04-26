@@ -79,7 +79,11 @@ public:
 
     int getNumVerts();
 
+    void draw(std::shared_ptr<ProfileBuffer> profileBuffer);
+
 private:
+    GLuint m_heightShader;
+
     unsigned int m_resolution;
     glm::vec2 m_size;
 

@@ -7,6 +7,9 @@
 WaveGeometry::WaveGeometry(glm::vec2 size, unsigned int resolution):
     m_size(size), m_resolution(resolution)
 {
+    m_heightShader = ShaderLoader::createShaderProgram("Shaders/heightEval.vert", "Shaders/heightEval.frag");
+    Debug::checkGLError();
+
     std::vector<float> data;
 
     glm::vec3 anchor = glm::vec3(-size.x/2, 0, -size.y/2);
@@ -84,4 +87,17 @@ void WaveGeometry::update(std::shared_ptr<WaveletGrid> waveletGrid){
     glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), data.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+}
+
+void WaveGeometry::draw(std::shared_ptr<ProfileBuffer> profileBuffer){
+    glUseProgram(m_heightShader);
+    glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
+    std::vector<float> periods = profileBuffer->getPeriods();
+    glUniform1fv(glGetUniformLocation(m_heightShader, "periods"), periods.size(), periods.data());
+    glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
+    glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
+    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 8);
+    glUniform1i(glGetUniformLocation(m_heightShader, "zResolution"), 4);
+    glViewport(0, 0, m_resolution, m_resolution);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }

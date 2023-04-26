@@ -23,6 +23,16 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float z_min, int
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, p_resolution, z_resolution, 0, GL_RED, GL_FLOAT, nullptr);
     Debug::checkGLError();
+
+    glGenFramebuffers(1, &m_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
+    glGenRenderbuffers(1, &m_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, p_resolution, z_resolution);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 float ProfileBuffer::value(float p) const{
@@ -110,6 +120,8 @@ float ProfileBuffer::cubicBump(float x) const{
 // GPU IMPLEMENTATION:
 
 void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_nodes){
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_pbShader);
     glUniform1f(glGetUniformLocation(m_pbShader, "t"), t);
     GLfloat z[m_zResolution];
@@ -122,4 +134,21 @@ void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_node
     glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), integration_nodes);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
     glUniform1f(glGetUniformLocation(m_pbShader, "unitZ"), m_unitZ);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glViewport(0, 0, m_pResolution, m_zResolution);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+std::vector<float> ProfileBuffer::getPeriods(){
+    std::vector<float> periods;
+    for(int iz = 0; iz<m_zResolution; iz++){
+        float z = m_minZ + iz * m_unitZ;
+        periods.push_back(2 * pow(2, z + 0.5 * m_unitZ));
+    }
+    return periods;
+}
+
+void ProfileBuffer::bindProfilebufferTexture(){
+    glBindTexture(GL_TEXTURE_2D, m_texture);
 }

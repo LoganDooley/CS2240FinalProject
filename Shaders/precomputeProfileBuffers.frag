@@ -1,6 +1,8 @@
 #version 330 core
 
-layout (location = 0) out float value;
+//layout (location = 0) out float value;
+
+out vec4 fragColor;
 
 uniform float t;
 uniform float z[8];
@@ -11,6 +13,7 @@ uniform float windSpeed;
 uniform float unitZ;
 
 float w(float k){
+    return 1;
     return sqrt(k * 9.81);
 }
 
@@ -49,5 +52,7 @@ void main() {
     float period = periodicity * pow(2, z_max);
     float p = (ip * period) / resolution;
 
-    value = psiBar(p, integration_nodes, z_min, z_max);
+//value = psiBar(p, integration_nodes, z_min, z_max);
+
+    fragColor = vec4(vec3(10 * abs(psiBar(p, integration_nodes, z_min, z_max))), 1);
 }

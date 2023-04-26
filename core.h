@@ -30,6 +30,7 @@ private:
     std::unique_ptr<WaveGeometry> m_waveGeometry;
     std::unique_ptr<Camera> m_camera;
     std::shared_ptr<WaveletGrid> m_waveletGrid;
+    std::shared_ptr<ProfileBuffer> m_profileBuffer;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;
 
     const float FPS = 0.5f;
