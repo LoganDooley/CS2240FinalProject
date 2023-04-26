@@ -51,9 +51,11 @@ public:
     void precomputeGPU(float t, int periodicity = 2, int integration_nodes = 100);
     std::vector<float> getPeriods();
     void bindProfilebufferTexture();
+    void debugDraw();
 
 private:
     GLuint m_pbShader;
+    GLuint m_textureShader;
     GLuint m_texture;
     GLuint m_fbo;
     GLuint m_rbo;

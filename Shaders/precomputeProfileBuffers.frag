@@ -2,7 +2,7 @@
 
 //layout (location = 0) out float value;
 
-out vec4 fragColor;
+out float fragColor;
 
 uniform float t;
 uniform float z[8] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -55,6 +55,6 @@ void main() {
     float p = (ip * period) / resolution;
 
 //value = psiBar(p, integration_nodes, z_min, z_max);
-
-    fragColor = vec4(vec3(10 * abs(psiBar(p, integration_nodes, z_min, z_max))), 1);
+    fragColor = 10 * abs(psiBar(p, integration_nodes, z_min, z_max));
+    //fragColor = vec4(vec3(10 * abs(psiBar(p, integration_nodes, z_min, z_max))), 1);
 }

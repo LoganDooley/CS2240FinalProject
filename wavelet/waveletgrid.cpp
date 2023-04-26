@@ -26,7 +26,7 @@ WaveletGrid::WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 reso
         amplitudes.resize(resolution);
         amplitudes_nxt.resize(resolution);
         precomputeProfileBuffers();
-
+        m_environment = Environment("100x100box.png", .9);
         //m_profileBuffer = std::make_unique<ProfileBuffer>(5);
 }
 
