@@ -39,6 +39,7 @@ int Core::update(float seconds){
     }
     */
     m_profileBuffer->precomputeGPU(glfwGetTime(), 2, 100);
+    m_waveGeometry->draw(m_profileBuffer);
     return 0;
 }
 

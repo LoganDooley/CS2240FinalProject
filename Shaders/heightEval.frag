@@ -39,4 +39,6 @@ void main() {
 
     float result = (3.14159/2 + atan(height))/3.14159;
     fragColor = vec4(vec3(result), 1);
+    fragColor = vec4(pos, 1, 1);
+    fragColor = vec4(vec3(pbValue(1, 1)), 1);
 }

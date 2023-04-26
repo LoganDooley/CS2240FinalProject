@@ -13,6 +13,8 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float z_min, int
 {
     m_pbShader = ShaderLoader::createShaderProgram("Shaders/precomputeProfileBuffers.vert", "Shaders/precomputeProfileBuffers.frag");
     Debug::checkGLError();
+    m_pbShader = ShaderLoader::createShaderProgram("Shaders/texture.vert", "Shaders/texture.frag");
+    Debug::checkGLError();
 
     glGenTextures(1, &m_texture);
     glBindTexture(GL_TEXTURE_2D, m_texture);
@@ -134,10 +136,10 @@ void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_node
     glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), integration_nodes);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
     glUniform1f(glGetUniformLocation(m_pbShader, "unitZ"), m_unitZ);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glViewport(0, 0, m_pResolution, m_zResolution);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    glViewport(0, 0, m_pResolution, m_zResolution);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 std::vector<float> ProfileBuffer::getPeriods(){
