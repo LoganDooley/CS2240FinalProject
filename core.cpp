@@ -29,9 +29,10 @@ Core::~Core(){
 
 int Core::update(float seconds){
     m_camera->move(m_keysDown, seconds);
-    m_waveletGrid->takeStep(seconds);
-    m_waveGeometry->update(m_waveletGrid);
-
+    if (timeSinceLastUpdate += seconds >= 1.0f/FPS) {
+        m_waveletGrid->takeStep(seconds);
+        m_waveGeometry->update(m_waveletGrid);
+    }
     return 0;
 }
 

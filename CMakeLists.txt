@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.0)
 # Sets project name
 project(SmileWave LANGUAGES CXX)
 
+find_package(OpenMP)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -89,6 +91,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glad
     glm
 )
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 #file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
