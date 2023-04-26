@@ -21,9 +21,12 @@ WaveletGrid::WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 reso
         m_unitParam = (m_maxParam - m_minParam) / resolutionVec;
 
         for(int ik = 0; ik < m_resolution[Parameter::K]; ik++)
-            m_profileBuffers.push_back(std::make_unique<ProfileBuffer>(0, 
+            m_profileBuffers.push_back(std::make_unique<ProfileBuffer>(5, 
                         m_unitParam[Parameter::X], settings.k_range.x, settings.k_range.y, m_unitParam[Parameter::K]));
+        amplitudes.resize(resolution);
+        amplitudes_nxt.resize(resolution);
         precomputeProfileBuffers();
+
         //m_profileBuffer = std::make_unique<ProfileBuffer>(5);
 }
 
@@ -65,7 +68,7 @@ glm::vec2 WaveletGrid::getWaveDirection(glm::vec4 pos) const {
 void WaveletGrid::advectionStep(float deltaTime) {
     /* std::cout << "ADVECTION" << std::endl; */
 
-#pragma omp parallel for collapse(2)
+/* #pragma omp parallel for collapse(2) */
     for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++) {
         for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
             std::array<unsigned int, 2> i_xy = {i_x, i_y};
@@ -98,11 +101,11 @@ void WaveletGrid::diffusionStep(float deltaTime) {
     float spacialResolution = m_unitParam[Parameter::X];
     /* std::cout << "DIFFUSION" << std::endl; */
 
-#pragma omp parallel for collapse(2)
+/* #pragma omp parallel for collapse(2) */
     for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
     for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
 
-        std::cout << omp_get_num_threads() << std::endl;
+        /* std::cout << omp_get_num_threads() << std::endl; */
 
         std::array<unsigned int, 2> i_xy = {i_x, i_y};
         float distanceToBoundary = m_environment.levelSet(getPositionAtIndex(i_xy));

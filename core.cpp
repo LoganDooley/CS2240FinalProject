@@ -32,6 +32,7 @@ int Core::update(float seconds){
     if (timeSinceLastUpdate += seconds >= 1.0f/FPS) {
         m_waveletGrid->takeStep(seconds);
         m_waveGeometry->update(m_waveletGrid);
+        timeSinceLastUpdate = 0;
     }
     return 0;
 }

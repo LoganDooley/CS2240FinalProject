@@ -37,6 +37,8 @@ Environment::Environment(std::string filename, float zBoundary) {
 bool Environment::inDomain(glm::vec2 pos) const { return levelSet(pos) >= 0; }
 
 float Environment::levelSet(glm::vec2 pos) const {
+    if (pos.x < 0 || pos.x >= heights.size() || pos.y < 0 || pos.y >= heights[0].size())
+        return -1;
   float zVal = heights[(int)((pos.x))][(int)((pos.y))];
   if (zVal < zBoundary) {
     return zBoundary - zVal;

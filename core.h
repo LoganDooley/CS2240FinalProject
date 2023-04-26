@@ -32,7 +32,7 @@ private:
     std::shared_ptr<WaveletGrid> m_waveletGrid;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;
 
-    const float FPS = 0.1f;
+    const float FPS = 0.5f;
     float timeSinceLastUpdate;
     bool m_mouseDown = false;
     glm::vec2 m_mousePos = glm::vec2(0, 0);
