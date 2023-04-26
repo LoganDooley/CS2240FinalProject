@@ -5,7 +5,7 @@
 out vec4 fragColor;
 
 uniform float t;
-uniform float z[8];
+uniform float z[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 uniform int resolution = 4096;
 uniform int periodicity = 2;
 uniform int integration_nodes = 100;
@@ -13,19 +13,21 @@ uniform float windSpeed;
 uniform float unitZ;
 
 float w(float k){
-    return 1;
+    /* return 1; */
     return sqrt(k * 9.81);
 }
 
 float psi(float z){
     float A = pow(1.1, 1.5 * z);
     float B = exp(-1.8038897788076411 * pow(4, z) / pow(windSpeed, 4));
+
     return 0.139098 * sqrt(A * B);
 }
 
 float psiBarIntegrand(float z, float p){
     float waveLength = pow(2, z);
     float waveNumber = 6.28318530718 / waveLength;
+
     return psi(z) * cos(waveNumber * p - w(waveNumber) * t) * waveLength;
 }
 

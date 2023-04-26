@@ -131,7 +131,7 @@ void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_node
     glUniform1fv(glGetUniformLocation(m_pbShader, "z"), m_zResolution, z);
     glUniform1i(glGetUniformLocation(m_pbShader, "resolution"), m_pResolution);
     glUniform1i(glGetUniformLocation(m_pbShader, "periodicity"), periodicity);
-    glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), integration_nodes);
+    glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), 1);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
     glUniform1f(glGetUniformLocation(m_pbShader, "unitZ"), m_unitZ);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
