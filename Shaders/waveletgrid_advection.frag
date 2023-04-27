@@ -13,8 +13,6 @@ uniform float deltaTime;
 uniform int resolutionTheta = 8;
 uniform int resolutionPos = 4096;
 
-uniform int zetaIndex;
-
 uniform vec4 minParam;
 uniform vec4 maxParam;
 uniform vec4 unitParam;
