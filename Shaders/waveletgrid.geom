@@ -1,9 +1,9 @@
-#version 330 core
+#version 400 core
+
+layout (triangles, invocations = 8) in; 
+layout (triangle_strip, max_vertices = 3) out;
 
 const int THETA_RESOLUTION = 8;
-
-layout (triangles, invocations = THETA_RESOLUTION) in;
-layout (triangles, max_vertices = 3) out;
 
 in VS_OUT {
     vec2 uv;

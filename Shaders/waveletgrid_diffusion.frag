@@ -1,4 +1,5 @@
 #version 330 core
+#extension GL_ARB_fragment_layer_viewport : enable
 
 in vec2 uv;
 
@@ -22,54 +23,55 @@ out vec4 outAmplitude;
 
 vec4 angularFrequency(vec4 wavenumber) {
     return pow(wavenumber * gravity +
-            surfaceTension * wavenumber * wavenumber * wavenumber, 0.5);
+            surfaceTension * wavenumber * wavenumber * wavenumber, vec4(0.5));
 }
 
-vec4 WaveletGrid::advectionSpeed(vec4 wavenumber) {
+vec4 advectionSpeed(vec4 wavenumber) {
     vec4 numerator = (gravity + 3 * surfaceTension * wavenumber * wavenumber);
     vec4 denominator = 2 * angularFrequency(wavenumber);
     return numerator / denominator;
 }
 
-vec4 WaveletGrid::dispersionSpeed(vec4 wavenumber) {
+vec4 dispersionSpeed(vec4 wavenumber) {
     // courtesy of wolfram alpha
     // https://www.wolframalpha.com/input?i=d%5E2%2Fdx%5E2%28sqrt%28ax%2Bbx%5E3%29%29
     vec4 numerator =
         (-2 * gravity + 6 * gravity * surfaceTension * wavenumber * wavenumber +
          3 * surfaceTension * surfaceTension * wavenumber * wavenumber * wavenumber * wavenumber);
-    vec4 denom = 4 * pow(wavenumber * (gravity + surfaceTension * wavenumber * wavenumber), 3 / 2.0);
+    vec4 denom = 4 * pow(wavenumber * (gravity + surfaceTension * wavenumber * wavenumber), vec4(3 / 2.0));
     return numerator / denom;
 }
 
-float ambientAmplitude(vec2 pos) {
-    return 0;
+vec4 ambientAmplitude(vec2 pos) {
+    return vec4(0);
 }
 
 vec4 lookup_amplitude(int i_x, int i_y, int i_theta) {
     i_theta = (i_theta + NUM_THETA) % NUM_THETA;
     vec2 pos = (unitParam.xy / 2 + vec2(i_x, i_y) / NUM_POS) * (maxParam.xy - minParam.xy) + minParam.xy;
 
-    if (i_x < 0 || i_x >= m_resolution[Parameter::X] || i_y < 0 || i_y >= m_resolution[Y])
+    // wavefront unlikely to diverge here, and even if it does they dont diverge by that much
+    if (i_x < 0 || i_x >= NUM_POS || i_y < 0 || i_y >= NUM_POS)
         // we need an amplitude for a point outside of the simulation box
         return ambientAmplitude(pos);
 
-    return texelFetch(_Amplitude, ivec3(i_x, i_y, i_theta));
+    return texelFetch(_Amplitude, ivec3(i_x, i_y, i_theta), 0);
 }
 
 void main() {
-    int i_x = uv.x * NUM_POS;
-    int i_y = uv.y * NUM_POS;
+    int i_x = int(uv.x * NUM_POS);
+    int i_y = int(uv.y * NUM_POS);
     vec2 pos = mix(minParam.xy, maxParam.xy, vec2(uv));
 
     int i_theta = gl_Layer;
-    float theta = float(i_theta) / resolutionTheta + unitParam.z / 2;
+    float theta = float(i_theta) / NUM_THETA + unitParam.z / 2;
 
     vec4 wavenumber = vec4(minParam.w, minParam.w * 2, minParam.w*4, minParam.w*8);
     vec2 wavedirection = vec2(cos(theta), sin(theta));
 
     bool atLeast2Away = true;
 
-    vec4 amplitude = texelFetch(_Amplitude, ivec4(uv.x * NUM_POS, uv.y * NUM_POS, i_theta));
+    vec4 amplitude = texelFetch(_Amplitude, ivec3(uv.x * NUM_POS, uv.y * NUM_POS, i_theta), 0);
 
     if (atLeast2Away) {
         vec4 aspeed = advectionSpeed(wavenumber);
@@ -94,7 +96,8 @@ void main() {
 
         // we are actually using a step size of h/2 here
         // use central difference to obtain d2A / dtheta^2 numerically
-        vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h, i_k) + lookup_amplitude(i_x, i_y, i_theta - h, i_k) - 2 * amplitude) * inverseH2;
+        vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h) 
+            + lookup_amplitude(i_x, i_y, i_theta - h) - 2 * amplitude) * inverseH2;
 
         // use central difference to obtain (k dot V_x)
         vec4 partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;

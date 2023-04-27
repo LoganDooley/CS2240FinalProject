@@ -5,14 +5,25 @@
 Core::Core(int width, int height){
     m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
     Debug::checkGLError();
+
     m_heightShader = ShaderLoader::createShaderProgram("Shaders/heightEval.vert", "Shaders/heightEval.frag");
     Debug::checkGLError();
+
     m_camera = std::make_unique<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
     Debug::checkGLError();
+
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(50, 50), 100);
     Debug::checkGLError();
+
     m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 1, 4, 1);
     glEnable(GL_CULL_FACE);
+
+    m_diffusionShader = ShaderLoader::createShaderProgram(
+        "Shaders/waveletgrid.vert",
+        "Shaders/waveletgrid.geom",
+        "Shaders/waveletgrid_diffusion.frag"
+    );
+
     glEnable(GL_DEPTH_TEST);
     Debug::checkGLError();
     glViewport(0, 0, width, height);

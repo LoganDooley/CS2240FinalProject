@@ -12,5 +12,5 @@ vec2 viewportToUV(vec3 viewport) {
 
 void main() {
     gl_Position = vec4(pos,1);
-    uv = viewportToUV();
+    vs_out.uv = viewportToUV(pos);
 }
