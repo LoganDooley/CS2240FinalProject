@@ -1,4 +1,5 @@
 #version 330 core
+#extension GL_ARB_fragment_layer_viewport : enable
 
 in vec2 uv;
 
@@ -26,14 +27,14 @@ float angularFrequency(float wavenumber) {
 }
 
 // TODO: Precompute these for grid points
-float WaveletGrid::advectionSpeed(float wavenumber) {
+float advectionSpeed(float wavenumber) {
     float numerator = (gravity + 3 * surfaceTension * wavenumber * wavenumber);
     float denominator = 2 * angularFrequency(wavenumber);
     return numerator / denominator;
 }
 
 // TODO: Precompute these for grid points
-float WaveletGrid::dispersionSpeed(float wavenumber) {
+float dispersionSpeed(float wavenumber) {
     // courtesy of wolfram alpha
     // https://www.wolframalpha.com/input?i=d%5E2%2Fdx%5E2%28sqrt%28ax%2Bbx%5E3%29%29
     float numerator =
@@ -69,19 +70,19 @@ float interpolate(vec4 v, float t) {
     return dot(a,b);
 }
 
-vec4 interpolate(float x, float y, int iTheta, int iZeta) {
-    int ix = x;
-    int iy = y;
+float interpolate2D(float x, float y, int iTheta, int iZeta) {
+    int ix = int(x);
+    int iy = int(y);
 
     vec4 w;
 
 #pragma openNV (unroll all)
     for (int dx = 0; dx < 4; dx++) {
         vec4 v = vec4(
-            texelFetch(ivec3(ix-1, iy, iTheta))[iZeta],
-            texelFetch(ivec3(ix, iy, iTheta))[iZeta],
-            texelFetch(ivec3(ix+1, iy, iTheta))[iZeta],
-            texelFetch(ivec3(ix+2, iy, iTheta))[iZeta]
+            texelFetch(_Amplitude, ivec3(ix-1, iy, iTheta), 0)[iZeta],
+            texelFetch(_Amplitude, ivec3(ix, iy, iTheta), 0)[iZeta],
+            texelFetch(_Amplitude, ivec3(ix+1, iy, iTheta), 0)[iZeta],
+            texelFetch(_Amplitude, ivec3(ix+2, iy, iTheta), 0)[iZeta]
         );
 
         w[dx] = interpolate(v, y - iy);
@@ -114,21 +115,14 @@ void main() {
         vec2 nxtPosUV = vec2(((nxtPos - unitParam/2) - minParam) / (maxParam - minParam));
 
         // this uses texture interpolation, and not the thing recoomended in the paper.
-        vec4 interpolatedAmplitude = 
-            interpolate(nxtPosUV.x * resolutionPos, nxtPosUV.y * resolutionPos, thetaIndex, zetaIndex);
+        float interpolatedAmplitude = 
+            interpolate2D(nxtPosUV.x * resolutionPos, nxtPosUV.y * resolutionPos, thetaIndex, zetaIndex);
 
         // ambient amplitude if outside grid
         if (pos.x < minParam.x || pos.x >= maxParam.x || 
             pos.x < minParam.x || pos.x >= maxParam.x) 
-                interpolatedAmplitude = ambientAmplitude(pos).rrrr;
+                interpolatedAmplitude = ambientAmplitude(pos);
 
-        interpolatedAmplitudes[zetaIndex] = interpolatedAmplitude;
+        amplitude[zetaIndex] = interpolatedAmplitude;
     }
-
-    amplitude = vec4(
-        interpolatedAmplitudes[0].r,
-        interpolatedAmplitudes[1].b,
-        interpolatedAmplitudes[2].g,
-        interpolatedAmplitudes[3].a
-    );
 }

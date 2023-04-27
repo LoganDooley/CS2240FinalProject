@@ -28,6 +28,7 @@ private:
     GLuint m_pbShader;
     GLuint m_heightShader;
     GLuint m_diffusionShader;
+    GLuint m_advectionShader;
     std::unique_ptr<WaveGeometry> m_waveGeometry;
     std::unique_ptr<Camera> m_camera;
     std::shared_ptr<WaveletGrid> m_waveletGrid;

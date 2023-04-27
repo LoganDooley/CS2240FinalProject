@@ -15,14 +15,23 @@ Core::Core(int width, int height){
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(50, 50), 100);
     Debug::checkGLError();
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 1, 4, 1);
-    glEnable(GL_CULL_FACE);
-
     m_diffusionShader = ShaderLoader::createShaderProgram(
         "Shaders/waveletgrid.vert",
         "Shaders/waveletgrid.geom",
         "Shaders/waveletgrid_diffusion.frag"
     );
+    Debug::checkGLError();
+
+    m_advectionShader = ShaderLoader::createShaderProgram(
+        "Shaders/waveletgrid.vert",
+        "Shaders/waveletgrid.geom",
+        "Shaders/waveletgrid_advection.frag"
+    );
+    Debug::checkGLError();
+
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 1, 4, 1);
+    glEnable(GL_CULL_FACE);
+
 
     glEnable(GL_DEPTH_TEST);
     Debug::checkGLError();
