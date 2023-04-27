@@ -7,7 +7,6 @@
 #include "mathutil.h"
 #include <tuple>
 #include <iostream>
-#include <omp.h>
 
 // wavelet grid
 WaveletGrid::WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 resolution)
@@ -80,7 +79,7 @@ void WaveletGrid::advectionStep(float deltaTime) {
                         glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
                         glm::vec2 kb = getWaveDirection(pos);
                         // ought also use advectionSpeed here? representing omega in equation 17?
-                        float omega = advectionSpeed(i_k);
+                        float omega = advectionSpeed(pos[Parameter::K]);
                         glm::vec4 lagrangianPos = pos;
                         lagrangianPos[Parameter::X] -= deltaTime * kb[0] * omega;
                         lagrangianPos[Parameter::Y] -= deltaTime * kb[1] * omega;
@@ -104,8 +103,6 @@ void WaveletGrid::diffusionStep(float deltaTime) {
 /* #pragma omp parallel for collapse(2) */
     for (unsigned int i_x = 0; i_x < amplitudes.getResolution(Parameter::X); i_x++)
     for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
-
-        /* std::cout << omp_get_num_threads() << std::endl; */
 
         std::array<unsigned int, 2> i_xy = {i_x, i_y};
         float distanceToBoundary = m_environment.levelSet(getPositionAtIndex(i_xy));
