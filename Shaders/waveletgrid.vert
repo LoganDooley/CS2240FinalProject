@@ -2,7 +2,9 @@
 
 layout (location = 0) in vec3 pos;
 
-out vec2 uv;
+out VS_OUT {
+    vec2 uv;
+} vs_out;
 
 vec2 viewportToUV(vec3 viewport) {
     return vec2((viewport + 1) / 2);
@@ -10,5 +12,5 @@ vec2 viewportToUV(vec3 viewport) {
 
 void main() {
     gl_Position = vec4(pos,1);
-    uv = uvIn;
+    uv = viewportToUV();
 }

@@ -11,6 +11,8 @@ uniform sampler3D _Amplitude;
 uniform float deltaTime;
 
 uniform int resolutionTheta = 8;
+uniform int resolutionPos = 4096;
+
 uniform int zetaIndex;
 
 uniform vec4 minParam;
@@ -47,11 +49,55 @@ float ambientAmplitude(vec4 pos) {
     return 0;
 }
 
+float interpolate(vec4 v, float t) {
+    float dk = (v[2] - v[0]) / 2;
+    float dkp1 = (v[3] - v[1]) / 2;
+    float deltaK = v[2] - v[1];
+
+    float signDK = sign(dk);
+    float signDKp1 = sign(dkp1);
+    float signdeltaK = sign(deltaK);
+
+    // if delta is 0 or the signed bit of dk, dkp1, and deltaK differs
+    // this is used to force monotonicity of f(t) on the interval [tk, tk+1]
+    // so that the interpolation is more stable and is less prone to overshooting
+    if (deltaK == 0 || (signDK + signDKp1 + signdeltaK) != 3 * signdeltaK)
+        deltaK = dk = dkp1 = 0;
+
+    // table-based approach of evaluating a 3rd order polynomial
+    vec4 a = vec4( v[1], dk, 3 * deltaK - 2 * dk - dkp1, dk + dkp1 - deltaK );
+    vec4 b = vec4(1, t, t*t, t*t*t);
+
+    return dot(a,b);
+}
+
+vec4 interpolate(float x, float y, int iTheta, int iZeta) {
+    int ix = x;
+    int iy = y;
+
+    vec4 w;
+
+#pragma openNV (unroll all)
+    for (int dx = 0; dx < 4; dx++) {
+        vec4 v = vec4(
+            texelFetch(ivec3(ix-1, iy, iTheta))[iZeta],
+            texelFetch(ivec3(ix, iy, iTheta))[iZeta],
+            texelFetch(ivec3(ix+1, iy, iTheta))[iZeta],
+            texelFetch(ivec3(ix+2, iy, iTheta))[iZeta]
+        );
+
+        w[dx] = interpolate(v, y - iy);
+    }
+
+    return interpolate(w, x-ix);
+}
+
 void main() {
     int thetaIndex = gl_Layer;
 
+    vec4 interpolatedAmplitudes[NUM_K];
+
     // ADVECTION STEP
-    float result[NUM_K];
 #pragma openNV (unroll all)
     for (int zetaIndex = 0; zetaIndex < NUM_K; zetaIndex++) {
         vec4 pos = mix(minParam, maxParam, 
@@ -67,17 +113,24 @@ void main() {
 
         vec4 nxtPos = pos - vec4(deltaTime * wavedirection * omega, 0, 0);
 
-        vec3 nxtPosUV = ((nxtPos - unitParam/2) - minParam) / (maxParam - minParam);
+        vec2 nxtPosUV = vec2(((nxtPos - unitParam/2) - minParam) / (maxParam - minParam));
 
         // this uses texture interpolation, and not the thing recoomended in the paper.
-        // TODO: write an actual interpolator.
-        float interpolatedAmplitude = texture(_Amplitude, nxtPosUV)[zetaIndex];
+        vec4 interpolatedAmplitude = 
+            interpolate(nxtPosUV.x * resolutionPos, nxtPosUV.y * resolutionPos, thetaIndex, zetaIndex);
 
         // ambient amplitude if outside grid
         if (pos.x < minParam.x || pos.x >= maxParam.x || 
             pos.x < minParam.x || pos.x >= maxParam.x) 
-                interpolatedAmplitude = ambientAmplitude(pos);
+                interpolatedAmplitude = ambientAmplitude(pos).rrrr;
 
-        amplitude[zetaIndex] = interpolatedAmplitude;
+        interpolatedAmplitudes[zetaIndex] = interpolatedAmplitude;
     }
+
+    amplitude = vec4(
+        interpolatedAmplitudes[0].r,
+        interpolatedAmplitudes[1].b,
+        interpolatedAmplitudes[2].g,
+        interpolatedAmplitudes[3].a
+    );
 }
