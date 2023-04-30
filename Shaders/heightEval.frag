@@ -33,7 +33,7 @@ void main() {
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
             if(itheta >= 0){
-                height += da * 10000 * pbValue(kdir_x, ik)/DIR_NUM;
+                height += da * 10000 * max(kdir_x, 0) / (length(pos)+1) * pbValue(kdir_x, ik)/DIR_NUM;
             }
         }
     }
