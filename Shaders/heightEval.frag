@@ -31,14 +31,14 @@ void main() {
             float angle = itheta * da * 6.28318530718;
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
-            if(itheta == 0){
-                height += da * 100 * pbValue(kdir_x, iz);
+            if(itheta == 0 || itheta == 3){
+                height += da * 0.01 * pbValue(kdir_x, iz);
             }
         }
     }
 
     float result = (3.14159/2 + atan(height))/3.14159;
     fragColor = vec4(vec3(result), 1);
-    fragColor = vec4(pos, 1, 1);
-    fragColor = vec4(vec3(pbValue(1, 1)), 1);
+    //fragColor = vec4(pos, 1, 1);
+    //fragColor = vec4(vec3(pbValue(1, 1)), 1);
 }

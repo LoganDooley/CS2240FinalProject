@@ -29,7 +29,7 @@ Core::Core(int width, int height){
     );
     Debug::checkGLError();
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 1, 4, 1);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 1, 4, 5);
     glEnable(GL_CULL_FACE);
 
 
@@ -38,8 +38,8 @@ Core::Core(int width, int height){
     glViewport(0, 0, width, height);
     Debug::checkGLError();
     m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 2), glm::uvec4(100, 100, 16, 4));
-    m_waveletGrid->takeStep(0);
-    m_waveGeometry->update(m_waveletGrid);
+    //m_waveletGrid->takeStep(0);
+    //m_waveGeometry->update(m_waveletGrid);
     m_fullscreenQuad = std::make_shared<FullscreenQuad>();
     m_fullscreenQuad->bind();
     m_profileBuffer->precomputeGPU(0, 2, 100);
@@ -59,7 +59,9 @@ int Core::update(float seconds){
     }
     */
     m_profileBuffer->precomputeGPU(glfwGetTime(), 2, 100);
-    m_waveGeometry->draw(m_profileBuffer);
+    glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
+    m_profileBuffer->debugDraw();
+    //m_waveGeometry->draw(m_profileBuffer);
     return 0;
 }
 
@@ -112,6 +114,7 @@ void Core::scrollEvent(double distance){
 
 void Core::framebufferResizeEvent(int width, int height){
     glViewport(0, 0, width, height);
+    m_FBOSize = glm::ivec2(width, height);
 }
 
 void Core::windowResizeEvent(int width, int height){

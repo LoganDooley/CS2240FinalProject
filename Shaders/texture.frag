@@ -6,5 +6,11 @@ uniform sampler2D tex;
 in vec2 uv;
 
 void main() {
-    fragColor = vec4(vec3(texture(tex, uv).r), 1);
+    float value = 10*texture(tex, uv).r;
+    if(value > 0){
+        fragColor = vec4(value, 0, 0, 1);
+    }
+    else{
+        fragColor = vec4(0, -value, 0, 1);
+    }
 }

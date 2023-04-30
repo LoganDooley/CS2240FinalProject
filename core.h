@@ -35,6 +35,7 @@ private:
     std::shared_ptr<ProfileBuffer> m_profileBuffer;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;
 
+    glm::ivec2 m_FBOSize = glm::ivec2(640, 480);
     const float FPS = 0.5f;
     float timeSinceLastUpdate;
     bool m_mouseDown = false;
