@@ -95,6 +95,8 @@ private:
             throw std::runtime_error(std::string("Failed to open shader: ")+filepath);
         }
 
+        /* std::cout << "Compiling file: " << filepath << std::endl; */
+
         // Compile shader code.
         const char *codePtr = code.c_str();
         glShaderSource(shaderID, 1, &codePtr, nullptr); // Assumes code is null terminated

@@ -19,7 +19,7 @@ public:
 
     void disableColorDraw();
 
-    void attachTexture(std::shared_ptr<Texture> texture, GLenum attachment = GL_COLOR_ATTACHMENT0);
+    void attachTexture(std::shared_ptr<Texture> texture, GLenum attachment = GL_COLOR_ATTACHMENT0, bool is3D = false);
 
     std::shared_ptr<Texture> createAndAttachColorTexture(GLenum attachment = GL_COLOR_ATTACHMENT0, GLenum texUnit = GL_TEXTURE0);
     std::shared_ptr<Texture> createAndAttachVector3Texture(GLenum attachment = GL_COLOR_ATTACHMENT0, GLenum texUnit = GL_TEXTURE0);

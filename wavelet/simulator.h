@@ -20,7 +20,10 @@ public:
     ~Simulator();
 
     void takeStep(float dt);
+    void visualize();
+
 private:
+    GLuint visualizationShader;
     GLuint advectionShader;
     GLuint diffusionShader;
 
@@ -30,6 +33,7 @@ private:
     std::shared_ptr<Texture> amplitude_intermediate;
     std::shared_ptr<FullscreenQuad> fullScreenQuad;
 
+    int visualization_thetaIndex = 0;
     GridSettings setting;
     std::array<int, 4> resolution;
     // derived from resolution and simulation area

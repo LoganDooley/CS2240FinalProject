@@ -46,10 +46,12 @@ void Framebuffer::disableColorDraw() {
     glReadBuffer(GL_NONE);
 }
 
-void Framebuffer::attachTexture(std::shared_ptr<Texture> texture, GLenum attachment) {
+void Framebuffer::attachTexture(std::shared_ptr<Texture> texture, GLenum attachment, bool is3D) {
     bind();
     Debug::checkGLError();
-    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, texture->getHandle(), 0);
+    if (is3D) glFramebufferTexture(GL_FRAMEBUFFER, attachment, texture->getHandle(), 0);
+    else glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, texture->getHandle(), 0);
+
     if (attachment != GL_DEPTH_ATTACHMENT && attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
         if (std::find(attachments.begin(), attachments.end(), attachment) == attachments.end()) {
             attachments.push_back(attachment);

@@ -1,7 +1,9 @@
 #include "core.h"
 
+#include "External/imgui/imgui.h"
 #include "debug.h"
 #include "wavelet/simulator.h"
+#include "imgui.h"
 
 Core::Core(int width, int height){
     m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
@@ -16,11 +18,10 @@ Core::Core(int width, int height){
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(10, 10), 400);
     Debug::checkGLError();
 
-    std::array<int,4> resolution = {4096, 4096, 16, 4};
+    std::array<int,4> resolution = {4096, 4096, 8, 4};
     Simulator::GridSettings setting;
     m_simulator = std::make_unique<Simulator>(resolution, setting);
     Debug::checkGLError();
-
 
     m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.01, 50, 4);
     glEnable(GL_CULL_FACE);
@@ -52,9 +53,32 @@ int Core::update(float seconds){
     */
     m_simulator->takeStep(seconds);
     m_profileBuffer->precomputeGPU(glfwGetTime());
-    glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
-    //m_profileBuffer->debugDraw();
-    m_waveGeometry->draw(m_profileBuffer);
+
+
+    const char* items[] = { "Wave geometry", "Advection / Diffusion" };
+    static const char* current_item = items[0];
+
+    if (ImGui::BeginCombo("visualizer", current_item)) {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+        {
+            bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+            if (ImGui::Selectable(items[n], is_selected))
+                current_item = items[n];
+            if (is_selected) 
+                ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+        }
+        ImGui::EndCombo();
+    }
+
+    if (std::distance(items[0], current_item) == 0) {
+        glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
+        //m_profileBuffer->debugDraw();
+        m_waveGeometry->draw(m_profileBuffer);
+    } else {
+        glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
+        m_simulator->visualize();
+    }
+
     return 0;
 }
 

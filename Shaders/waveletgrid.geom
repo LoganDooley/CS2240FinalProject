@@ -3,8 +3,6 @@
 layout (triangles, invocations = 8) in; 
 layout (triangle_strip, max_vertices = 3) out;
 
-const int THETA_RESOLUTION = 8;
-
 in VS_OUT {
     vec2 uv;
 } gs_in[];

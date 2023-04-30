@@ -106,20 +106,12 @@ int Window::loop(){
         glfwPollEvents();
         double current = glfwGetTime();
         float dt = current - previous;
-        int updateResult = m_core->update(current - previous);
-        previous = current;
-        if(updateResult != 0){
-            return updateResult;
-        }
-        int drawResult = m_core->draw();
-        if(drawResult != 0){
-            return drawResult;
-        }
 
         // feed inputs to dear imgui, start new frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
         // render your GUI
         ImGui::Begin("Editor Window");
         std::string fps = std::string("FPS: ")+std::to_string(1/dt);
@@ -139,6 +131,18 @@ int Window::loop(){
                     ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
             }
             ImGui::EndCombo();
+        }
+
+
+        // in the update, you can draw more imgui stuff
+        int updateResult = m_core->update(current - previous);
+        previous = current;
+        if(updateResult != 0){
+            return updateResult;
+        }
+        int drawResult = m_core->draw();
+        if(drawResult != 0){
+            return drawResult;
         }
 
         ImGui::End();
