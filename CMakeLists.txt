@@ -81,6 +81,13 @@ add_executable(${PROJECT_NAME}
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_glfw.h
 
+    GLWrapper/framebuffer.h
+    GLWrapper/framebuffer.cpp
+    GLWrapper/texture.h
+    GLWrapper/texture.cpp
+    wavelet/simulation.h
+    wavelet/simulation.cpp
+
     # STB files
     external/stb/stb_image.h
 )

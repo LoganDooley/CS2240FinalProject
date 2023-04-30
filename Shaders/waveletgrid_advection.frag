@@ -3,17 +3,17 @@
 
 in vec2 uv;
 
-const int NUM_K = 4;
+// DIMENSIONS
+const int NUM_K = 4; // this must not be higher than 4
+uniform int NUM_THETA = 8;
+uniform int NUM_POS = 4096;
 
-const float gravity = 9.81;
-const float surfaceTension = 72.8 / 1000; // of water
+uniform float gravity = 9.81;
+uniform float surfaceTension = 72.8 / 1000; // of water
 
 uniform sampler3D _Amplitude;
+
 uniform float deltaTime;
-
-uniform int resolutionTheta = 8;
-uniform int resolutionPos = 4096;
-
 uniform vec4 minParam;
 uniform vec4 maxParam;
 uniform vec4 unitParam;
@@ -100,7 +100,7 @@ void main() {
 #pragma openNV (unroll all)
     for (int zetaIndex = 0; zetaIndex < NUM_K; zetaIndex++) {
         vec4 pos = mix(minParam, maxParam, 
-            vec4(uv, float(thetaIndex) / resolutionTheta, float(zetaIndex) / NUM_K)) + unitParam/2;
+            vec4(uv, float(thetaIndex) / NUM_THETA, float(zetaIndex) / NUM_K)) + unitParam/2;
         // since we're using zeta
         pos.w = pow(2, zetaIndex) * minParam.w;
 
@@ -116,7 +116,7 @@ void main() {
 
         // this uses texture interpolation, and not the thing recoomended in the paper.
         float interpolatedAmplitude = 
-            interpolate2D(nxtPosUV.x * resolutionPos, nxtPosUV.y * resolutionPos, thetaIndex, zetaIndex);
+            interpolate2D(nxtPosUV.x * NUM_POS, nxtPosUV.y * NUM_POS, thetaIndex, zetaIndex);
 
         // ambient amplitude if outside grid
         if (pos.x < minParam.x || pos.x >= maxParam.x || 

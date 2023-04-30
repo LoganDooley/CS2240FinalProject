@@ -4,6 +4,8 @@
 in vec2 uv;
 
 const int NUM_K = 4;
+uniform int NUM_POS = 4096;
+uniform int NUM_THETA = 8;
 
 const float gravity = 9.81;
 const float surfaceTension = 72.8 / 1000; // of water
@@ -12,8 +14,6 @@ uniform sampler3D _Amplitude;
 uniform sampler2D _AtLeast2Away;
 
 uniform float deltaTime;
-uniform int NUM_POS = 4096;
-uniform int NUM_THETA = 8;
 
 uniform vec4 minParam;
 uniform vec4 maxParam;
