@@ -85,8 +85,8 @@ add_executable(${PROJECT_NAME}
     GLWrapper/framebuffer.cpp
     GLWrapper/texture.h
     GLWrapper/texture.cpp
-    wavelet/simulation.h
-    wavelet/simulation.cpp
+    wavelet/simulator.h
+    wavelet/simulator.cpp
 
     # STB files
     external/stb/stb_image.h

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "GLWrapper/framebuffer.h"
+#include "fullscreenquad.h"
 #include "wavelet/waveletgrid.h"
 #include <glm/glm.hpp>
+#include <memory>
 
 class Simulator {
 public:
@@ -25,6 +27,8 @@ private:
     std::shared_ptr<Framebuffer> advectionFBO;
     std::shared_ptr<Framebuffer> diffusionFBO;
     std::shared_ptr<Texture> amplitude;
+    std::shared_ptr<Texture> amplitude_intermediate;
+    std::shared_ptr<FullscreenQuad> fullScreenQuad;
 
     GridSettings setting;
     std::array<int, 4> resolution;
@@ -35,4 +39,6 @@ private:
     void recomputeRanges();
 
     void recomputeFramebuffer();
+
+    void loadShadersWithData(GLuint shader);
 };

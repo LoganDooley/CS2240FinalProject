@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include "camera.h"
+#include "wavelet/simulator.h"
 #include "wavelet/wavegeometry.h"
 #include "shaderloader.h"
 #include "fullscreenquad.h"
@@ -29,6 +30,7 @@ private:
     GLuint m_heightShader;
     std::unique_ptr<WaveGeometry> m_waveGeometry;
     std::unique_ptr<Camera> m_camera;
+    std::unique_ptr<Simulator> m_simulator;
     std::shared_ptr<WaveletGrid> m_waveletGrid;
     std::shared_ptr<ProfileBuffer> m_profileBuffer;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;

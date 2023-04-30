@@ -30,6 +30,9 @@ void Framebuffer::unbind() {
 void Framebuffer::verifyStatus() {
     bind();
     GLenum err = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (err != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Something went wrong: " << err << std::endl;
+    }
     unbind();
 }
 

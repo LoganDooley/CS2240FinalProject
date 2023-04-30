@@ -22,6 +22,8 @@ FullscreenQuad::FullscreenQuad(){
 }
 
 FullscreenQuad::~FullscreenQuad(){
+    glDeleteBuffers(1, &m_vbo);
+    glDeleteVertexArrays(1, &m_vao);
 
 }
 

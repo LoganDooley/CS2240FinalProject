@@ -1,6 +1,7 @@
 #include "core.h"
 
 #include "debug.h"
+#include "wavelet/simulator.h"
 
 Core::Core(int width, int height){
     m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
@@ -13,6 +14,11 @@ Core::Core(int width, int height){
     Debug::checkGLError();
 
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(10, 10), 400);
+    Debug::checkGLError();
+
+    std::array<int,4> resolution = {4096, 4096, 16, 4};
+    Simulator::GridSettings setting;
+    m_simulator = std::make_unique<Simulator>(resolution, setting);
     Debug::checkGLError();
 
 
@@ -44,6 +50,7 @@ int Core::update(float seconds){
         timeSinceLastUpdate = 0;
     }
     */
+    m_simulator->takeStep(seconds);
     m_profileBuffer->precomputeGPU(glfwGetTime());
     glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
     //m_profileBuffer->debugDraw();
