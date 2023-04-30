@@ -5,64 +5,52 @@
 out float fragColor;
 
 uniform float t;
-uniform float z[8];
-uniform int resolution = 4096;
-uniform int periodicity = 2;
-uniform int integration_nodes = 100;
+uniform int pResolution = 4096;
+uniform int integration_nodes;
 uniform float windSpeed;
-uniform float unitZ;
+uniform float kMin;
 
-float rand(float z){
-    //return 0;
-    return 10 * fract(sin(z * 12.9898) * 43758.5453);
+float rand(float k){
+    return fract(sin(k * 12.9898) * 43758.5453);
 }
 
 float w(float k){
     //return 1;
-    return sqrt(k * 9.81);
-}
-
-float psi(float z){
-    float A = pow(1.1, 1.5 * z);
-    float B = exp(-1.8038897788076411 * pow(4, z) / pow(windSpeed, 4));
-
-    return 0.139098 * sqrt(A * B);
+    return sqrt(k/1000 * 9.81);
 }
 
 float phillips(float w){
     return 8.1 * pow(10, -3) * 2 * 3.1415 * pow(9.8, 2)/pow(w, 5);
 }
 
-float psiBarIntegrand(float z, float p){
-    float waveLength = pow(2, z);
-    float waveNumber = 6.28318530718 / waveLength;
-    float w = w(waveNumber);
-    //return psi(z) * cos(waveNumber * p - w(waveNumber) * t) * waveLength;
-    return phillips(w) * w * cos(waveNumber * p - w * t + rand(z));
+float psiBarIntegrand(float k, float p){
+    float waveLength = 1/k;
+    float w = w(k);
+    return phillips(w) * waveLength * cos((k + rand(k)) * p - w * t);
 }
 
-float psiBar(float p, int integration_nodes, float z_min, float z_max){
-    float dz = (z_max - z_min) / integration_nodes;
-    float z = z_min + 0.5 * dz;
+float psiBar(float p, int integration_nodes, float k_min, float k_max){
+    float dk = k_min;
+    float k = k_min;
 
     float result = 0;
-    for(int i = 0; i<integration_nodes; i++){
-        result += psiBarIntegrand(z, p) * dz;
-        z += dz;
+    for(int i = 0; i<integration_nodes - 1; i++){
+        result += psiBarIntegrand(k, p) * dk;
+        k += dk;
     }
 
     return result;
 }
 
 void main() {
-    int iz = int(floor(gl_FragCoord.y)); // Get row of texture corresponding to z index
+    int ik = int(floor(gl_FragCoord.y)); // Get row of texture corresponding to z index
     int ip = int(floor(gl_FragCoord.x)); // Get column of texture corresponding to p index
 
-    float z_min = z[iz] - 0.5 * unitZ;
-    float z_max = z[iz] + 0.5 * unitZ;
+    float k_min = kMin + pow(integration_nodes, ik);
+    float k_max = kMin + integration_nodes * k_min;
 
-    float period = periodicity * pow(2, z[iz]);
-    float p = (ip * period) / resolution;
+    float period = 6.28318530718 / k_min;
+    float p = (ip * period) / pResolution;
 
-    fragColor = psiBar(p, integration_nodes, z_min, z_max);
+    fragColor = psiBar(p, integration_nodes, k_min, k_max);
 }

@@ -96,8 +96,8 @@ void WaveGeometry::draw(std::shared_ptr<ProfileBuffer> profileBuffer){
     glUniform1fv(glGetUniformLocation(m_heightShader, "periods"), periods.size(), periods.data());
     glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
     glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
-    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 8);
-    glUniform1i(glGetUniformLocation(m_heightShader, "zResolution"), 4);
+    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 16);
+    glUniform1i(glGetUniformLocation(m_heightShader, "kResolution"), profileBuffer->getKResolution());
     profileBuffer->bindProfilebufferTexture();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_resolution, m_resolution);

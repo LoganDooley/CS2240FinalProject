@@ -4,12 +4,12 @@
 #include <iostream>
 #include "debug.h"
 
-ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float z_min, int z_resolution, float unit_z):
+ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float kMin, int integration_nodes, int kResolution):
     m_windSpeed(windSpeed),
-    m_zResolution(z_resolution),
     m_pResolution(p_resolution),
-    m_minZ(z_min),
-    m_unitZ(unit_z)
+    m_kMin(kMin),
+    m_integrationNodes(integration_nodes),
+    m_kResolution(kResolution)
 {
     m_pbShader = ShaderLoader::createShaderProgram("Shaders/precomputeProfileBuffers.vert", "Shaders/precomputeProfileBuffers.frag");
     Debug::checkGLError();
@@ -23,7 +23,7 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float z_min, int
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, p_resolution, z_resolution, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, p_resolution, kResolution, 0, GL_RED, GL_FLOAT, nullptr);
     Debug::checkGLError();
 
     glGenFramebuffers(1, &m_fbo);
@@ -31,7 +31,7 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float z_min, int
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
     glGenRenderbuffers(1, &m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, p_resolution, z_resolution);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, p_resolution, kResolution);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -121,21 +121,16 @@ float ProfileBuffer::cubicBump(float x) const{
 
 // GPU IMPLEMENTATION:
 
-void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_nodes){
+void ProfileBuffer::precomputeGPU(float t){
     glUseProgram(m_pbShader);
     glUniform1f(glGetUniformLocation(m_pbShader, "t"), t);
-    GLfloat z[m_zResolution];
-    for(int i = 0; i < m_zResolution; i++){
-        z[i] = m_minZ + i * m_unitZ;
-    }
-    glUniform1fv(glGetUniformLocation(m_pbShader, "z"), m_zResolution, z);
-    glUniform1i(glGetUniformLocation(m_pbShader, "resolution"), m_pResolution);
-    glUniform1i(glGetUniformLocation(m_pbShader, "periodicity"), periodicity);
-    glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), integration_nodes);
+    glUniform1i(glGetUniformLocation(m_pbShader, "pResolution"), m_pResolution);
+    glUniform1i(glGetUniformLocation(m_pbShader, "kResolution"), m_kResolution);
+    glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), m_integrationNodes);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
-    glUniform1f(glGetUniformLocation(m_pbShader, "unitZ"), m_unitZ);
+    glUniform1f(glGetUniformLocation(m_pbShader, "kMin"), m_kMin);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-    glViewport(0, 0, m_pResolution, m_zResolution);
+    glViewport(0, 0, m_pResolution, m_kResolution);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -144,9 +139,9 @@ void ProfileBuffer::precomputeGPU(float t, int periodicity, int integration_node
 
 std::vector<float> ProfileBuffer::getPeriods(){
     std::vector<float> periods;
-    for(int iz = 0; iz<m_zResolution; iz++){
-        float z = m_minZ + iz * m_unitZ;
-        periods.push_back(2 * pow(2, z + 0.5 * m_unitZ));
+    for(int ik = 0; ik<m_kResolution; ik++){
+        float k_min = m_kMin + pow(m_integrationNodes, ik);
+        periods.push_back(6.28318530718 / k_min);
     }
     return periods;
 }

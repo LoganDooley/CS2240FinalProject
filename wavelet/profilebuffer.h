@@ -10,7 +10,7 @@ class ProfileBuffer
 {
 public:
     ProfileBuffer(){};
-    ProfileBuffer(float windSpeed, int p_resolution, float z_min, int z_resolution, float unit_z);
+    ProfileBuffer(float windSpeed, int p_resolution, float kMin, int integration_nodes, int k_resolution);
     ~ProfileBuffer(){};
 
     void precompute(float t, float k_min, float k_max, int resolution = 4096, int periodicity = 2, int integration_nodes = 100);
@@ -22,6 +22,14 @@ public:
     float psi(float k) const;
 
     float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
+
+    int getKResolution() const{
+        return m_kResolution;
+    }
+
+    int getIntegrationNodes() const{
+        return m_integrationNodes;
+    }
 private:
     float psiBarIntegrand(float k, float p, float t);
 
@@ -48,7 +56,7 @@ private:
 // GPU Implementation
 
 public:
-    void precomputeGPU(float t, int periodicity = 2, int integration_nodes = 100);
+    void precomputeGPU(float t);
     std::vector<float> getPeriods();
     void bindProfilebufferTexture();
     void debugDraw();
@@ -59,8 +67,8 @@ private:
     GLuint m_texture;
     GLuint m_fbo;
     GLuint m_rbo;
-    int m_zResolution;
+    int m_kResolution;
     int m_pResolution;
-    float m_minZ;
-    float m_unitZ;
+    float m_kMin;
+    int m_integrationNodes;
 };
