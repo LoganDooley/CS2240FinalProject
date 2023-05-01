@@ -29,7 +29,7 @@ void main() {
     for(int ik = 0; ik < kResolution; ik++){
         float da = 6.28318530718 / DIR_NUM;
         for(int itheta = 0; itheta < DIR_NUM; itheta++){
-            float angle = itheta * da * 6.28318530718;
+            float angle = itheta * da;
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
             if(itheta >= 0){
