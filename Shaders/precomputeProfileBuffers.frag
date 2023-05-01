@@ -18,10 +18,6 @@ float w(float k){
     return sqrt(k * 9.81);
 }
 
-float phillips(float w){
-    return 8.1 * pow(10, -3) * 2 * 3.1415 * pow(9.8, 2)/pow(w, 5);
-}
-
 float JONSWAP(float w){
     float U = windSpeed;
     float F = 1000;
