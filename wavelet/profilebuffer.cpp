@@ -142,7 +142,7 @@ std::vector<float> ProfileBuffer::getPeriods(){
     for(int ik = 0; ik<m_kResolution; ik++){
         float k_min = m_kMin * pow(m_integrationNodes + 1, ik);
         periods.push_back(6.28318530718 / k_min);
-        std::cout<<6.28318530718 / k_min<<std::endl;
+        //std::cout<<6.28318530718 / k_min<<std::endl;
     }
     return periods;
 }

@@ -9,6 +9,7 @@ uniform vec2 gridSpacing;
 uniform vec2 bottomLeft;
 uniform int thetaResolution;
 uniform int kResolution;
+uniform float windTheta = 0;
 
 float pbValue(float p, int ik){
     int N = pb_resolution;
@@ -24,6 +25,14 @@ float pbValue(float p, int ik){
     return wpUpper * texture(profileBuffers, vec2((pUpper + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r + (1 - wpUpper) * texture(profileBuffers, vec2((pLower + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r;
 }
 
+float PositiveCosineSquaredDS(float theta){
+    float angle = theta - windTheta;
+    if(angle > -3.14159/2 && angle < 3.14159/2){
+        return (2/3.14159) * pow(cos(angle), 2);
+    }
+    else return 0;
+}
+
 void main() {
     vec2 pos = bottomLeft + vec2((gl_FragCoord.x - 0.5), (gl_FragCoord.y - 0.5)) * gridSpacing;
 
@@ -35,7 +44,7 @@ void main() {
             float angle = itheta * da;
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
-            height += da * max(dot(kdir, normalize(pos)), 0) * pbValue(kdir_x, ik);
+            height += da * sqrt(da * PositiveCosineSquaredDS(angle)) * pbValue(kdir_x, ik);
         }
     }
 
