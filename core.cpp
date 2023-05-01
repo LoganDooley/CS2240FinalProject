@@ -81,8 +81,13 @@ int Core::update(float seconds){
         //m_profileBuffer->debugDraw();
 
     } else {
-        if (ImGui::Button("Step"))
+        if (!simulationPaused) {
             m_simulator->takeStep(seconds);
+            if (ImGui::Button("Pause"))     simulationPaused = true;
+        } else {
+            if (ImGui::Button("Unpause"))   simulationPaused = false;
+            if (ImGui::Button("Step"))      m_simulator->takeStep(seconds);
+        }
         m_simulator->visualize(m_FBOSize);
     }
 

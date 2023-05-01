@@ -35,10 +35,12 @@ private:
     std::shared_ptr<ProfileBuffer> m_profileBuffer;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;
 
+
     glm::ivec2 m_FBOSize = glm::ivec2(640, 480);
     const float FPS = 0.5f;
     float timeSinceLastUpdate;
     bool m_mouseDown = false;
     glm::vec2 m_mousePos = glm::vec2(0, 0);
     std::set<int> m_keysDown = std::set<int>();
+    bool simulationPaused = true;
 };

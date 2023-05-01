@@ -45,8 +45,8 @@ float dispersionSpeed(float wavenumber) {
 }
 
 float ambientAmplitude(vec4 pos) {
-    return 1;
-    /* return (gl_Layer == 1) ? 1 : 0; */
+    /* return 1; */
+    return (gl_Layer == 1) ? 1 : 0;
 }
 
 float interpolate(vec4 v, float t) {

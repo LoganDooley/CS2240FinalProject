@@ -105,12 +105,12 @@ void Simulator::visualize(glm::ivec2 viewport) {
     fullScreenQuad->bind();
     amplitude->bind();
 
+    int n = std::min(viewport.x, viewport.y);
+    /* glViewport(0, 0, n, n); */
     glViewport(0,0, resolution[0], resolution[1]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glad_glUniform1i(glGetUniformLocation(visualizationShader, "thetaIndex"), visualization_thetaIndex);
-    int n = std::min(viewport.x, viewport.y);
-    glViewport(0, 0, n, n);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 

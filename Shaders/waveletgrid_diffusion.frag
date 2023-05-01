@@ -42,8 +42,8 @@ vec4 dispersionSpeed(vec4 wavenumber) {
     return numerator / denom;
 }
 
-vec4 ambientAmplitude(vec2 pos) {
-    return vec4(0);
+vec4 ambientAmplitude(vec2 pos, int i_theta) {
+    return (i_theta == 1) ? vec4(1) : vec4(0);
 }
 
 vec4 lookup_amplitude(int i_x, int i_y, int i_theta) {
@@ -53,7 +53,7 @@ vec4 lookup_amplitude(int i_x, int i_y, int i_theta) {
     // wavefront unlikely to diverge here, and even if it does they dont diverge by that much
     if (i_x < 0 || i_x >= NUM_POS || i_y < 0 || i_y >= NUM_POS)
         // we need an amplitude for a point outside of the simulation box
-        return ambientAmplitude(pos);
+        return ambientAmplitude(pos, i_theta);
 
     return texelFetch(_Amplitude, ivec3(i_x, i_y, i_theta), 0);
 }
@@ -69,7 +69,7 @@ void main() {
     vec4 wavenumber = vec4(minParam.w, minParam.w * 2, minParam.w*4, minParam.w*8);
     vec2 wavedirection = vec2(cos(theta), sin(theta));
 
-    bool atLeast2Away = true;
+    bool atLeast2Away = i_x > 2 && i_x < NUM_POS - 2 && i_y > 2 && i_y < NUM_POS-2;
 
     vec4 amplitude = texelFetch(_Amplitude, ivec3(uv.x * NUM_POS, uv.y * NUM_POS, i_theta), 0);
 
@@ -85,8 +85,8 @@ void main() {
         int h = 1; // step size
 
         // caching some values common to the calculations below
-        float inverseH2 = 1.0f / (h*h);
-        float inverse2H = 1.0f / (2*h);
+        float inverseH2 = 1.0f / float(h*h);
+        float inverse2H = 1.0f / float(2*h);
 
         vec4 lookup_xh_y_theta_k = lookup_amplitude(i_x + h, i_y, i_theta);
         vec4 lookup_xnegh_y_theta_k = lookup_amplitude(i_x - h, i_y, i_theta);
@@ -94,10 +94,6 @@ void main() {
         vec4 lookup_x_yh_theta_k = lookup_amplitude(i_x, i_y + h, i_theta);
         vec4 lookup_x_ynegh_theta_k = lookup_amplitude(i_x, i_y - h, i_theta);
 
-        // we are actually using a step size of h/2 here
-        // use central difference to obtain d2A / dtheta^2 numerically
-        vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h) 
-            + lookup_amplitude(i_x, i_y, i_theta - h) - 2 * amplitude) * inverseH2;
 
         // use central difference to obtain (k dot V_x)
         vec4 partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
@@ -121,10 +117,21 @@ void main() {
             dot(wavedirection * wavedirection, vec2(secondPartialDerivativeWRTX.a, secondPartialDerivativeWRTY.a))
         );
 
-        // equation 18
-        vec4 derivativeWRTt = -aspeed * directionalDerivativeWRTK + delta * secondDirectionalDerivativeWRTK + gamma * secondPartialDerivativeWRTtheta;
+        // we are actually using a step size of h/2 here
+        // use central difference to obtain d2A / dtheta^2 numerically
+        vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(i_x, i_y, i_theta + h) 
+            + lookup_amplitude(i_x, i_y, i_theta - h) - 2 * amplitude) * inverseH2;
 
-        /* amplitude += derivativeWRTt * deltaTime; */
+        // equation 18
+        vec4 derivativeWRTt = 
+            -aspeed * directionalDerivativeWRTK 
+            + 
+            delta * secondDirectionalDerivativeWRTK 
+            + 
+            gamma * secondPartialDerivativeWRTtheta
+            ;
+
+        amplitude += derivativeWRTt * deltaTime;
     }
 
     outAmplitude = amplitude;
