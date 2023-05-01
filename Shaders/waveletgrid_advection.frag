@@ -45,7 +45,8 @@ float dispersionSpeed(float wavenumber) {
 }
 
 float ambientAmplitude(vec4 pos) {
-    return 0;
+    return 1;
+    /* return (gl_Layer == 1) ? 1 : 0; */
 }
 
 float interpolate(vec4 v, float t) {
@@ -94,12 +95,10 @@ float interpolate2D(float x, float y, int iTheta, int iZeta) {
 void main() {
     int thetaIndex = gl_Layer;
 
-    vec4 interpolatedAmplitudes[NUM_K];
-
     // ADVECTION STEP
 #pragma openNV (unroll all)
     for (int zetaIndex = 0; zetaIndex < NUM_K; zetaIndex++) {
-        vec4 pos = mix(minParam, maxParam, 
+        vec4 pos = mix(minParam, maxParam,
             vec4(uv, float(thetaIndex) / NUM_THETA, float(zetaIndex) / NUM_K)) + unitParam/2;
         // since we're using zeta
         pos.w = pow(2, zetaIndex) * minParam.w;
@@ -110,17 +109,17 @@ void main() {
 
         float omega = advectionSpeed(wavenumber);
 
-        vec4 nxtPos = pos - vec4(deltaTime * wavedirection * omega, 0, 0);
+        vec2 nxtPos = pos.xy - deltaTime * wavedirection * omega;
 
-        vec2 nxtPosUV = vec2(((nxtPos - unitParam/2) - minParam) / (maxParam - minParam));
+        vec2 nxtPosUV = ((nxtPos - unitParam.xy/2) - minParam.xy) / (maxParam.xy - minParam.xy);
 
         // this uses texture interpolation, and not the thing recoomended in the paper.
         float interpolatedAmplitude = 
             interpolate2D(nxtPosUV.x * NUM_POS, nxtPosUV.y * NUM_POS, thetaIndex, zetaIndex);
-
+        
         // ambient amplitude if outside grid
-        if (pos.x < minParam.x || pos.x >= maxParam.x || 
-            pos.x < minParam.x || pos.x >= maxParam.x) 
+        if (nxtPos.x < minParam.x || nxtPos.x >= maxParam.x || 
+            nxtPos.y < minParam.y || nxtPos.y >= maxParam.y) 
                 interpolatedAmplitude = ambientAmplitude(pos);
 
         amplitude[zetaIndex] = interpolatedAmplitude;

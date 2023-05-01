@@ -51,7 +51,6 @@ int Core::update(float seconds){
         timeSinceLastUpdate = 0;
     }
     */
-    m_simulator->takeStep(seconds);
     m_profileBuffer->precomputeGPU(glfwGetTime());
 
 
@@ -75,8 +74,9 @@ int Core::update(float seconds){
         //m_profileBuffer->debugDraw();
         m_waveGeometry->draw(m_profileBuffer);
     } else {
-        glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
-        m_simulator->visualize();
+        if (ImGui::Button("Step"))
+            m_simulator->takeStep(seconds);
+        m_simulator->visualize(m_FBOSize);
     }
 
     return 0;

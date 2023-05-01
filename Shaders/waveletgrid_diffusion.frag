@@ -124,7 +124,7 @@ void main() {
         // equation 18
         vec4 derivativeWRTt = -aspeed * directionalDerivativeWRTK + delta * secondDirectionalDerivativeWRTK + gamma * secondPartialDerivativeWRTtheta;
 
-        amplitude += derivativeWRTt * deltaTime;
+        /* amplitude += derivativeWRTt * deltaTime; */
     }
 
     outAmplitude = amplitude;

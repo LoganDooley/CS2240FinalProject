@@ -20,7 +20,7 @@ public:
     ~Simulator();
 
     void takeStep(float dt);
-    void visualize();
+    void visualize(glm::ivec2 viewportSize);
 
 private:
     GLuint visualizationShader;
@@ -41,8 +41,7 @@ private:
 
     // to recompute minParam, maxParam, unitParam
     void recomputeRanges();
-
     void recomputeFramebuffer();
-
     void loadShadersWithData(GLuint shader);
+    std::shared_ptr<Texture> setup3DAmplitude();
 };

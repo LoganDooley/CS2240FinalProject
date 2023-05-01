@@ -10,5 +10,5 @@ out vec4 color;
 
 void main() {
     vec4 amplitudeSampled = texelFetch(_Amplitude, ivec3(uv.x * NUM_POS, uv.y * NUM_POS, thetaIndex), 0);
-    color = amplitudeSampled;
+    color = vec4(vec3(amplitudeSampled.rgb), 1);
 }
