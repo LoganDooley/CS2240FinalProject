@@ -15,7 +15,7 @@ Core::Core(int width, int height){
     m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
     Debug::checkGLError();
 
-    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(10, 10), 400);
+    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 400);
     Debug::checkGLError();
 
     std::array<int,4> resolution = {4096, 4096, 8, 4};

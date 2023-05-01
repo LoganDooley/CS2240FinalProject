@@ -10,15 +10,18 @@ uniform vec2 bottomLeft;
 uniform int thetaResolution;
 uniform int kResolution;
 
-float pbValue(float p, int iz){
-    return texture(profileBuffers, vec2(p, iz + 0.5)).r;
+float pbValue(float p, int ik){
     int N = pb_resolution;
-    float ip = N * p / periods[iz];
+    float ip = N * p / periods[ik];
     int pLower = int(floor(ip));
+    return texture(profileBuffers, vec2(ip/pb_resolution, ik)).r;
+
+
+
     float wpUpper = ip - pLower;
     pLower = int(mod(pLower, N));
     int pUpper = int(mod(pLower + 1, N));
-    return wpUpper * texture(profileBuffers, vec2((pUpper + 0.5)/pb_resolution, (iz + 0.5)/kResolution)).r + (1 - wpUpper) * texture(profileBuffers, vec2((pLower + 0.5)/pb_resolution, (iz + 0.5)/kResolution)).r;
+    return wpUpper * texture(profileBuffers, vec2((pUpper + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r + (1 - wpUpper) * texture(profileBuffers, vec2((pLower + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r;
 }
 
 void main() {

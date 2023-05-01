@@ -15,12 +15,11 @@ float rand(float k){
 }
 
 float w(float k){
-    return sqrt(k/50 * 9.81);
+    return sqrt(k * 9.81);
 }
 
 float phillips(float w){
-    return 1/(5 * w);
-    return 8.1 * pow(10, -3) * 2 * 3.1415 * pow(9.8, 2)/pow(w, 5);
+    return 0.1 * 8.1 * pow(10, -3) * 2 * 3.1415 * pow(9.8, 2)/pow(w, 5);
 }
 
 float psiBarIntegrand(float k, float p){
