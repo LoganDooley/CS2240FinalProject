@@ -140,7 +140,7 @@ void ProfileBuffer::precomputeGPU(float t){
 std::vector<float> ProfileBuffer::getPeriods(){
     std::vector<float> periods;
     for(int ik = 0; ik<m_kResolution; ik++){
-        float k_min = m_kMin + pow(m_integrationNodes, ik);
+        float k_min = m_kMin * pow(m_integrationNodes + 1, ik);
         periods.push_back(6.28318530718 / k_min);
     }
     return periods;

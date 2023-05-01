@@ -23,7 +23,7 @@ Core::Core(int width, int height){
     m_simulator = std::make_unique<Simulator>(resolution, setting);
     Debug::checkGLError();
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.01, 50, 4);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
 
 
@@ -73,12 +73,12 @@ int Core::update(float seconds){
 
     if (std::distance(items[0], current_item) == 0) {
         m_fullscreenQuad->bind();
-        //m_profileBuffer->debugDraw();
         m_waveGeometry->precomputeHeightField(m_profileBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
         m_waveGeometry->draw(m_camera);
         //m_waveGeometry->debugDraw();
+        //m_profileBuffer->debugDraw();
 
     } else {
         if (ImGui::Button("Step"))

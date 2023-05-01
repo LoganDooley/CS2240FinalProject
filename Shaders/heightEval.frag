@@ -32,9 +32,7 @@ void main() {
             float angle = itheta * da;
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
-            if(itheta >= 0){
-                height += da * 50 * max(dot(kdir, normalize(pos)), 0) * pbValue(kdir_x, ik);
-            }
+            height += da * max(dot(kdir, normalize(pos)), 0) * pbValue(kdir_x, ik);
         }
     }
 
