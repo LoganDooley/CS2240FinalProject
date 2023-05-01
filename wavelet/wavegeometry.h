@@ -11,6 +11,7 @@
 
 #include "waveletgrid.h"
 #include <memory>
+#include "camera.h"
 
 struct Triangle{
     Triangle(glm::vec3 nv0, glm::vec3 nv1, glm::vec3 nv2):
@@ -79,10 +80,23 @@ public:
 
     int getNumVerts();
 
-    void draw(std::shared_ptr<ProfileBuffer> profileBuffer);
+    void draw(std::shared_ptr<Camera> camera);
+
+    void debugDraw();
+
+    void precomputeHeightField(std::shared_ptr<ProfileBuffer> profileBuffer);
+
+    void bindHeightMapTexture();
+    void unbindHeightMapTexture();
 
 private:
     GLuint m_heightShader;
+    GLuint m_waveShader;
+    GLuint m_textureShader;
+
+    GLuint m_heightMap;
+    GLuint m_fbo;
+    GLuint m_rbo;
 
     unsigned int m_resolution;
     glm::vec2 m_size;

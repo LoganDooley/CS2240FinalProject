@@ -3,13 +3,22 @@
 layout (location = 0) in vec3 pos;
 
 uniform mat4 view, projection;
+uniform sampler2D heightMap;
+uniform vec2 lowerLeft;
+uniform vec2 upperRight;
 
 out vec3 worldSpace_pos;
+out vec2 uv;
 
 void main() {
-    vec2 xz = vec2(pos.x, pos.z);
+    if(pos.x < lowerLeft.x || pos.z < lowerLeft.y || pos.x > upperRight.x || pos.z > upperRight.y){
+        worldSpace_pos = vec3(pos.x, 0, pos.z);
+    }
+    else{
+        worldSpace_pos = vec3(pos.x, texture(heightMap, (vec2(pos.x, pos.z) - lowerLeft)/(upperRight - lowerLeft)).r, pos.z);
+    }
+    worldSpace_pos = vec3(pos.x, 0, pos.z);
+    uv = (vec2(pos.x, pos.z) - lowerLeft)/(upperRight - lowerLeft);
 
-    worldSpace_pos = pos;
-
-    gl_Position = projection * view * vec4(pos, 1);
+    gl_Position = projection * view * vec4(worldSpace_pos, 1);
 }

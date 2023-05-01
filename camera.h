@@ -27,6 +27,14 @@ public:
     void move(std::set<int>& keysDown, float dt);
     void rotate(glm::vec2 deltaMousePos);
 
+    int getWidth() const{
+        return m_width;
+    }
+
+    int getHeight() const{
+        return m_height;
+    }
+
 private:
     void translate(glm::vec3 move);
     void angleAxis(float angle, glm::vec3 axis);

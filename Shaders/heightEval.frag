@@ -1,6 +1,6 @@
 #version 330 core
 
-out vec4 fragColor;
+out float fragColor;
 
 uniform sampler2D profileBuffers;
 uniform int pb_resolution = 4096;
@@ -39,5 +39,6 @@ void main() {
     }
 
     float result = (3.14159/2 + atan(height))/3.14159;
-    fragColor = vec4(vec3(result), 1);
+    fragColor = result;
+    //fragColor = vec4(vec3(result), 1);
 }

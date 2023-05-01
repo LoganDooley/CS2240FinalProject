@@ -10,6 +10,12 @@ WaveGeometry::WaveGeometry(glm::vec2 size, unsigned int resolution):
     m_heightShader = ShaderLoader::createShaderProgram("Shaders/heightEval.vert", "Shaders/heightEval.frag");
     Debug::checkGLError();
 
+    m_waveShader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
+    Debug::checkGLError();
+
+    m_textureShader = ShaderLoader::createShaderProgram("Shaders/texture.vert", "Shaders/texture.frag");
+    Debug::checkGLError();
+
     std::vector<float> data;
 
     glm::vec3 anchor = glm::vec3(-size.x/2, 0, -size.y/2);
@@ -36,6 +42,26 @@ WaveGeometry::WaveGeometry(glm::vec2 size, unsigned int resolution):
     glBindVertexArray(0);
 
     m_numVerts = data.size() / 3;
+
+    glGenTextures(1, &m_heightMap);
+    glBindTexture(GL_TEXTURE_2D, m_heightMap);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, resolution, resolution, 0, GL_RED, GL_FLOAT, nullptr);
+    Debug::checkGLError();
+
+    glGenFramebuffers(1, &m_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_heightMap, 0);
+    glGenRenderbuffers(1, &m_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, resolution, resolution);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 WaveGeometry::~WaveGeometry(){
@@ -89,7 +115,17 @@ void WaveGeometry::update(std::shared_ptr<WaveletGrid> waveletGrid){
 
 }
 
-void WaveGeometry::draw(std::shared_ptr<ProfileBuffer> profileBuffer){
+void WaveGeometry::bindHeightMapTexture(){
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_heightMap);
+}
+
+void WaveGeometry::unbindHeightMapTexture(){
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileBuffer){
     glUseProgram(m_heightShader);
     glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
     std::vector<float> periods = profileBuffer->getPeriods();
@@ -99,9 +135,34 @@ void WaveGeometry::draw(std::shared_ptr<ProfileBuffer> profileBuffer){
     glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 16);
     glUniform1i(glGetUniformLocation(m_heightShader, "kResolution"), profileBuffer->getKResolution());
     profileBuffer->bindProfilebufferTexture();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_resolution, m_resolution);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void WaveGeometry::draw(std::shared_ptr<Camera> camera){
+    glUseProgram(m_waveShader);
+    glUniformMatrix4fv(glGetUniformLocation(m_waveShader, "view"), 1, GL_FALSE, glm::value_ptr(camera->getView()));
+    glUniformMatrix4fv(glGetUniformLocation(m_waveShader, "projection"), 1, GL_FALSE, glm::value_ptr(camera->getProjection()));
+    glUniform2f(glGetUniformLocation(m_waveShader, "lowerLeft"), - m_size.x/2, - m_size.y/2);
+    glUniform2f(glGetUniformLocation(m_waveShader, "upperRight"), m_size.x/2, m_size.y/2);
+    bindHeightMapTexture();
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glViewport(0, 0, camera->getWidth(), camera->getHeight());
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindVertexArray(m_vao);
+    glDrawArrays(GL_TRIANGLES, 0, m_numVerts);
+
+}
+
+void WaveGeometry::debugDraw(){
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUseProgram(m_textureShader);
+    bindHeightMapTexture();
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

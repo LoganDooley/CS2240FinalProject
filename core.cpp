@@ -12,7 +12,7 @@ Core::Core(int width, int height){
     m_heightShader = ShaderLoader::createShaderProgram("Shaders/heightEval.vert", "Shaders/heightEval.frag");
     Debug::checkGLError();
 
-    m_camera = std::make_unique<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
+    m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
     Debug::checkGLError();
 
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(10, 10), 400);
@@ -51,6 +51,7 @@ int Core::update(float seconds){
         timeSinceLastUpdate = 0;
     }
     */
+    m_camera->move(m_keysDown, seconds);
     m_profileBuffer->precomputeGPU(glfwGetTime());
 
 
@@ -63,16 +64,21 @@ int Core::update(float seconds){
             bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
             if (ImGui::Selectable(items[n], is_selected))
                 current_item = items[n];
-            if (is_selected) 
+            if (is_selected)
                 ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
         }
         ImGui::EndCombo();
     }
 
     if (std::distance(items[0], current_item) == 0) {
-        glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
+        m_fullscreenQuad->bind();
         //m_profileBuffer->debugDraw();
-        m_waveGeometry->draw(m_profileBuffer);
+        m_waveGeometry->precomputeHeightField(m_profileBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
+        m_waveGeometry->draw(m_camera);
+        //m_waveGeometry->debugDraw();
+
     } else {
         if (ImGui::Button("Step"))
             m_simulator->takeStep(seconds);
