@@ -13,6 +13,7 @@ const float surfaceTension = 72.8 / 1000; // of water
 uniform sampler3D _Amplitude;
 uniform sampler2D _AtLeast2Away;
 
+uniform float time;
 uniform float deltaTime;
 
 uniform vec4 minParam;
@@ -43,7 +44,8 @@ vec4 dispersionSpeed(vec4 wavenumber) {
 }
 
 vec4 ambientAmplitude(vec2 pos, int i_theta) {
-    return (i_theta == 1) ? vec4(1) : vec4(0);
+    return vec4(1);
+    /* return (i_theta == 1) ? vec4((sin(time) + 1) / 2) : vec4(0); */
 }
 
 vec4 lookup_amplitude(int i_x, int i_y, int i_theta) {
@@ -124,12 +126,9 @@ void main() {
 
         // equation 18
         vec4 derivativeWRTt = 
-            -aspeed * directionalDerivativeWRTK 
-            + 
-            delta * secondDirectionalDerivativeWRTK 
-            + 
-            gamma * secondPartialDerivativeWRTtheta
-            ;
+            -aspeed * directionalDerivativeWRTK + 
+            delta * secondDirectionalDerivativeWRTK + 
+            gamma * secondPartialDerivativeWRTtheta;
 
         amplitude += derivativeWRTt * deltaTime;
     }

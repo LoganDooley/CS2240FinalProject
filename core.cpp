@@ -18,14 +18,17 @@ Core::Core(int width, int height){
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 400);
     Debug::checkGLError();
 
+
     std::array<int,4> resolution = {4096, 4096, 8, 4};
     Simulator::GridSettings setting;
     m_simulator = std::make_unique<Simulator>(resolution, setting);
     Debug::checkGLError();
 
+    m_waveGeometry->setAmplitudeTexture(m_simulator->getAmplitudeTexture());
+    Debug::checkGLError();
+
     m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
-
 
     glEnable(GL_DEPTH_TEST);
     Debug::checkGLError();
@@ -52,9 +55,6 @@ int Core::update(float seconds){
     }
     */
     m_camera->move(m_keysDown, seconds);
-    m_fullscreenQuad->bind();
-    m_profileBuffer->precomputeGPU(glfwGetTime());
-
 
     const char* items[] = { "Wave geometry", "Advection / Diffusion" };
     static const char* current_item = items[0];
@@ -72,6 +72,9 @@ int Core::update(float seconds){
     }
 
     if (std::distance(items[0], current_item) == 0) {
+        m_simulator->takeStep(seconds);
+        m_profileBuffer->precomputeGPU(glfwGetTime());
+
         m_fullscreenQuad->bind();
         m_waveGeometry->precomputeHeightField(m_profileBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

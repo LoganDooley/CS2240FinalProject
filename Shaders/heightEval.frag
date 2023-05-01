@@ -2,6 +2,8 @@
 
 out float fragColor;
 
+uniform sampler3D _Amplitude;
+
 uniform sampler2D profileBuffers;
 uniform int pb_resolution = 4096;
 uniform float periods[8];
@@ -22,7 +24,9 @@ float pbValue(float p, int ik){
     float wpUpper = ip - pLower;
     pLower = int(mod(pLower, N));
     int pUpper = int(mod(pLower + 1, N));
-    return wpUpper * texture(profileBuffers, vec2((pUpper + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r + (1 - wpUpper) * texture(profileBuffers, vec2((pLower + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r;
+    return wpUpper * texture(profileBuffers, 
+        vec2((pUpper + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r + (1 - wpUpper) * texture(profileBuffers, 
+        vec2((pLower + 0.5)/pb_resolution, (ik + 0.5)/kResolution)).r;
 }
 
 float PositiveCosineSquaredDS(float theta){
@@ -33,18 +37,30 @@ float PositiveCosineSquaredDS(float theta){
     else return 0;
 }
 
+vec4 amplitude(vec2 uv, float thetaUV) {
+    return texture(_Amplitude, vec3(uv, thetaUV));
+}
+
 void main() {
     vec2 pos = bottomLeft + vec2((gl_FragCoord.x - 0.5), (gl_FragCoord.y - 0.5)) * gridSpacing;
+    vec2 uv = gl_FragCoord.xy / pb_resolution;
 
     float height = 0;
     int DIR_NUM = thetaResolution;
-    for(int ik = 0; ik < kResolution; ik++){
-        float da = 6.28318530718 / DIR_NUM;
-        for(int itheta = 0; itheta < DIR_NUM; itheta++){
-            float angle = itheta * da;
+    float da = 6.28318530718 / DIR_NUM;
+    for(int itheta = 0; itheta < DIR_NUM; itheta++){
+        float angle = itheta * da;
+
+        vec4 amp = amplitude(uv, angle);
+
+        for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
-            height += da * sqrt(da * PositiveCosineSquaredDS(angle)) * pbValue(kdir_x, ik);
+            /* height += da * sqrt(da * PositiveCosineSquaredDS(angle)) * pbValue(kdir_x, ik); */
+
+            int interpolated_ik = int(round( float(ik) / DIR_NUM ));
+
+            height += da * amp[interpolated_ik] * pbValue(kdir_x, ik);
         }
     }
 

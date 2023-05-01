@@ -21,8 +21,10 @@ public:
 
     void takeStep(float dt);
     void visualize(glm::ivec2 viewportSize);
+    std::shared_ptr<Texture> getAmplitudeTexture() { return amplitude; }
 
 private:
+    float timeElapsed = 0;
     GLuint visualizationShader;
     GLuint advectionShader;
     GLuint diffusionShader;

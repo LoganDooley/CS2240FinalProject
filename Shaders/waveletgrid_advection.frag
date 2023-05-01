@@ -13,6 +13,7 @@ uniform float surfaceTension = 72.8 / 1000; // of water
 
 uniform sampler3D _Amplitude;
 
+uniform float time;
 uniform float deltaTime;
 uniform vec4 minParam;
 uniform vec4 maxParam;
@@ -46,7 +47,8 @@ float dispersionSpeed(float wavenumber) {
 
 float ambientAmplitude(vec4 pos) {
     /* return 1; */
-    return (gl_Layer == 1) ? 1 : 0;
+    /* return (gl_Layer == 1) ? (sin(time) + 1) / 2 : 0; */
+    return 1;
 }
 
 float interpolate(vec4 v, float t) {
@@ -113,7 +115,6 @@ void main() {
 
         vec2 nxtPosUV = ((nxtPos - unitParam.xy/2) - minParam.xy) / (maxParam.xy - minParam.xy);
 
-        // this uses texture interpolation, and not the thing recoomended in the paper.
         float interpolatedAmplitude = 
             interpolate2D(nxtPosUV.x * NUM_POS, nxtPosUV.y * NUM_POS, thetaIndex, zetaIndex);
         

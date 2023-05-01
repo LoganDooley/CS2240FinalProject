@@ -127,6 +127,8 @@ void WaveGeometry::unbindHeightMapTexture(){
 
 void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileBuffer){
     glUseProgram(m_heightShader);
+    amplitudeTexture->bind(GL_TEXTURE1);
+    glUniform1i(glGetUniformLocation(m_heightShader, "_Amplitude"), 1);
     glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
     std::vector<float> periods = profileBuffer->getPeriods();
     glUniform1fv(glGetUniformLocation(m_heightShader, "periods"), periods.size(), periods.data());
@@ -141,6 +143,7 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    amplitudeTexture->unbind(GL_TEXTURE1);
 }
 
 void WaveGeometry::draw(std::shared_ptr<Camera> camera){

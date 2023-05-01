@@ -68,6 +68,7 @@ void Simulator::takeStep(float dt) {
 
     // advection step
     glUseProgram(advectionShader);
+    glUniform1f(glGetUniformLocation(advectionShader, "time"), timeElapsed);
     glUniform1f(glGetUniformLocation(advectionShader, "deltaTime"), dt);
     advectionFBO->bind();
     amplitude->bind();
@@ -82,6 +83,7 @@ void Simulator::takeStep(float dt) {
 
     // diffusion step
     glUseProgram(diffusionShader);
+    glUniform1f(glGetUniformLocation(diffusionShader, "time"), timeElapsed);
     glUniform1f(glGetUniformLocation(diffusionShader, "deltaTime"), dt);
     diffusionFBO->bind();
     amplitude_intermediate->bind();
@@ -95,6 +97,8 @@ void Simulator::takeStep(float dt) {
 
     glEnable(GL_DEPTH_TEST);
     glUseProgram(0);
+
+    timeElapsed += dt;
 }
 
 void Simulator::visualize(glm::ivec2 viewport) {
