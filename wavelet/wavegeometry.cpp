@@ -48,8 +48,8 @@ WaveGeometry::WaveGeometry(glm::vec2 size, unsigned int resolution):
     // set the texture wrapping/filtering options (on the currently bound texture object)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, resolution, resolution, 0, GL_RED, GL_FLOAT, nullptr);
     Debug::checkGLError();
 
@@ -143,19 +143,18 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
 }
 
 void WaveGeometry::draw(std::shared_ptr<Camera> camera){
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_waveShader);
     glUniformMatrix4fv(glGetUniformLocation(m_waveShader, "view"), 1, GL_FALSE, glm::value_ptr(camera->getView()));
     glUniformMatrix4fv(glGetUniformLocation(m_waveShader, "projection"), 1, GL_FALSE, glm::value_ptr(camera->getProjection()));
     glUniform2f(glGetUniformLocation(m_waveShader, "lowerLeft"), - m_size.x/2, - m_size.y/2);
     glUniform2f(glGetUniformLocation(m_waveShader, "upperRight"), m_size.x/2, m_size.y/2);
     bindHeightMapTexture();
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glViewport(0, 0, camera->getWidth(), camera->getHeight());
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindVertexArray(m_vao);
     glDrawArrays(GL_TRIANGLES, 0, m_numVerts);
-
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void WaveGeometry::debugDraw(){
@@ -165,4 +164,5 @@ void WaveGeometry::debugDraw(){
     bindHeightMapTexture();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(0);
 }

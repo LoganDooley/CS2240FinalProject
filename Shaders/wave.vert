@@ -8,7 +8,6 @@ uniform vec2 lowerLeft;
 uniform vec2 upperRight;
 
 out vec3 worldSpace_pos;
-out vec2 uv;
 
 void main() {
     if(pos.x < lowerLeft.x || pos.z < lowerLeft.y || pos.x > upperRight.x || pos.z > upperRight.y){
@@ -17,8 +16,6 @@ void main() {
     else{
         worldSpace_pos = vec3(pos.x, texture(heightMap, (vec2(pos.x, pos.z) - lowerLeft)/(upperRight - lowerLeft)).r, pos.z);
     }
-    worldSpace_pos = vec3(pos.x, 0, pos.z);
-    uv = (vec2(pos.x, pos.z) - lowerLeft)/(upperRight - lowerLeft);
 
     gl_Position = projection * view * vec4(worldSpace_pos, 1);
 }

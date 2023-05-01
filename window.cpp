@@ -35,7 +35,7 @@ int Window::start(){
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 
-    m_GLFWwindow = glfwCreateWindow(640, 480, "CS1950U Engine", NULL, NULL);
+    m_GLFWwindow = glfwCreateWindow(640, 480, "Smile & Wave", NULL, NULL);
     if (!m_GLFWwindow)
     {
         std::cout<<"Window Creation Failed :("<<std::endl;

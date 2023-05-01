@@ -33,12 +33,10 @@ void main() {
             vec2 kdir = vec2(cos(angle), sin(angle));
             float kdir_x = dot(kdir, pos);
             if(itheta >= 0){
-                height += da * 10000 * max(kdir_x, 0) / (length(pos)+1) * pbValue(kdir_x, ik)/DIR_NUM;
+                height += da * 500 * max(dot(kdir, normalize(pos)), 0) * pbValue(kdir_x, ik)/DIR_NUM;
             }
         }
     }
 
-    float result = (3.14159/2 + atan(height))/3.14159;
-    fragColor = result;
-    //fragColor = vec4(vec3(result), 1);
+    fragColor = height;
 }

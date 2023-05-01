@@ -52,6 +52,7 @@ int Core::update(float seconds){
     }
     */
     m_camera->move(m_keysDown, seconds);
+    m_fullscreenQuad->bind();
     m_profileBuffer->precomputeGPU(glfwGetTime());
 
 
