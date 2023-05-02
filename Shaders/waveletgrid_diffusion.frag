@@ -1,6 +1,8 @@
 #version 330 core
 #extension GL_ARB_fragment_layer_viewport : enable
 
+const float tau = 6.28318530718f;
+
 in vec2 uv;
 
 const int NUM_K = 4;
@@ -23,8 +25,7 @@ uniform vec4 unitParam;
 out vec4 outAmplitude;
 
 vec4 angularFrequency(vec4 wavenumber) {
-    return pow(wavenumber * gravity +
-            surfaceTension * wavenumber * wavenumber * wavenumber, vec4(0.5));
+    return pow(wavenumber * gravity + surfaceTension * wavenumber * wavenumber * wavenumber, vec4(0.5));
 }
 
 vec4 advectionSpeed(vec4 wavenumber) {
@@ -44,13 +45,12 @@ vec4 dispersionSpeed(vec4 wavenumber) {
 }
 
 vec4 ambientAmplitude(vec2 pos, int i_theta) {
-    return vec4(1);
-    /* return (i_theta == 1) ? vec4((sin(time) + 1) / 2) : vec4(0); */
+    return (i_theta == 1) ? vec4(0.5) : vec4(0);
 }
 
 vec4 lookup_amplitude(int i_x, int i_y, int i_theta) {
     i_theta = (i_theta + NUM_THETA) % NUM_THETA;
-    vec2 pos = (unitParam.xy / 2 + vec2(i_x, i_y) / NUM_POS) * (maxParam.xy - minParam.xy) + minParam.xy;
+    vec2 pos = vec2(i_x + 0.5, i_y + 0.5) / NUM_POS * (maxParam.xy - minParam.xy) + minParam.xy;
 
     // wavefront unlikely to diverge here, and even if it does they dont diverge by that much
     if (i_x < 0 || i_x >= NUM_POS || i_y < 0 || i_y >= NUM_POS)
@@ -63,10 +63,10 @@ vec4 lookup_amplitude(int i_x, int i_y, int i_theta) {
 void main() {
     int i_x = int(uv.x * NUM_POS);
     int i_y = int(uv.y * NUM_POS);
-    vec2 pos = mix(minParam.xy, maxParam.xy, vec2(uv));
+    vec2 pos = mix(minParam.xy, maxParam.xy, uv);
 
     int i_theta = gl_Layer;
-    float theta = float(i_theta) / NUM_THETA + unitParam.z / 2;
+    float theta = mix(minParam.z, maxParam.z, i_theta + 0.5);
 
     vec4 wavenumber = vec4(minParam.w, minParam.w * 2, minParam.w*4, minParam.w*8);
     vec2 wavedirection = vec2(cos(theta), sin(theta));
@@ -126,8 +126,8 @@ void main() {
 
         // equation 18
         vec4 derivativeWRTt = 
-            -aspeed * directionalDerivativeWRTK + 
-            delta * secondDirectionalDerivativeWRTK + 
+            -aspeed * directionalDerivativeWRTK +
+            delta * secondDirectionalDerivativeWRTK +
             gamma * secondPartialDerivativeWRTtheta;
 
         amplitude += derivativeWRTt * deltaTime;

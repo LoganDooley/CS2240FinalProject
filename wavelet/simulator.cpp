@@ -140,6 +140,10 @@ void Simulator::recomputeFramebuffer() {
     advectionFBO->verifyStatus();
     diffusionFBO->verifyStatus();
 
+    reset();
+}
+
+void Simulator::reset() {
     GLuint clearColor[4] = {0, 0, 0, 0};
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER,advectionFBO->getHandle());

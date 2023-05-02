@@ -71,6 +71,7 @@ int Core::update(float seconds){
         ImGui::EndCombo();
     }
 
+    if (ImGui::Button("Reset Simulator"))      m_simulator->reset();
     if (std::distance(items[0], current_item) == 0) {
         m_simulator->takeStep(seconds);
         m_profileBuffer->precomputeGPU(glfwGetTime());

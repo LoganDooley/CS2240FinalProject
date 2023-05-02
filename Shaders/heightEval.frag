@@ -13,6 +13,10 @@ uniform int thetaResolution;
 uniform int kResolution;
 uniform float windTheta = 0;
 
+float rand(vec2 seed) {
+    return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 float pbValue(float p, int ik){
     int N = pb_resolution;
     float ip = N * p / periods[ik];
@@ -51,16 +55,17 @@ void main() {
     for(int itheta = 0; itheta < DIR_NUM; itheta++){
         float angle = itheta * da;
 
-        vec4 amp = amplitude(uv, angle);
+        vec4 amp = amplitude(uv, float(itheta) / DIR_NUM);
 
         for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
-            float kdir_x = dot(kdir, pos);
+            float p = dot(kdir, pos) + rand( kdir );
             /* height += da * sqrt(da * PositiveCosineSquaredDS(angle)) * pbValue(kdir_x, ik); */
 
-            int interpolated_ik = int(round( float(ik) / DIR_NUM ));
+            int interpolated_ik = int(round(4 * float(ik) / kResolution));
+            interpolated_ik = clamp(interpolated_ik, 0, 3);
 
-            height += da * amp[interpolated_ik] * pbValue(kdir_x, ik);
+            height += da * amp[interpolated_ik] * pbValue(p, ik);
         }
     }
 

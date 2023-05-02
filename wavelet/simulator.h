@@ -21,6 +21,7 @@ public:
 
     void takeStep(float dt);
     void visualize(glm::ivec2 viewportSize);
+    void reset();
     std::shared_ptr<Texture> getAmplitudeTexture() { return amplitude; }
 
 private:

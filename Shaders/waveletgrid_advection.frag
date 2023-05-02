@@ -3,6 +3,8 @@
 
 in vec2 uv;
 
+const float tau = 6.28318530718f;
+
 // DIMENSIONS
 const int NUM_K = 4; // this must not be higher than 4
 uniform int NUM_THETA = 8;
@@ -46,10 +48,17 @@ float dispersionSpeed(float wavenumber) {
 }
 
 float ambientAmplitude(vec4 pos) {
-    /* return 1; */
-    /* return (gl_Layer == 1) ? (sin(time) + 1) / 2 : 0; */
-    return 1;
+    return (gl_Layer == 1) ? 0.5 : 0;
 }
+
+float ambientAmplitudeCoord(int ix, int iy, int itheta, int izeta) {
+    vec4 coord = (vec4(ix, iy, itheta, izeta) + 0.5) / vec4(vec2(NUM_POS), NUM_THETA, NUM_K);
+    vec4 pos = mix(minParam, maxParam, coord);
+    pos.w = minParam.w * pow(2, izeta);
+
+    return ambientAmplitude(pos);
+}
+
 
 float interpolate(vec4 v, float t) {
     float dk = (v[2] - v[0]) / 2;
@@ -73,7 +82,15 @@ float interpolate(vec4 v, float t) {
     return dot(a,b);
 }
 
-float interpolate2D(float x, float y, int iTheta, int iZeta) {
+float getAmplitude(int ix, int iy, int itheta, int izeta) {
+    return ix >= 0 && ix < NUM_POS && iy >= 0 && iy < NUM_POS ? 
+        texelFetch(_Amplitude, ivec3(ix, iy, itheta), 0)[izeta] :
+        ambientAmplitudeCoord(ix, iy, itheta, izeta);
+}
+
+// we can break this into 2 shaders and instead of doing 16 texture fetches, we only
+// do 8 but i dont know if that's that much better
+float interpolate2D(float x, float y, int itheta, int izeta) {
     int ix = int(x);
     int iy = int(y);
 
@@ -82,10 +99,10 @@ float interpolate2D(float x, float y, int iTheta, int iZeta) {
 #pragma openNV (unroll all)
     for (int dx = 0; dx < 4; dx++) {
         vec4 v = vec4(
-            texelFetch(_Amplitude, ivec3(ix-1, iy, iTheta), 0)[iZeta],
-            texelFetch(_Amplitude, ivec3(ix, iy, iTheta), 0)[iZeta],
-            texelFetch(_Amplitude, ivec3(ix+1, iy, iTheta), 0)[iZeta],
-            texelFetch(_Amplitude, ivec3(ix+2, iy, iTheta), 0)[iZeta]
+            texelFetch(_Amplitude, ivec3(ix+dx-1, iy-1, itheta), 0)[izeta],
+            texelFetch(_Amplitude, ivec3(ix+dx-1, iy, itheta), 0)[izeta],
+            texelFetch(_Amplitude, ivec3(ix+dx-1, iy+1, itheta), 0)[izeta],
+            texelFetch(_Amplitude, ivec3(ix+dx-1, iy+2, itheta), 0)[izeta]
         );
 
         w[dx] = interpolate(v, y - iy);
@@ -100,28 +117,29 @@ void main() {
     // ADVECTION STEP
 #pragma openNV (unroll all)
     for (int zetaIndex = 0; zetaIndex < NUM_K; zetaIndex++) {
-        vec4 pos = mix(minParam, maxParam,
-            vec4(uv, float(thetaIndex) / NUM_THETA, float(zetaIndex) / NUM_K)) + unitParam/2;
-        // since we're using zeta
-        pos.w = pow(2, zetaIndex) * minParam.w;
-
+        vec3 uvw = vec3(uv, (thetaIndex + 0.5) / NUM_THETA);
+        vec3 pos = mix(minParam.xyz, maxParam.xyz, uvw);
         float theta = pos.z;
-        float wavenumber = pos.w;
+
+        // since we're using zeta
+        float wavenumber = minParam.w * pow(2,zetaIndex);
         vec2 wavedirection = vec2(cos(theta), sin(theta));
 
-        float omega = advectionSpeed(wavenumber);
+        vec2 nxtPos = pos.xy - deltaTime * wavedirection * advectionSpeed(wavenumber);
 
-        vec2 nxtPos = pos.xy - deltaTime * wavedirection * omega;
+        vec2 nxtPosUV = (nxtPos - minParam.xy) / (maxParam.xy - minParam.xy);
+        vec2 nxtPosTexCoord = nxtPosUV * NUM_POS - 0.5;
 
-        vec2 nxtPosUV = ((nxtPos - unitParam.xy/2) - minParam.xy) / (maxParam.xy - minParam.xy);
-
-        float interpolatedAmplitude = 
-            interpolate2D(nxtPosUV.x * NUM_POS, nxtPosUV.y * NUM_POS, thetaIndex, zetaIndex);
+        float interpolatedAmplitude =
+            interpolate2D(nxtPosTexCoord.x, nxtPosTexCoord.y, thetaIndex, zetaIndex);
         
         // ambient amplitude if outside grid
         if (nxtPos.x < minParam.x || nxtPos.x >= maxParam.x || 
-            nxtPos.y < minParam.y || nxtPos.y >= maxParam.y) 
-                interpolatedAmplitude = ambientAmplitude(pos);
+            nxtPos.y < minParam.y || nxtPos.y >= maxParam.y) {
+
+            interpolatedAmplitude = (gl_Layer == 1) ? 0.5 : 0;
+            /* interpolatedAmplitude = ambientAmplitude(vec4(nxtPos, theta, wavenumber)); */
+        }
 
         amplitude[zetaIndex] = interpolatedAmplitude;
     }
