@@ -23,14 +23,14 @@ uniform vec4 minParam;
 uniform vec4 maxParam;
 uniform vec4 unitParam;
 
-layout (location = 0) vec4 amplitude0;
-layout (location = 1) vec4 amplitude1;
-layout (location = 2) vec4 amplitude2;
-layout (location = 3) vec4 amplitude3;
-layout (location = 4) vec4 amplitude4;
-layout (location = 5) vec4 amplitude5;
-layout (location = 6) vec4 amplitude6;
-layout (location = 7) vec4 amplitude7;
+layout (location = 0) out vec4 amplitude0;
+layout (location = 1) out vec4 amplitude1;
+layout (location = 2) out vec4 amplitude2;
+layout (location = 3) out vec4 amplitude3;
+layout (location = 4) out vec4 amplitude4;
+layout (location = 5) out vec4 amplitude5;
+layout (location = 6) out vec4 amplitude6;
+layout (location = 7) out vec4 amplitude7;
 
 // TODO: Precompute these for grid points
 float angularFrequency(float wavenumber) {

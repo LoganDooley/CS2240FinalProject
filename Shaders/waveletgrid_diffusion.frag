@@ -22,14 +22,14 @@ uniform vec4 minParam;
 uniform vec4 maxParam;
 uniform vec4 unitParam;
 
-layout (location = 0) vec4 outAmplitude0;
-layout (location = 1) vec4 outAmplitude1;
-layout (location = 2) vec4 outAmplitude2;
-layout (location = 3) vec4 outAmplitude3;
-layout (location = 4) vec4 outAmplitude4;
-layout (location = 5) vec4 outAmplitude5;
-layout (location = 6) vec4 outAmplitude6;
-layout (location = 7) vec4 outAmplitude7;
+layout (location = 0) out vec4 outAmplitude0;
+layout (location = 1) out vec4 outAmplitude1;
+layout (location = 2) out vec4 outAmplitude2;
+layout (location = 3) out vec4 outAmplitude3;
+layout (location = 4) out vec4 outAmplitude4;
+layout (location = 5) out vec4 outAmplitude5;
+layout (location = 6) out vec4 outAmplitude6;
+layout (location = 7) out vec4 outAmplitude7;
 
 vec4 angularFrequency(vec4 wavenumber) {
     return pow(wavenumber * gravity + surfaceTension * wavenumber * wavenumber * wavenumber, vec4(0.5));
