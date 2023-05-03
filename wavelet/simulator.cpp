@@ -7,10 +7,12 @@
 #include "shaderloader.h"
 #include <glm/ext.hpp>
 
-Simulator::Simulator(std::array<int, 4> resolution, GridSettings setting) :
-    setting(setting), resolution(resolution) {
+Simulator::Simulator(Setting setting) :
+    setting(setting) {
     
-    if (resolution[0] != resolution[1] || resolution[2] != 8 || resolution[3] != 4) {
+    if (setting.resolution[0] != setting.resolution[1] || 
+        setting.resolution[2] != 8 || 
+        setting.resolution[3] != 4) {
         std::cerr << "currently using unsupported resolution" << std::endl;
     }
     recomputeRanges();

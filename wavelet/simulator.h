@@ -2,21 +2,14 @@
 
 #include "GLWrapper/framebuffer.h"
 #include "fullscreenquad.h"
+#include "wavelet/setting.h"
 #include "wavelet/waveletgrid.h"
 #include <glm/glm.hpp>
 #include <memory>
 
 class Simulator {
 public:
-    struct GridSettings {
-        float gravity = 9.81;
-        float surfaceTension = 72.8 / 1000; // of water
-
-        float size = 50;
-        glm::vec2 kRange = glm::vec2(0.01, 10.0);
-    };
-
-    Simulator(std::array<int, 4> resolution, GridSettings setting);
+    Simulator(Setting settings);
     ~Simulator();
 
     void takeStep(float dt);
@@ -36,9 +29,8 @@ private:
     std::shared_ptr<Texture> amplitude_intermediate;
     std::shared_ptr<FullscreenQuad> fullScreenQuad;
 
+    const Setting setting;
     int visualization_thetaIndex = 0;
-    GridSettings setting;
-    std::array<int, 4> resolution;
     // derived from resolution and simulation area
     glm::vec4 minParam, maxParam, unitParam;
 

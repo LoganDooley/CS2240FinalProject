@@ -15,14 +15,14 @@ struct Setting {
 
     // for profile buffer computation
     int integrationNodes = 49;
-    int pResolution = 4096;
+    int pResolution = 1024;
 
     float profileBuffer_kMin = 0.1;
     int profileBuffer_kResolution = 4;
 
     // for height field evaluation
-    int heightField_resolution;
+    int heightField_resolution = 400;
 
-    float minP() { return -1; }
-    float maxP() { return sqrt(2) * size / 2; }
+    float minP() { return 0; }
+    float maxP() { return sqrt(2) * size / 2 + 1; }
 };

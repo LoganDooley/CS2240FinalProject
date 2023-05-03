@@ -2,11 +2,12 @@
 
 #include "External/imgui/imgui.h"
 #include "debug.h"
+#include "wavelet/setting.h"
 #include "wavelet/simulator.h"
 #include "imgui.h"
 
 Core::Core(int width, int height){
-    Simulator::GridSettings setting;
+    Setting setting;
 
     m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
     Debug::checkGLError();
@@ -20,8 +21,7 @@ Core::Core(int width, int height){
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 400);
     Debug::checkGLError();
 
-    std::array<int,4> resolution = {2048, 2048, 8, 4};
-    m_simulator = std::make_unique<Simulator>(resolution, setting);
+    m_simulator = std::make_unique<Simulator>(setting);
     Debug::checkGLError();
 
     m_waveGeometry->setAmplitudeTexture(m_simulator->getAmplitudeTexture());
@@ -34,7 +34,8 @@ Core::Core(int width, int height){
     Debug::checkGLError();
     glViewport(0, 0, width, height);
     Debug::checkGLError();
-    m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 2), glm::uvec4(100, 100, 16, 4));
+    m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 2), 
+            glm::uvec4(100, 100, 16, 4));
     //m_waveletGrid->takeStep(0);
     //m_waveGeometry->update(m_waveletGrid);
     m_fullscreenQuad = std::make_shared<FullscreenQuad>();

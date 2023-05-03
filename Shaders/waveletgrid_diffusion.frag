@@ -130,7 +130,7 @@ void main() {
             delta * secondDirectionalDerivativeWRTK +
             gamma * secondPartialDerivativeWRTtheta;
 
-        amplitude += derivativeWRTt * deltaTime;
+        /* amplitude += derivativeWRTt * deltaTime; */
     }
 
     outAmplitude = amplitude;

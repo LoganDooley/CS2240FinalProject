@@ -23,8 +23,6 @@ float pbValue(float p, int ik){
 
     return texture(profileBuffers, vec2(ip/pb_resolution, ik)).r;
 
-
-
     float wpUpper = ip - pLower;
     pLower = int(mod(pLower, N));
     int pUpper = int(mod(pLower + 1, N));
