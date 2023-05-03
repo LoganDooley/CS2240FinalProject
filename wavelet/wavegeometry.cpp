@@ -127,8 +127,8 @@ void WaveGeometry::unbindHeightMapTexture(){
 
 void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileBuffer){
     glUseProgram(m_heightShader);
-    amplitudeTexture->bind(GL_TEXTURE1);
     glUniform1i(glGetUniformLocation(m_heightShader, "_Amplitude"), 1);
+    amplitudeTexture->bind(GL_TEXTURE1);
     glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
     std::vector<float> periods = profileBuffer->getPeriods();
     glUniform1fv(glGetUniformLocation(m_heightShader, "periods"), periods.size(), periods.data());

@@ -9,7 +9,7 @@
 class Simulator {
 public:
     struct GridSettings {
-        float gravity = 9.8;
+        float gravity = 9.81;
         float surfaceTension = 72.8 / 1000; // of water
 
         float size = 50;

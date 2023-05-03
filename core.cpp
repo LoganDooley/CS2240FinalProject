@@ -6,6 +6,8 @@
 #include "imgui.h"
 
 Core::Core(int width, int height){
+    Simulator::GridSettings setting;
+
     m_shader = ShaderLoader::createShaderProgram("Shaders/wave.vert", "Shaders/wave.frag");
     Debug::checkGLError();
 
@@ -15,12 +17,10 @@ Core::Core(int width, int height){
     m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
     Debug::checkGLError();
 
-    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 400);
+    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(setting.size, setting.size), 400);
     Debug::checkGLError();
 
-
     std::array<int,4> resolution = {4096, 4096, 8, 4};
-    Simulator::GridSettings setting;
     m_simulator = std::make_unique<Simulator>(resolution, setting);
     Debug::checkGLError();
 

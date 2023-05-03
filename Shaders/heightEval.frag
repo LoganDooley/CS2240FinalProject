@@ -3,7 +3,6 @@
 out float fragColor;
 
 uniform sampler3D _Amplitude;
-
 uniform sampler2D profileBuffers;
 uniform int pb_resolution = 4096;
 uniform float periods[8];
@@ -21,7 +20,8 @@ float pbValue(float p, int ik){
     int N = pb_resolution;
     float ip = N * p / periods[ik];
     int pLower = int(floor(ip));
-    return texture(profileBuffers, vec2(ip/pb_resolution, ik)).r;
+
+    return texture(profileBuffers, vec2(ip/pb_resolution, float(ik + 0.5) / kResolution)).r;
 
 
 
@@ -55,7 +55,7 @@ void main() {
     for(int itheta = 0; itheta < DIR_NUM; itheta++){
         float angle = itheta * da;
 
-        vec4 amp = amplitude(uv, float(itheta) / DIR_NUM);
+        vec4 amp = amplitude(uv, float(itheta + 0.5) / DIR_NUM);
 
         for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
