@@ -10,7 +10,7 @@
 Framebuffer::Framebuffer(int width, int height) : width(width), height(height) {
     glGenFramebuffers(1, &handle);
     bind();
-    glViewport(0, 0, width, height);
+    //glViewport(0, 0, width, height);
     unbind();
 }
 
@@ -27,8 +27,9 @@ void Framebuffer::bind() {
 }
 
 void Framebuffer::unbind() {
+    //Debug::checkGLError();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    Debug::checkGLError();
+    //Debug::checkGLError();
 }
 
 void Framebuffer::verifyStatus() {
@@ -51,6 +52,7 @@ void Framebuffer::disableColorDraw() {
 }
 
 void Framebuffer::attachTexture(std::shared_ptr<Texture> texture, GLenum attachment, bool is3D) {
+    Debug::checkGLError();
     bind();
     Debug::checkGLError();
     if (is3D) glFramebufferTexture(GL_FRAMEBUFFER, attachment, texture->getHandle(), 0);
@@ -59,9 +61,12 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture, GLenum attachm
     if (attachment != GL_DEPTH_ATTACHMENT && attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
         if (std::find(attachments.begin(), attachments.end(), attachment) == attachments.end()) {
             attachments.push_back(attachment);
+            Debug::checkGLError();
             glDrawBuffers(attachments.size(), attachments.data());
+            Debug::checkGLError();
         }
     }
+    Debug::checkGLError();
     unbind();
 }
 
@@ -75,8 +80,9 @@ std::shared_ptr<Texture> Framebuffer::createAndAttachColorTexture(GLenum attachm
 
 std::shared_ptr<Texture> Framebuffer::createAndAttachVector3Texture(GLenum attachment, GLenum texUnit) {
     std::shared_ptr<Texture> texture = std::make_shared<Texture>(texUnit);
+    Debug::checkGLError();
     texture->initialize2D(width, height, GL_RGBA16F, GL_RGBA, GL_FLOAT);
-
+    Debug::checkGLError();
     attachTexture(texture, attachment);
     Debug::checkGLError();
     return texture;
@@ -119,10 +125,15 @@ void Framebuffer::createAndAttachDepthStencilRenderBuffer() {
         rbo = 0;
     }
     glGenRenderbuffers(1, &rbo);
+    Debug::checkGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    Debug::checkGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    Debug::checkGLError();
     bind();
+    Debug::checkGLError();
     glad_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    Debug::checkGLError();
     unbind();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     Debug::checkGLError();

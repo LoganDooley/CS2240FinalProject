@@ -77,8 +77,6 @@ public:
     void bind();
     void unbind();
 
-    void update(std::shared_ptr<WaveletGrid> waveletGrid);
-
     int getNumVerts();
 
     void draw(std::shared_ptr<Camera> camera);

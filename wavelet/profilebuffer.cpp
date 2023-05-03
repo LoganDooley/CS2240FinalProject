@@ -20,10 +20,9 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float kMin, int 
     glBindTexture(GL_TEXTURE_2D, m_texture);
     // set the texture wrapping/filtering options (on the currently bound texture object)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, p_resolution, kResolution, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, p_resolution, 1, 0, GL_RGBA, GL_FLOAT, nullptr);
     Debug::checkGLError();
 
     glGenFramebuffers(1, &m_fbo);
@@ -37,100 +36,15 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float kMin, int 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-float ProfileBuffer::value(float p) const{
-    const int N = m_data.size(); // num entries
-    float pi = N * p / m_period; // target "index" (between 2 indices)
-    //pi = fmodf(pi, N); // loop for periodicity (array covers 1 period)
-
-    //pi = fmaxf(0.5f, pi);
-    //if(pi < 0){
-        //pi += N;
-    //}
-    // Lerp
-    int pLower = int(floor(pi));
-    float wpUpper = pi - pLower; // weight towards ceiling index of pi
-    pLower %= N;
-    if(pLower < 0){
-        pLower += N;
-    }
-    int pUpper = int(ceil(pi));
-    pUpper %= N;
-    if(pUpper < 0){
-        pUpper += N;
-    }
-
-    //int pUpper = fmodf(pLower + 1, N);
-    //std::cout<<"wUpper: "<<wpUpper<<" wLower: "<<1 - wpUpper<<" value: "<<wpUpper * m_data[pLower + 1] + (1-wpUpper) * m_data[pLower]<<std::endl;
-    //std::cout<<"data size: "<<m_data.size()<<", pLower: "<<pLower<<std::endl;
-    return wpUpper * m_data[pUpper] + (1-wpUpper) * m_data[pLower];
-}
-
-float ProfileBuffer::w(float k){
-    //return 1;
-    constexpr float g = 9.81;
-    return sqrt(k * g);
-}
-
-float ProfileBuffer::psi(float k) const {
-    float A = pow(1.1, 1.5 * k);
-    float B = exp(-1.8038897788076411 * pow(4, k) / pow(m_windSpeed, 4));
-    return 0.139098 * sqrt(A * B);
-}
-
-float ProfileBuffer::psiBarIntegrand(float k, float p, float t){
-    float waveLength = pow(2, k);
-    float waveNumber = 6.28318530718 / waveLength;
-    return psi(k) * cosf(waveNumber * p - w(waveNumber) * t) * waveLength;
-}
-
-// Numerically integrate equation 21 with midpoint rectangle method
-float ProfileBuffer::psiBar(float p, float t, int integration_nodes, float k_min, float k_max){
-    float dk = (k_max - k_min) / integration_nodes;
-    float k = k_min + 0.5 * dk;
-
-    float result = 0;
-    for(int i = 0; i<integration_nodes; i++) {
-        result += psiBarIntegrand(k, p, t) * dk;
-        //std::cout<<"psibarIntegrand: "<<psiBarIntegrand(k, p, t)<<" dk: "<<dk<<std::endl;
-        k += dk;
-    }
-    //std::cout<<"result: "<<result<<std::endl;
-    //std::cout<<"p = "<<p<<" result = "<<result<<std::endl;
-    return result;
-}
-
-void ProfileBuffer::precompute(float t, float k_min, float k_max, int resolution, int periodicity, int integration_nodes){
-    m_data.resize(resolution);
-    m_period = periodicity * pow(2, k_max);
-    //std::cout<<m_period<<std::endl;
-
-    for(int i = 0; i<resolution; i++){
-        constexpr float tau = 6.28318530718;
-        float p   = (i * m_period) / resolution;
-
-        m_data[i] = psiBar(p, t, integration_nodes, k_min, k_max);
-    }
-}
-
-float ProfileBuffer::cubicBump(float x) const{
-    if (abs(x) >= 1){
-      return 0.0f;
-    }
-    return x * x * (2 * abs(x) - 3) + 1;
-}
-
 // GPU IMPLEMENTATION:
 
 void ProfileBuffer::precomputeGPU(float t){
     glUseProgram(m_pbShader);
     glUniform1f(glGetUniformLocation(m_pbShader, "t"), t);
     glUniform1i(glGetUniformLocation(m_pbShader, "pResolution"), m_pResolution);
-    glUniform1i(glGetUniformLocation(m_pbShader, "kResolution"), m_kResolution);
-    glUniform1i(glGetUniformLocation(m_pbShader, "integration_nodes"), m_integrationNodes);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
-    glUniform1f(glGetUniformLocation(m_pbShader, "kMin"), m_kMin);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-    glViewport(0, 0, m_pResolution, m_kResolution);
+    glViewport(0, 0, m_pResolution, 1);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -152,6 +66,11 @@ void ProfileBuffer::bindProfilebufferTexture(){
     glBindTexture(GL_TEXTURE_2D, m_texture);
 }
 
+void ProfileBuffer::unbindProfilebufferTexture(){
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void ProfileBuffer::debugDraw(){
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -159,4 +78,5 @@ void ProfileBuffer::debugDraw(){
     bindProfilebufferTexture();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    unbindProfilebufferTexture();
 }

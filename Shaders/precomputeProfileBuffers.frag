@@ -2,13 +2,16 @@
 
 //layout (location = 0) out float value;
 
-out float fragColor;
+// k = 0.001 to k = 100 is the approximate valid range
+// k = 0.001->0.01 (0.005), 0.01->0.1 (0.05), 0.1->1 (0.5), 1->100 (50)
+
+out vec4 fragColor;
 
 uniform float t;
 uniform int pResolution = 4096;
-uniform int integration_nodes;
 uniform float windSpeed;
-uniform float kMin;
+
+const int integration_nodes = 90;
 
 float rand(float k){
     return fract(sin(k * 125612.9898) * 43758.5453);
@@ -64,7 +67,7 @@ float psiBarIntegrand(float k, float p, float dk){
 }
 
 float psiBar(float p, int integration_nodes, float k_min, float k_max){
-    float dk = k_min;
+    float dk = (k_max - k_min)/integration_nodes;
     float k = k_min;
 
     float result = 0;
@@ -77,14 +80,35 @@ float psiBar(float p, int integration_nodes, float k_min, float k_max){
 }
 
 void main() {
-    int ik = int(floor(gl_FragCoord.y)); // Get row of texture corresponding to z index
     int ip = int(floor(gl_FragCoord.x)); // Get column of texture corresponding to p index
 
-    float k_min = kMin * pow(integration_nodes + 1, ik);
-    float k_max = kMin * pow(integration_nodes + 1, ik + 1);
-
-    float period = 6.28318530718 / k_min;
+    float k_min = 0.001;
+    float k_max = 0.01;
+    float dk = (k_max - k_min)/integration_nodes;
+    float period = 6.28318530718 / dk;
     float p = (ip * period) / pResolution;
+    fragColor.r = psiBar(p, integration_nodes, k_min, k_max);
 
-    fragColor = psiBar(p, integration_nodes, k_min, k_max);
+    k_min = 0.01;
+    k_max = 0.1;
+    dk = (k_max - k_min)/integration_nodes;
+    period = 6.28318530718 / dk;
+    p = (ip * period) / pResolution;
+    fragColor.g = psiBar(p, integration_nodes, k_min, k_max);
+
+    k_min = 0.1;
+    k_max = 1;
+    dk = (k_max - k_min)/integration_nodes;
+    period = 6.28318530718 / dk;
+    p = (ip * period) / pResolution;
+    fragColor.b = psiBar(p, integration_nodes, k_min, k_max);
+
+    k_min = 1;
+    k_max = 100;
+    dk = (k_max - k_min)/integration_nodes;
+    period = 6.28318530718 / dk;
+    p = (ip * period) / pResolution;
+    fragColor.a = psiBar(p, integration_nodes, k_min, k_max);
+
+    //fragColor = vec4(1);
 }

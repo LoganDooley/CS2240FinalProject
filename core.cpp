@@ -27,7 +27,7 @@ Core::Core(int width, int height){
     m_waveGeometry->setAmplitudeTexture(m_simulator->getAmplitudeTexture());
     Debug::checkGLError();
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 90, 4);
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_DEPTH_TEST);
@@ -75,13 +75,19 @@ int Core::update(float seconds){
     if (ImGui::Button("Reset Simulator"))      m_simulator->reset();
     if (std::distance(items[0], current_item) == 0) {
         m_simulator->takeStep(seconds);
+        Debug::checkGLError();
         m_profileBuffer->precomputeGPU(glfwGetTime());
-
+        Debug::checkGLError();
         m_fullscreenQuad->bind();
+        Debug::checkGLError();
         m_waveGeometry->precomputeHeightField(m_profileBuffer);
+        Debug::checkGLError();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        Debug::checkGLError();
         glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
+        Debug::checkGLError();
         m_waveGeometry->draw(m_camera);
+        Debug::checkGLError();
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
 

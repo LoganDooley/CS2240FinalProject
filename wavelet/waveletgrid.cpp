@@ -24,7 +24,6 @@ WaveletGrid::WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 reso
                         m_unitParam[Parameter::X], settings.k_range.x, settings.k_range.y, m_unitParam[Parameter::K]));
         amplitudes.resize(resolution);
         amplitudes_nxt.resize(resolution);
-        precomputeProfileBuffers();
         m_environment = Environment("100x100box.png", .9);
         //m_profileBuffer = std::make_unique<ProfileBuffer>(5);
 }
@@ -33,7 +32,6 @@ void WaveletGrid::takeStep(float dt){
     time += dt;
     advectionStep(dt);
     diffusionStep(dt);
-    precomputeProfileBuffers();
 }
 
 float WaveletGrid::angularFrequency(float wavenumber) {
@@ -181,32 +179,6 @@ float WaveletGrid::amplitude(std::array<float, 4> pos) const{
     );
 }
 
-float WaveletGrid::surfaceAtPoint(glm::vec2 pos) {
-    float height = 0;
-
-    int DIR_NUM = m_resolution[Parameter::THETA];
-    for(int ik = 0; ik < m_resolution[Parameter::K]; ik++){
-        //float k = m_minParam[Parameter::K] + ik * m_unitParam[Parameter::K];
-
-        float da = tau/DIR_NUM;
-
-        for(int itheta = 0; itheta < DIR_NUM; itheta++) {
-            float angle = itheta * da * tau;
-            glm::vec2 kdir = glm::vec2(cosf(angle), sinf(angle));
-            float kdir_x = glm::dot(kdir, pos);
-
-            //height += da * lookup_interpolated_amplitude(pos.x, pos.y, angle, ik) * m_profileBuffer->value(kdir_x);
-            //height += da * 0.01 * m_profileBuffer->value(kdir_x);
-            if(itheta == 0){
-                height += da * 100 * m_profileBuffers[ik]->value(kdir_x);
-            }
-            //std::cout<<"Profile Buffer: "<<m_profileBuffer->value(kdir_x)<<", amplitude: "<<lookup_interpolated_amplitude(pos.x, pos.y, angle, ik)<<std::endl;
-        }
-    }
-
-    return height;
-}
-
 float WaveletGrid::idxToPos(const unsigned int idx, Parameter p) const{
     return m_minParam[p] + (idx + 0.5) * m_unitParam[p];
 }
@@ -297,14 +269,6 @@ float WaveletGrid::lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) cons
     return amplitudes(glm::uvec4(i_x, i_y, i_theta, i_k));
 };
 
-void WaveletGrid::precomputeProfileBuffers(){
-    for(int ik = 0; ik < m_resolution[Parameter::K]; ik++){
-        float mink = m_minParam[Parameter::K] + (ik-0.5) * m_unitParam[Parameter::K];
-        float maxk = m_minParam[Parameter::K] + (ik+0.5) * m_unitParam[Parameter::K];
-
-        m_profileBuffers[ik]->precompute(time, mink, maxk);
-    }
-}
 
 float WaveletGrid::k(float zeta){
     return powf(2, zeta);

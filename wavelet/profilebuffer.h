@@ -13,16 +13,6 @@ public:
     ProfileBuffer(float windSpeed, int p_resolution, float kMin, int integration_nodes, int k_resolution);
     ~ProfileBuffer(){};
 
-    void precompute(float t, float k_min, float k_max, int resolution = 4096, int periodicity = 2, int integration_nodes = 100);
-
-    float value(float p) const;
-
-    static float w(float k);
-
-    float psi(float k) const;
-
-    float psiBar(float p, float t, int integration_nodes, float k_min, float k_max);
-
     int getKResolution() const{
         return m_kResolution;
     }
@@ -30,35 +20,12 @@ public:
     int getIntegrationNodes() const{
         return m_integrationNodes;
     }
-private:
-    float psiBarIntegrand(float k, float p, float t);
-
-    float cubicBump(float x) const;
-
-    template <typename Function>
-    auto integrate(int integration_nodes, float x_min, float x_max, Function const &function){
-        float dx = (x_max - x_min) / integration_nodes;
-        float x = x_min + 0.5 * dx;
-
-        float result = dx * function(x);
-        for(int i = 1; i<integration_nodes; i++) {
-            x += dx;
-            result += dx * function(x);
-        }
-
-        return result;
-    }
-
-    float m_windSpeed = 1;
-    float m_period = 0;
-    std::vector<float> m_data = {};
-
-// GPU Implementation
 
 public:
     void precomputeGPU(float t);
     std::vector<float> getPeriods();
     void bindProfilebufferTexture();
+    void unbindProfilebufferTexture();
     void debugDraw();
 
 private:
@@ -71,4 +38,8 @@ private:
     int m_pResolution;
     float m_kMin;
     int m_integrationNodes;
+
+    float m_windSpeed = 1;
+    float m_period = 0;
+    std::vector<float> m_data = {};
 };

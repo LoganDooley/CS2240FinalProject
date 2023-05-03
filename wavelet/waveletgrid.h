@@ -33,9 +33,6 @@ class WaveletGrid {
         WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 resolution);
 
         void takeStep(float dt);
-        void heightFieldEvaluation(); // please change parameters to this
-
-        float surfaceAtPoint(glm::vec2 pos);
 
     private:
         float amplitude(std::array<float, 4> index) const;
@@ -163,8 +160,6 @@ class WaveletGrid {
          * @return float the amplitude at that index, or the ambient amplitude if index is not in the grid.
          */
         float lookup_amplitude(int i_x, int i_y, int i_theta, int i_k) const;
-
-        void precomputeProfileBuffers();
 
         float k(float zeta);
         float zeta(float k);
