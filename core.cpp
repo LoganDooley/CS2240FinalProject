@@ -24,10 +24,7 @@ Core::Core(int width, int height){
     m_simulator = std::make_unique<Simulator>(setting);
     Debug::checkGLError();
 
-    m_waveGeometry->setAmplitudeTexture(m_simulator->getAmplitudeTexture());
-    Debug::checkGLError();
-
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 90, 4);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_DEPTH_TEST);

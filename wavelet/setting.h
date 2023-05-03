@@ -11,7 +11,7 @@ struct Setting {
     glm::vec2 kRange = glm::vec2(0.01, 10); // linear in this range
 
     // resolution x,y,theta,k of the simulator
-    std::array<int,4> simulationResolution = {4096, 4096, 16, 4};
+    std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
 
     // for profile buffer computation
     int integrationNodes = 49;

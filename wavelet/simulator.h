@@ -15,7 +15,7 @@ public:
     void takeStep(float dt);
     void visualize(glm::ivec2 viewportSize);
     void reset();
-    std::shared_ptr<Texture> getAmplitudeTexture() { return amplitude; }
+    std::vector<std::shared_ptr<Texture>> getAmplitudeTextures() { return amplitude; }
 
 private:
     float timeElapsed = 0;
@@ -25,8 +25,10 @@ private:
 
     std::shared_ptr<Framebuffer> advectionFBO;
     std::shared_ptr<Framebuffer> diffusionFBO;
-    std::shared_ptr<Texture> amplitude;
-    std::shared_ptr<Texture> amplitude_intermediate;
+
+    std::vector<std::shared_ptr<Texture>> amplitude;
+    std::vector<std::shared_ptr<Texture>> amplitude_intermediate;
+
     std::shared_ptr<FullscreenQuad> fullScreenQuad;
 
     const Setting setting;
@@ -38,5 +40,5 @@ private:
     void recomputeRanges();
     void recomputeFramebuffer();
     void loadShadersWithData(GLuint shader);
-    std::shared_ptr<Texture> setup3DAmplitude();
+    std::vector<std::shared_ptr<Texture>> setup3DAmplitude();
 };

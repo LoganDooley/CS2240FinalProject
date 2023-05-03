@@ -27,9 +27,7 @@ void Framebuffer::bind() {
 }
 
 void Framebuffer::unbind() {
-    //Debug::checkGLError();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //Debug::checkGLError();
 }
 
 void Framebuffer::verifyStatus() {
@@ -57,6 +55,7 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture, GLenum attachm
     Debug::checkGLError();
     if (is3D) glFramebufferTexture(GL_FRAMEBUFFER, attachment, texture->getHandle(), 0);
     else glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, texture->getHandle(), 0);
+    Debug::checkGLError();
 
     if (attachment != GL_DEPTH_ATTACHMENT && attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
         if (std::find(attachments.begin(), attachments.end(), attachment) == attachments.end()) {
