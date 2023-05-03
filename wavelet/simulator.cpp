@@ -105,7 +105,6 @@ void Simulator::takeStep(float dt) {
 
     glEnable(GL_DEPTH_TEST);
     glUseProgram(0);
-    std::cout << "HERE" << std::endl;
 
     timeElapsed += dt;
 }

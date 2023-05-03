@@ -88,8 +88,6 @@ public:
     void bindHeightMapTexture();
     void unbindHeightMapTexture();
 
-    void setAmplitudeTexture(std::shared_ptr<Texture> amplitudeTexture) { this->amplitudeTexture = amplitudeTexture; }
-
 private:
     GLuint m_heightShader;
     GLuint m_waveShader;
@@ -98,8 +96,6 @@ private:
     GLuint m_heightMap;
     GLuint m_fbo;
     GLuint m_rbo;
-
-    std::shared_ptr<Texture> amplitudeTexture;
 
     unsigned int m_resolution;
     glm::vec2 m_size;
