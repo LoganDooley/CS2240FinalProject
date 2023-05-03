@@ -1,7 +1,11 @@
 #include "framebuffer.h"
 #include "texture.h"
 #include "../debug.h"
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 Framebuffer::Framebuffer(int width, int height) : width(width), height(height) {
     glGenFramebuffers(1, &handle);
