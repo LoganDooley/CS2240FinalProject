@@ -10,9 +10,9 @@
 Simulator::Simulator(Setting setting) :
     setting(setting) {
     
-    if (setting.resolution[0] != setting.resolution[1] || 
-        setting.resolution[2] != 8 || 
-        setting.resolution[3] != 4) {
+    if (setting.simulationResolution[0] != setting.simulationResolution[1] || 
+        setting.simulationResolution[2] != 8 || 
+        setting.simulationResolution[3] != 4) {
         std::cerr << "currently using unsupported resolution" << std::endl;
     }
     recomputeRanges();
@@ -50,7 +50,7 @@ Simulator::Simulator(Setting setting) :
 
     glUseProgram(visualizationShader);
     glad_glUniform1i(glGetUniformLocation(visualizationShader, "_Amplitude"), 0);
-    glad_glUniform1i(glGetUniformLocation(visualizationShader, "NUM_POS"), resolution[0]);
+    glad_glUniform1i(glGetUniformLocation(visualizationShader, "NUM_POS"), setting.simulationResolution[0]);
     glUseProgram(0);
     Debug::checkGLError();
 
@@ -77,7 +77,7 @@ void Simulator::takeStep(float dt) {
     amplitude->bind();
     fullScreenQuad->bind();
 
-    glViewport(0,0,resolution[0],resolution[1]);
+    glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -114,7 +114,7 @@ void Simulator::visualize(glm::ivec2 viewport) {
 
     int n = std::min(viewport.x, viewport.y);
     /* glViewport(0, 0, n, n); */
-    glViewport(0,0, resolution[0], resolution[1]);
+    glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glad_glUniform1i(glGetUniformLocation(visualizationShader, "thetaIndex"), visualization_thetaIndex);
@@ -167,8 +167,8 @@ void Simulator::loadShadersWithData(GLuint shader) {
     glad_glUniform1f(glGetUniformLocation(shader, "gravity"), setting.gravity);
     glad_glUniform1f(glGetUniformLocation(shader, "surfaceTension"), setting.surfaceTension);
 
-    glad_glUniform1i(glGetUniformLocation(shader, "NUM_POS"), resolution[0]);
-    glad_glUniform1i(glGetUniformLocation(shader, "NUM_THETA"), resolution[2]);
+    glad_glUniform1i(glGetUniformLocation(shader, "NUM_POS"), setting.simulationResolution[0]);
+    glad_glUniform1i(glGetUniformLocation(shader, "NUM_THETA"), setting.simulationResolution[2]);
 
     glad_glUniform1i(glGetUniformLocation(shader, "_Amplitude"), 0);
 
@@ -180,7 +180,12 @@ void Simulator::loadShadersWithData(GLuint shader) {
 
 std::shared_ptr<Texture> Simulator::setup3DAmplitude() {
     std::shared_ptr<Texture> amp = std::make_shared<Texture>(GL_TEXTURE0, GL_TEXTURE_3D);
-    amp->initialize3D(resolution[0], resolution[1], resolution[2], GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+    amp->initialize3D(
+            setting.simulationResolution[0], 
+            setting.simulationResolution[1], 
+            setting.simulationResolution[2], 
+            GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+
     amp->setInterpolation(GL_LINEAR);
     amp->setWrapping(GL_CLAMP_TO_BORDER);
     amp->bind();
