@@ -51,6 +51,9 @@ float pbValue(float p, int ik){
 }
 
 float PositiveCosineSquaredDS(float theta){
+    if(theta > 3.14159){
+        theta -= 2 * 3.14159;
+    }
     float angle = theta - windTheta;
     if(angle > -3.14159/2 && angle < 3.14159/2){
         return (2/3.14159) * pow(cos(angle), 2);
@@ -77,7 +80,8 @@ void main() {
         for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
             float p = dot(kdir, pos) + rand( kdir );
-            height += da * sqrt(da * PositiveCosineSquaredDS(angle)) * pbValue(p, ik);
+            height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik);
+            //height += da * 0.01 * pbValue(p, ik);
 
 //            int interpolated_ik = int(round(4 * float(ik) / kResolution));
 //            interpolated_ik = clamp(interpolated_ik, 0, 3);
