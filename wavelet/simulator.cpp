@@ -24,6 +24,7 @@ Simulator::Simulator(std::array<int, 4> resolution, GridSettings setting) :
     fullScreenQuad = std::make_shared<FullscreenQuad>();
 
     recomputeFramebuffer();
+    Debug::checkGLError();
 
     diffusionShader = ShaderLoader::createShaderProgram(
         "Shaders/waveletgrid.vert",
@@ -134,7 +135,11 @@ void Simulator::recomputeFramebuffer() {
     diffusionFBO = std::make_shared<Framebuffer>( resolution[0], resolution[1] );
 
     advectionFBO->attachTexture(amplitude_intermediate, GL_COLOR_ATTACHMENT0, true);
+    advectionFBO->createAndAttachDepthStencilRenderBuffer();
+    Debug::checkGLError();
     diffusionFBO->attachTexture(amplitude, GL_COLOR_ATTACHMENT0, true);
+    diffusionFBO->createAndAttachDepthStencilRenderBuffer();
+    Debug::checkGLError();
 
     // here we dont need depth nor stencil because we're not going to do depth testing
     advectionFBO->verifyStatus();
@@ -173,7 +178,7 @@ void Simulator::loadShadersWithData(GLuint shader) {
 
 std::shared_ptr<Texture> Simulator::setup3DAmplitude() {
     std::shared_ptr<Texture> amp = std::make_shared<Texture>(GL_TEXTURE0, GL_TEXTURE_3D);
-    amp ->initialize3D(resolution[0], resolution[1], resolution[2], GL_RGBA, GL_RGBA, GL_FLOAT);
+    amp->initialize3D(resolution[0], resolution[1], resolution[2], GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
     amp->setInterpolation(GL_LINEAR);
     amp->setWrapping(GL_CLAMP_TO_BORDER);
     amp->bind();

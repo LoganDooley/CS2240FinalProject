@@ -21,7 +21,7 @@ float pbValue(float p, int ik){
     float ip = N * p / periods[ik];
     int pLower = int(floor(ip));
 
-    return texture(profileBuffers, vec2(ip/pb_resolution, float(ik + 0.5) / kResolution)).r;
+    return texture(profileBuffers, vec2(ip/pb_resolution, ik)).r;
 
 
 

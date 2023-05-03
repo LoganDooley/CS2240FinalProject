@@ -6,9 +6,6 @@
 
 class Texture {
 public:
-    // creates a 3D texture
-    // is3D can be any value, and is really only there because I'm lazy
-    // so the compiler can distinguish between the two constructors
     Texture(GLenum texUnit = GL_TEXTURE0, GLenum texTarget = GL_TEXTURE_2D);
 
     // load 2D texture from filepath, relative to project's root I believe

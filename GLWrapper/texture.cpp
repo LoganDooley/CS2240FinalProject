@@ -45,8 +45,11 @@ void Texture::initialize3D(int width, int height, int depth,
                            GLint internalFormat, GLint format, GLint dataType) {
 
     bind();
+    if (width > GL_MAX_TEXTURE_SIZE)
+        std::cerr << "Width higher than max size" << std::endl;
     glTexImage3D(m_texTarget, 0, internalFormat, width, height, depth, 0, format,
                  dataType, NULL);
+    Debug::checkGLError();
     unbind();
 }
 
