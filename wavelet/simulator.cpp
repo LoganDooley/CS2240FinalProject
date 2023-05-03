@@ -66,24 +66,44 @@ void Simulator::takeStep(float dt) {
 
     int thetaResolution = setting.simulationResolution[2];
 
+    int attachments[16] = {
+        GL_TEXTURE0, 
+        GL_TEXTURE1, 
+        GL_TEXTURE2, 
+        GL_TEXTURE3, 
+        GL_TEXTURE4, 
+        GL_TEXTURE5, 
+        GL_TEXTURE6, 
+        GL_TEXTURE7, 
+        GL_TEXTURE8, 
+        GL_TEXTURE9, 
+        GL_TEXTURE10, 
+        GL_TEXTURE11, 
+        GL_TEXTURE12, 
+        GL_TEXTURE13, 
+        GL_TEXTURE14, 
+        GL_TEXTURE15, 
+    };
+
+    glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
+
     // advection step
     glUseProgram(advectionShader);
     glUniform1f(glGetUniformLocation(advectionShader, "time"), timeElapsed);
     glUniform1f(glGetUniformLocation(advectionShader, "deltaTime"), dt);
     advectionFBO->bind();
 
-    for (int i = 0; i < thetaResolution; i++)
-        amplitude[i]->bind(GL_TEXTURE0 + i);
 
     fullScreenQuad->bind();
 
-    glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
+    for (int i = 0; i < thetaResolution; i++)
+        amplitude[i]->bind(attachments[i]);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     for (int i = 0; i < thetaResolution; i++)
-        amplitude[i]->unbind(GL_TEXTURE0 + i);
+        amplitude[i]->unbind(attachments[i]);
 
     /* // diffusion step */
     glUseProgram(diffusionShader);
@@ -92,13 +112,13 @@ void Simulator::takeStep(float dt) {
     diffusionFBO->bind();
 
     for (int i = 0; i < thetaResolution; i++)
-        amplitude_intermediate[i]->bind(GL_TEXTURE0 + i);
+        amplitude_intermediate[i]->bind(attachments[i]);
 
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     for (int i = 0; i < thetaResolution; i++)
-        amplitude_intermediate[i]->unbind(GL_TEXTURE0 + i);
+        amplitude_intermediate[i]->unbind(attachments[i]);
 
     // this should bind the default framebuffer
     advectionFBO->unbind();
@@ -167,15 +187,9 @@ void Simulator::recomputeFramebuffer() {
     Debug::checkGLError();
 
     for (int i = 0; i < thetaResolution; i++)
-        advectionFBO->attachTexture(amplitude_intermediate[i], attachments[i], false);
+        advectionFBO->attachTexture(amplitude_intermediate[i],  attachments[i]);
     for (int i = 0; i < thetaResolution; i++)
-        diffusionFBO->attachTexture(amplitude[i], attachments[i], false);
-
-    advectionFBO->createAndAttachDepthStencilRenderBuffer();
-    Debug::checkGLError();
-
-    diffusionFBO->createAndAttachDepthStencilRenderBuffer();
-    Debug::checkGLError();
+        diffusionFBO->attachTexture(amplitude[i],               attachments[i]);
 
     // here we dont need depth nor stencil because we're not going to do depth testing
     advectionFBO->verifyStatus();
@@ -207,8 +221,11 @@ void Simulator::loadShadersWithData(GLuint shader) {
     int thetaResolution = setting.simulationResolution[2];
     for (int i = 0; i < thetaResolution; i++) {
         std::string prop = "_Amplitude[" + std::to_string(i) + "]";
-        glad_glUniform1i(glGetUniformLocation(shader, prop.c_str()), 0);
+        glad_glUniform1i(glGetUniformLocation(shader, prop.c_str()), i);
     }
+
+    glm::vec4 kValues(0.0045, 0.045, 0.45, 45);
+    glad_glUniform4fv(glGetUniformLocation(shader, "wavenumberValues"), 1, glm::value_ptr(kValues));
 
     glad_glUniform4fv(glGetUniformLocation(shader, "minParam"), 1, glm::value_ptr(minParam));
     glad_glUniform4fv(glGetUniformLocation(shader, "maxParam"), 1, glm::value_ptr(maxParam));

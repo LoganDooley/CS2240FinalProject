@@ -13,7 +13,7 @@ uniform int NUM_POS = 4096;
 uniform float gravity = 9.81;
 uniform float surfaceTension = 72.8 / 1000; // of water
 
-uniform float wavenumberValue[4] = {0.005, 0.05, 0.5, 5};
+uniform vec4 wavenumberValues;
 
 uniform sampler2D _Amplitude[8];
 
@@ -111,7 +111,7 @@ vec4 evaluate(int thetaIndex) {
 #pragma openNV (unroll all)
     for (int zetaIndex = 0; zetaIndex < NUM_K; zetaIndex++) {
         // since we're using zeta
-        float wavenumber = wavenumberValue[zetaIndex];
+        float wavenumber = wavenumberValues[zetaIndex];
 
         vec2 nxtPos = pos.xy - deltaTime * wavedirection * advectionSpeed(wavenumber);
 
@@ -119,6 +119,7 @@ vec4 evaluate(int thetaIndex) {
         vec2 nxtPosTexCoord = nxtPosUV * NUM_POS - 0.5;
 
         float interpolatedAmplitude =
+            /* texture(_Amplitude[thetaIndex], nxtPosUV)[zetaIndex]; */
             interpolate2D(nxtPosTexCoord.x, nxtPosTexCoord.y, thetaIndex, zetaIndex);
 
         // ambient amplitude if outside grid

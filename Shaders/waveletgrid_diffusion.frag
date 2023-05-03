@@ -12,6 +12,8 @@ uniform int NUM_THETA = 8;
 const float gravity = 9.81;
 const float surfaceTension = 72.8 / 1000; // of water
 
+uniform vec4 wavenumberValues;
+
 uniform sampler2D _Amplitude[8];
 uniform sampler2D _AtLeast2Away;
 
