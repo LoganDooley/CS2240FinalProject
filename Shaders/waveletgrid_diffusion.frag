@@ -1,5 +1,4 @@
 #version 330 core
-#extension GL_ARB_fragment_layer_viewport : enable
 
 const float tau = 6.28318530718f;
 const float pi = 3.141592653589793f;

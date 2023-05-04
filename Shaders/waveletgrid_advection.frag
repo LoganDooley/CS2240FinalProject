@@ -1,5 +1,4 @@
 #version 330 core
-#extension GL_ARB_fragment_layer_viewport : enable
 
 in vec2 uv;
 
