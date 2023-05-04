@@ -4,6 +4,7 @@
 in vec2 uv;
 
 const float tau = 6.28318530718f;
+const float pi = 3.141592653589793f;
 
 // DIMENSIONS
 const int NUM_K = 4; // this must not be higher than 4
@@ -14,6 +15,8 @@ uniform float gravity = 9.81;
 uniform float surfaceTension = 72.8 / 1000; // of water
 
 uniform vec4 wavenumberValues;
+
+uniform vec2 windDirection;
 
 uniform sampler2D _Amplitude[8];
 
@@ -53,6 +56,18 @@ float dispersionSpeed(float wavenumber) {
          3 * surfaceTension * surfaceTension * wavenumber * wavenumber * wavenumber * wavenumber);
     float denom = 4 * pow(wavenumber * (gravity + surfaceTension * wavenumber * wavenumber), 3 / 2);
     return numerator / denom;
+}
+
+float ambient(int itheta) {
+    // all of this can be precomputed on the cpu
+
+    float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
+    vec2 wavedirection = vec2(cos(theta), sin(theta));
+    float windSpeed = length(windDirection);
+
+    float cosTheta = dot(wavedirection, windDirection) / windSpeed;
+
+    return cosTheta < 0 ? 0 : cosTheta * cosTheta * 2 / pi;
 }
 
 float interpolate(vec4 v, float t) {
@@ -125,8 +140,8 @@ float guaranteeMonotonicInterpolate(vec4 v, float t) {
 }
 
 float get(int ix, int iy, int itheta, int izeta) {
-    float ambient = itheta == 0 ? 0.5 : 0.0;
-    return iy >= 0 && iy < NUM_POS ? texelFetch(_Amplitude[itheta], ivec2(ix, iy), 0)[izeta] : ambient;
+    float ambientAmplitude = ambient(itheta);
+    return iy >= 0 && iy < NUM_POS ? texelFetch(_Amplitude[itheta], ivec2(ix, iy), 0)[izeta] : ambientAmplitude;
 }
 
 // we can break this into 2 shaders and instead of doing 16 texture fetches, we only
@@ -146,9 +161,8 @@ float interpolate2D(float x, float y, int itheta, int izeta) {
             get(ix+1,   niy, itheta, izeta),
             get(ix+2,   niy, itheta, izeta)
         );
-        float ambient = (itheta == 0 ? 1 : 0.0);
-
-        w[dy] = niy >= 0 && niy < NUM_POS  ? guaranteeMonotonicInterpolate(v, x - ix) : ambient;
+        float ambientAmplitude = ambient(itheta);
+        w[dy] = niy >= 0 && niy < NUM_POS  ? guaranteeMonotonicInterpolate(v, x - ix) : ambientAmplitude;
     }
 
     return guaranteeMonotonicInterpolate(w, y-iy);
@@ -181,7 +195,7 @@ vec4 evaluate(int thetaIndex) {
         if (nxtPos.x < minParam.x || nxtPos.x >= maxParam.x || 
             nxtPos.y < minParam.y || nxtPos.y >= maxParam.y) {
 
-            interpolatedAmplitude = thetaIndex==0 ? 1 : 0;
+            interpolatedAmplitude = ambient(thetaIndex);
         }
 
         amplitude[zetaIndex] = interpolatedAmplitude;

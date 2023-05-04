@@ -153,10 +153,10 @@ void Simulator::visualize(glm::ivec2 viewport) {
 
 void Simulator::recomputeRanges() {
     constexpr static float tau = 6.28318530718f;
-    minParam = glm::vec4(-setting.size, -setting.size, 0, setting.kRange.x);
-    maxParam = glm::vec4(setting.size, setting.size, tau, setting.kRange.y);
-
-    unitParam = (maxParam - minParam) / glm::vec4(setting.simulationResolution[0], setting.simulationResolution[1], setting.simulationResolution[2], setting.simulationResolution[3]);
+    minParam = glm::vec4(-setting.size, -setting.size, 0, setting.kValues.x);
+    maxParam = glm::vec4(setting.size, setting.size, tau, setting.kValues.w);
+    unitParam = (maxParam - minParam) / glm::vec4(setting.simulationResolution[0], setting.simulationResolution[1], 
+        setting.simulationResolution[2], setting.simulationResolution[3]);
 }
 
 void Simulator::recomputeFramebuffer() {
@@ -224,8 +224,8 @@ void Simulator::loadShadersWithData(GLuint shader) {
         glad_glUniform1i(glGetUniformLocation(shader, prop.c_str()), i);
     }
 
-    glm::vec4 kValues(0.0045, 0.045, 0.45, 45);
-    glad_glUniform4fv(glGetUniformLocation(shader, "wavenumberValues"), 1, glm::value_ptr(kValues));
+    glad_glUniform4fv(glGetUniformLocation(shader, "wavenumberValues"), 1, glm::value_ptr(setting.kValues));
+    glad_glUniform2fv(glGetUniformLocation(shader, "windDirection"), 1, glm::value_ptr(setting.windDirection));
 
     glad_glUniform4fv(glGetUniformLocation(shader, "minParam"), 1, glm::value_ptr(minParam));
     glad_glUniform4fv(glGetUniformLocation(shader, "maxParam"), 1, glm::value_ptr(maxParam));

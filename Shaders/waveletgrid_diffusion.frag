@@ -2,6 +2,7 @@
 #extension GL_ARB_fragment_layer_viewport : enable
 
 const float tau = 6.28318530718f;
+const float pi = 3.141592653589793f;
 
 in vec2 uv;
 
@@ -16,6 +17,8 @@ uniform vec4 wavenumberValues;
 
 uniform sampler2D _Amplitude[8];
 uniform sampler2D _AtLeast2Away;
+
+uniform vec2 windDirection;
 
 uniform float time;
 uniform float deltaTime;
@@ -53,14 +56,25 @@ vec4 dispersionSpeed(vec4 wavenumber) {
     return numerator / denom;
 }
 
+float ambient(int itheta) {
+    // all of this can be precomputed on the cpu
+
+    float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
+    vec2 wavedirection = vec2(cos(theta), sin(theta));
+    float windSpeed = length(windDirection);
+
+    float cosTheta = dot(wavedirection, windDirection) / windSpeed;
+
+    return cosTheta < 0 ? 0 : cosTheta * cosTheta * 2 / pi;
+}
+
 vec4 lookup_amplitude(int ix, int iy, int itheta) {
     itheta = (itheta + NUM_THETA) % NUM_THETA;
-    /* vec2 pos = vec2(ix + 0.5, iy + 0.5) / NUM_POS * (maxParam.xy - minParam.xy) + minParam.xy; */
 
     // wavefront unlikely to diverge here, and even if it does they dont diverge by that much
     if (ix < 0 || ix >= NUM_POS || iy < 0 || iy >= NUM_POS)
         // we need an amplitude for a point outside of the simulation box
-        return (itheta == 0) ? vec4(1) : vec4(0);
+        return vec4(ambient(itheta));
 
     return texelFetch(_Amplitude[itheta], ivec2(ix, iy), 0);
 }

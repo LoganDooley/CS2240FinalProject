@@ -1,17 +1,22 @@
 #pragma once
 
+#include <cmath>
 #include <glm/glm.hpp>
 #include <array>
+#include <vector>
 
 struct Setting {
     float surfaceTension = 72.8 / 1000; // of water
     float gravity = 9.81;
 
     float size = 100; // of the simulation square
-    glm::vec2 kRange = glm::vec2(0.01, 10); // linear in this range
+    glm::vec4 kValues = glm::vec4(0.0045, 0.045, 0.45, 45);
 
     // resolution x,y,theta,k of the simulator
     std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
+
+    // random angle i've chosen, feel free to change
+    glm::vec2 windDirection = 2.00f * glm::vec2(std::cos(1), std::sin(1));
 
     // for profile buffer computation
     int integrationNodes = 49;
