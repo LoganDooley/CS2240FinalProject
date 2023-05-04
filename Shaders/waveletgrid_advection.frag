@@ -8,7 +8,7 @@ const float tau = 6.28318530718f;
 // DIMENSIONS
 const int NUM_K = 4; // this must not be higher than 4
 uniform int NUM_THETA = 8;
-uniform int NUM_POS = 4096;
+uniform int NUM_POS = 2048;
 
 uniform float gravity = 9.81;
 uniform float surfaceTension = 72.8 / 1000; // of water
@@ -67,36 +67,45 @@ float interpolate(vec4 v, float t) {
     // if delta is 0 or the signed bit of dk, dkp1, and deltaK differs
     // this is used to force monotonicity of f(t) on the interval [tk, tk+1]
     // so that the interpolation is more stable and is less prone to overshooting
-    if (deltaK == 0 || (signDK + signDKp1 + signdeltaK) != 3 * signdeltaK)
-        deltaK = dk = dkp1 = 0;
+    if (deltaK == 0 || signDK != signdeltaK || signDKp1 != signdeltaK) {
+        dk = dkp1 = 0;
+    }
 
     // table-based approach of evaluating a 3rd order polynomial
-    vec4 a = vec4( v[1], dk, 3 * deltaK - 2 * dk - dkp1, dk + dkp1 - deltaK );
+    vec4 a = vec4( v[1], dk, 3 * deltaK - 2 * dk - dkp1, dk + dkp1 - 2 * deltaK );
     vec4 b = vec4(1, t, t*t, t*t*t);
 
     return dot(a,b);
 }
 
+float get(int ix, int iy, int itheta, int izeta) {
+    float ambient = itheta == 0 ? 0.5 : 0.0;
+    return iy >= 0 && iy < NUM_POS ? texelFetch(_Amplitude[itheta], ivec2(ix, iy), 0)[izeta] : ambient;
+}
+
 // we can break this into 2 shaders and instead of doing 16 texture fetches, we only
 // do 8 but i dont know if that's that much better
 float interpolate2D(float x, float y, int itheta, int izeta) {
-    int ix = int(x);
-    int iy = int(y);
+    int ix = int(floor(x));
+    int iy = int(floor(y));
 
     vec4 w;
-#pragma openNV (unroll all)
-    for (int dx = 0; dx < 4; dx++) {
-        vec4 v = vec4(
-            texelFetch(_Amplitude[itheta], ivec2(ix+dx-1, iy-1), 0)[izeta],
-            texelFetch(_Amplitude[itheta], ivec2(ix+dx-1, iy), 0)[izeta],
-            texelFetch(_Amplitude[itheta], ivec2(ix+dx-1, iy+1), 0)[izeta],
-            texelFetch(_Amplitude[itheta], ivec2(ix+dx-1, iy+2), 0)[izeta]
-        );
 
-        w[dx] = interpolate(v, y - iy);
+#pragma openNV (unroll all)
+    for (int dy = 0; dy < 4; dy++) {
+        int niy = iy+dy-1;
+        vec4 v = vec4(
+            get(ix-1,   niy, itheta, izeta),
+            get(ix,     niy, itheta, izeta),
+            get(ix+1,   niy, itheta, izeta),
+            get(ix+2,   niy, itheta, izeta)
+        );
+        float ambient = (itheta == 0 ? 1 : 0.0);
+
+        w[dy] = niy >= 0 && niy < NUM_POS  ? interpolate(v, x - ix) : ambient;
     }
 
-    return interpolate(w, x-ix);
+    return interpolate(w, y-iy);
 }
 
 vec4 evaluate(int thetaIndex) {
@@ -126,7 +135,7 @@ vec4 evaluate(int thetaIndex) {
         if (nxtPos.x < minParam.x || nxtPos.x >= maxParam.x || 
             nxtPos.y < minParam.y || nxtPos.y >= maxParam.y) {
 
-            interpolatedAmplitude = (thetaIndex==1) ? 0.5 : 0;
+            interpolatedAmplitude = thetaIndex==0 ? 1 : 0;
         }
 
         amplitude[zetaIndex] = interpolatedAmplitude;

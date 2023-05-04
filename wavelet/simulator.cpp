@@ -244,7 +244,7 @@ std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
                 GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
         textures[i]->setInterpolation(GL_LINEAR);
         textures[i]->setWrapping(GL_CLAMP_TO_BORDER);
-        textures[i]->setBorderColor(glm::vec4(0,0,0,0));
+        textures[i]->setBorderColor(glm::vec4(1,1,1,1));
     }
 
     return textures;
