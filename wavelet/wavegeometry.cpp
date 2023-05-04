@@ -92,7 +92,18 @@ void WaveGeometry::unbindHeightMapTexture(){
 
 void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileBuffer){
     glUseProgram(m_heightShader);
-    glUniform1i(glGetUniformLocation(m_heightShader, "_Amplitude"), 1);
+
+    // TODO: Move this to earlier
+    for (int i = 0; i < setting.simulationResolution[2]; i++) {
+        std::string prop = "_Amplitudes[" + std::to_string(i) + "]";
+        glUniform1i(glGetUniformLocation(m_heightShader, prop.c_str()), 1 + i);
+    }
+    {
+        int p = 0;
+        if (simulator) for (auto texture : simulator->getAmplitudeTextures())
+            texture->bind(GL_TEXTURE1 + (p++));
+    }
+
     glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
     glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
     glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
@@ -105,6 +116,12 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    {
+        int p = 0;
+        if (simulator) for (auto texture : simulator->getAmplitudeTextures())
+            texture->unbind(GL_TEXTURE1 + (p++));
+    }
 }
 
 void WaveGeometry::draw(std::shared_ptr<Camera> camera){

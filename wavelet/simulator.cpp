@@ -199,13 +199,20 @@ void Simulator::recomputeFramebuffer() {
 }
 
 void Simulator::reset() {
-    GLuint clearColor[4] = {0, 0, 0, 0};
+    /* GLuint clearColor[4] = {0, 0, 0, 0}; */
+    glClearColor(0.0, 0.0, 0.0, 0.0);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER,advectionFBO->getHandle());
-    glClearBufferuiv(GL_COLOR, 0, clearColor);
+    glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER,diffusionFBO->getHandle());
-    glClearBufferuiv(GL_COLOR, 0, clearColor);
+    glBindFramebuffer(GL_FRAMEBUFFER,advectionFBO->getHandle());
+    glClear(GL_COLOR_BUFFER_BIT);
+    /* glClearBufferuiv(GL_COLOR, 0, clearColor); */
+    Debug::checkGLError();
+
+    glBindFramebuffer(GL_FRAMEBUFFER,diffusionFBO->getHandle());
+    glClear(GL_COLOR_BUFFER_BIT);
+    /* glClearBufferuiv(GL_COLOR, 0, clearColor); */
+    Debug::checkGLError();
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
@@ -243,8 +250,8 @@ std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
                 setting.simulationResolution[1], 
                 GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
         textures[i]->setInterpolation(GL_LINEAR);
-        textures[i]->setWrapping(GL_CLAMP_TO_BORDER);
-        textures[i]->setBorderColor(glm::vec4(1,1,1,1));
+        textures[i]->setWrapping(GL_CLAMP_TO_EDGE);
+        /* textures[i]->setBorderColor(glm::vec4(0,0,0,0)); */
     }
 
     return textures;

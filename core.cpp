@@ -23,6 +23,7 @@ Core::Core(int width, int height){
 
     m_simulator = std::make_unique<Simulator>(setting);
     Debug::checkGLError();
+    m_waveGeometry->setSimulator(m_simulator.get());
 
     m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
@@ -71,6 +72,7 @@ int Core::update(float seconds){
 
     if (ImGui::Button("Reset Simulator"))      m_simulator->reset();
     if (std::distance(items[0], current_item) == 0) {
+        m_simulator->takeStep(seconds);
         m_fullscreenQuad->bind();
         Debug::checkGLError();
         m_profileBuffer->precomputeGPU(glfwGetTime());

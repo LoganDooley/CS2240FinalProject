@@ -1,6 +1,8 @@
 #pragma once
 
 #include "GLWrapper/texture.h"
+#include "wavelet/setting.h"
+#include "wavelet/simulator.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -88,6 +90,8 @@ public:
     void bindHeightMapTexture();
     void unbindHeightMapTexture();
 
+    void setSimulator(Simulator* simulator) { this->simulator = simulator; }
+
 private:
     GLuint m_heightShader;
     GLuint m_waveShader;
@@ -96,6 +100,9 @@ private:
     GLuint m_heightMap;
     GLuint m_fbo;
     GLuint m_rbo;
+
+    Setting setting;
+    Simulator* simulator;
 
     unsigned int m_resolution;
     glm::vec2 m_size;

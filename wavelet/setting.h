@@ -16,7 +16,7 @@ struct Setting {
     std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
 
     // random angle i've chosen, feel free to change
-    glm::vec2 windDirection = 2.00f * glm::vec2(std::cos(1), std::sin(1));
+    glm::vec2 windDirection = 0.4f * glm::vec2(std::cos(1), std::sin(1));
 
     // for profile buffer computation
     int integrationNodes = 49;
