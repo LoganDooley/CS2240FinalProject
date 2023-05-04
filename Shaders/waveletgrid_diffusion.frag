@@ -88,10 +88,10 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // found on bottom of page 6
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
-    vec4 delta = 1e-5 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * abs(dispersionSpeed(wavenumber));
+    vec4 delta = 1e-4 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * abs(dispersionSpeed(wavenumber));
 
     // found on bottom of page 6
-    vec4 gamma = 0.025 * aspeed * unitParam.z * unitParam.z / unitParam.x;
+    vec4 gamma = 0.0025 * aspeed * unitParam.z * unitParam.z / unitParam.x;
 
     int h = 1; // step size
 
@@ -149,7 +149,8 @@ void main() {
     int iy = int(uv.y * NUM_POS);
     vec2 pos = mix(minParam.xy, maxParam.xy, uv);
 
-    bool atLeast2Away = ix >= 2 && iy < NUM_POS - 2 && iy > 2 && iy < NUM_POS-2;
+    /* bool atLeast2Away = ix >= 2 && iy < NUM_POS - 2 && iy > 2 && iy < NUM_POS-2; */
+    bool atLeast2Away = true;
 
     outAmplitude0 = texelFetch(_Amplitude[0], ivec2(uv * NUM_POS), 0);
     outAmplitude1 = texelFetch(_Amplitude[1], ivec2(uv * NUM_POS), 0);

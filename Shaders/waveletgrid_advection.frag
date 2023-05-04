@@ -59,8 +59,8 @@ float dispersionSpeed(float wavenumber) {
 
 float ambient(int itheta) {
     // all of this can be precomputed on the cpu
-
     float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
+
     vec2 wavedirection = vec2(cos(theta), sin(theta));
     float windSpeed = length(windDirection);
 
@@ -212,4 +212,12 @@ void main() {
     amplitude5 = evaluate(5);
     amplitude6 = evaluate(6);
     amplitude7 = evaluate(7);
+    /* amplitude0 = vec4(ambient(0)); */
+    /* amplitude1 = vec4(ambient(1)); */
+    /* amplitude2 = vec4(ambient(2)); */
+    /* amplitude3 = vec4(ambient(3)); */
+    /* amplitude4 = vec4(ambient(4)); */
+    /* amplitude5 = vec4(ambient(5)); */
+    /* amplitude6 = vec4(ambient(6)); */
+    /* amplitude7 = vec4(ambient(7)); */
 }

@@ -5,6 +5,7 @@
 #include "fullscreenquad.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "shaderloader.h"
+#include <glm/gtx/string_cast.hpp>
 #include <glm/ext.hpp>
 
 Simulator::Simulator(Setting setting) :
@@ -232,6 +233,7 @@ void Simulator::loadShadersWithData(GLuint shader) {
     }
 
     glad_glUniform4fv(glGetUniformLocation(shader, "wavenumberValues"), 1, glm::value_ptr(setting.kValues));
+    std::cout << glm::to_string(setting.windDirection) << std::endl;
     glad_glUniform2fv(glGetUniformLocation(shader, "windDirection"), 1, glm::value_ptr(setting.windDirection));
 
     glad_glUniform4fv(glGetUniformLocation(shader, "minParam"), 1, glm::value_ptr(minParam));
