@@ -25,7 +25,7 @@ float getPeriod(int ik){
         value = 2 * 3.14159/0.01;
     }
     if(ik == 3){
-        value =2 * 3.14159/1;
+        value = 2 * 3.14159/1;
     }
     return value;
 }
@@ -94,7 +94,7 @@ void main() {
 
         for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
-            float p = dot(kdir, pos) + rand( kdir );
+            float p = dot(kdir, pos) + getPeriod(ik) * rand( kdir );
 
             /* height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik); */
             height += da * amp[ik] * pbValue(p, ik);

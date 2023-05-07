@@ -97,9 +97,9 @@ int Core::update(float seconds){
         Debug::checkGLError();
 
         glEnable(GL_BLEND);
-        //m_waveGeometry->draw(m_camera);
+        m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
-        m_waveGeometry->debugDraw();
+        //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
 
     } else {

@@ -226,16 +226,16 @@ void main() {
     amplitude7 = evaluate(7);
 
     // TEMPORARY FOR RAIN: REMOVE LATER
-//    if(rand(uv * time) > 0.999){
-//        amplitude0 += vec4(0, 0, 0, 0.5);
-//        amplitude1 += vec4(0, 0, 0, 0.5);
-//        amplitude2 += vec4(0, 0, 0, 0.5);
-//        amplitude3 += vec4(0, 0, 0, 0.5);
-//        amplitude4 += vec4(0, 0, 0, 0.5);
-//        amplitude5 += vec4(0, 0, 0, 0.5);
-//        amplitude6 += vec4(0, 0, 0, 0.5);
-//        amplitude7 += vec4(0, 0, 0, 0.5);
-//    }
+    if(rand(uv * time) > 0.999){
+        amplitude0 += vec4(0, 0, 0, 0.5);
+        amplitude1 += vec4(0, 0, 0, 0.5);
+        amplitude2 += vec4(0, 0, 0, 0.5);
+        amplitude3 += vec4(0, 0, 0, 0.5);
+        amplitude4 += vec4(0, 0, 0, 0.5);
+        amplitude5 += vec4(0, 0, 0, 0.5);
+        amplitude6 += vec4(0, 0, 0, 0.5);
+        amplitude7 += vec4(0, 0, 0, 0.5);
+    }
     //
     /* amplitude0 = vec4(ambient(0)); */
     /* amplitude1 = vec4(ambient(1)); */
