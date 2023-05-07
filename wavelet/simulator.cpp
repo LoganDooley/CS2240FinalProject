@@ -259,3 +259,17 @@ std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
     return textures;
 }
 
+void Simulator::addRaindrop(){
+    int thetaResolution = setting.simulationResolution[2];
+    std::vector<std::shared_ptr<Texture>> textures(thetaResolution);
+    for (int i = 0; i < thetaResolution; i++) {
+        textures[i] = std::make_shared<Texture>();
+        textures[i]->initialize2D(
+                setting.simulationResolution[0],
+                setting.simulationResolution[1],
+                GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+        textures[i]->setInterpolation(GL_LINEAR);
+        textures[i]->setWrapping(GL_CLAMP_TO_EDGE);
+        /* textures[i]->setBorderColor(glm::vec4(0,0,0,0)); */
+    }
+}

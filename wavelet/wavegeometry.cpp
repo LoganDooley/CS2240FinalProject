@@ -107,7 +107,7 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
     glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
     glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
-    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 8);
+    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 160);
     glUniform1i(glGetUniformLocation(m_heightShader, "kResolution"), profileBuffer->getKResolution());
     glUniform1f(glGetUniformLocation(m_heightShader, "windTheta"), 0);
     profileBuffer->bindProfilebufferTexture();

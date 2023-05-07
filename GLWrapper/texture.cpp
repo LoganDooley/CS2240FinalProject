@@ -114,3 +114,7 @@ GLuint Texture::getTexUnitUint() {
 GLenum Texture::getTexUnitEnum() {
     return m_texUnit;
 }
+
+void Texture::setValue(glm::ivec2 location, glm::vec4 color){
+
+}

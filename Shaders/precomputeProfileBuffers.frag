@@ -61,8 +61,9 @@ float TMA(float w, float h){
 }
 
 float psiBarIntegrand(float k, float p, float dk){
-    float waveLength = 2 * 3.1415 /k;
+    float waveLength = 2 * 3.1415 / k;
     float w = w(k);
+
     return sqrt(2 * JONSWAP(w) * dk) * waveLength * cos(k * p - w * t);
 }
 

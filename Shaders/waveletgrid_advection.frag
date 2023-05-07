@@ -34,6 +34,11 @@ layout (location = 5) out vec4 amplitude5;
 layout (location = 6) out vec4 amplitude6;
 layout (location = 7) out vec4 amplitude7;
 
+// Temporary randomness for raindrops
+float rand(vec2 seed) {
+    return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 // TODO: Precompute these for grid points
 float angularFrequency(float wavenumber) {
     return sqrt(wavenumber * gravity + surfaceTension * wavenumber * wavenumber * wavenumber);
@@ -58,13 +63,20 @@ float dispersionSpeed(float wavenumber) {
 }
 
 float ambient(int itheta) {
+    // TEMPORARY: FOR RAIN
+//    return 0;
+    //
+
     // all of this can be precomputed on the cpu
     float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
+    theta = 2 * 3.14159 * itheta/NUM_THETA;
 
     vec2 wavedirection = vec2(cos(theta), sin(theta));
     float windSpeed = length(windDirection);
 
     float cosTheta = dot(wavedirection, windDirection) / windSpeed;
+
+    //return cosTheta < 0 ? 0 : cosTheta;
 
     return cosTheta < 0 ? 0 : cosTheta * cosTheta * 2 / pi;
 }
@@ -212,6 +224,19 @@ void main() {
     amplitude5 = evaluate(5);
     amplitude6 = evaluate(6);
     amplitude7 = evaluate(7);
+
+    // TEMPORARY FOR RAIN: REMOVE LATER
+//    if(rand(uv * time) > 0.999){
+//        amplitude0 += vec4(0, 0, 0, 0.5);
+//        amplitude1 += vec4(0, 0, 0, 0.5);
+//        amplitude2 += vec4(0, 0, 0, 0.5);
+//        amplitude3 += vec4(0, 0, 0, 0.5);
+//        amplitude4 += vec4(0, 0, 0, 0.5);
+//        amplitude5 += vec4(0, 0, 0, 0.5);
+//        amplitude6 += vec4(0, 0, 0, 0.5);
+//        amplitude7 += vec4(0, 0, 0, 0.5);
+//    }
+    //
     /* amplitude0 = vec4(ambient(0)); */
     /* amplitude1 = vec4(ambient(1)); */
     /* amplitude2 = vec4(ambient(2)); */

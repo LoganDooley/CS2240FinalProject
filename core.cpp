@@ -81,6 +81,7 @@ int Core::update(float seconds){
 
     if (ImGui::Button("Reset Simulator"))      m_simulator->reset();
     if (std::distance(items[0], current_item) == 0) {
+        glDisable(GL_BLEND);
         m_simulator->takeStep(seconds);
         m_fullscreenQuad->bind();
         Debug::checkGLError();
@@ -94,9 +95,11 @@ int Core::update(float seconds){
         Debug::checkGLError();
         glViewport(0, 0, m_FBOSize.x, m_FBOSize.y);
         Debug::checkGLError();
-        m_waveGeometry->draw(m_camera);
+
+        glEnable(GL_BLEND);
+        //m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
-        //m_waveGeometry->debugDraw();
+        m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
 
     } else {

@@ -17,6 +17,8 @@ public:
     void reset();
     std::vector<std::shared_ptr<Texture>> getAmplitudeTextures() { return amplitude; }
 
+    void addRaindrop();
+
 private:
     float timeElapsed = 0;
     GLuint visualizationShader;

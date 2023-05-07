@@ -14,18 +14,20 @@ uniform int kResolution;
 uniform float windTheta = 0;
 
 float getPeriod(int ik){
+    float value;
     if(ik == 0){
-        return 2 * 3.14159/0.0001;
+        value = 2 * 3.14159/0.0001;
     }
     if(ik == 1){
-        return 2 * 3.14159/0.001;
+        value = 2 * 3.14159/0.001;
     }
     if(ik == 2){
-        return 2 * 3.14159/0.01;
+        value = 2 * 3.14159/0.01;
     }
     if(ik == 3){
-        return 2 * 3.14159/1;
+        value =2 * 3.14159/1;
     }
+    return value;
 }
 
 float rand(vec2 seed) {
@@ -35,7 +37,6 @@ float rand(vec2 seed) {
 float pbValue(float p, int ik){
     int N = pb_resolution;
     float ip = N * p / getPeriod(ik);
-    int pLower = int(floor(ip));
 
     vec4 color = texture(profileBuffers, vec2(ip/pb_resolution, 0.5));
     if(ik == 0){

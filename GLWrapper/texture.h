@@ -32,6 +32,7 @@ public:
     GLuint getHandle();
     GLuint getTexUnitUint();
     GLenum getTexUnitEnum();
+    void setValue(glm::ivec2 location, glm::vec4 color);
 
 private:
     GLuint m_handle;
