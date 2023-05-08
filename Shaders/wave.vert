@@ -26,9 +26,9 @@ void main() {
         vec3 dfdy = vec3(0, 1, texture(heightMap, (vec2(pos.x, pos.z + 1) - lowerLeft)/(upperRight - lowerLeft)).r - texture(heightMap, (vec2(pos.x, pos.z - 1) - lowerLeft)/(upperRight - lowerLeft)).r);
         surfaceNormal = normalize(cross(dfdx, dfdy));
         // Directional Light Example
-        //incidentDirection = normalize(vec3(0.5, 1, 0.5));
+        incidentDirection = normalize(vec3(0.5, -1, 0.5));
         // Point Light Example
-        incidentDirection = normalize(vec3(0, 1, 0) - worldSpace_pos);
+        //incidentDirection = normalize(vec3(0, 1, 0) - worldSpace_pos);
     }
     height = texture(heightMap, (vec2(pos.x, pos.z) - lowerLeft)/(upperRight - lowerLeft)).r;
     gl_Position = projection * view * vec4(worldSpace_pos, 1);

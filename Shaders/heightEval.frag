@@ -97,7 +97,10 @@ void main() {
             float p = dot(kdir, pos) + getPeriod(ik) * rand( kdir );
 
             /* height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik); */
-            height += da * amp[ik] * pbValue(p, ik);
+            if(ik >= 0){
+                height += 100 * da * amp[ik] * pbValue(p, ik);
+            }
+            //height += da * amp[ik] * pbValue(p, ik);
             //height += da * 0.01 * pbValue(p, ik);
 
 //            int interpolated_ik = int(round(4 * float(ik) / kResolution));

@@ -6,6 +6,6 @@ uniform sampler2D tex;
 in vec2 uv;
 
 void main() {
-    vec3 value = texture(tex, uv).xyz;
-    fragColor = vec4(abs(value), 1);
+    vec4 value = texture(tex, uv);
+    fragColor = vec4(vec3(abs(value.r)), 1);
 }
