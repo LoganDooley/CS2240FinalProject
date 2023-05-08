@@ -26,6 +26,9 @@ Core::Core(int width, int height){
     Debug::checkGLError();
     m_waveGeometry->setSimulator(m_simulator.get());
 
+    m_terrain = std::make_shared<Environment>("Blender/geometryHeight.png", "Blender/geometry.obj", 0.5);
+    Debug::checkGLError();
+
     m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
 
@@ -99,6 +102,8 @@ int Core::update(float seconds){
         glEnable(GL_BLEND);
         m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
+
+        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
 

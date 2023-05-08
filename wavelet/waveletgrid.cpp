@@ -24,7 +24,7 @@ WaveletGrid::WaveletGrid(glm::vec4 minParam, glm::vec4 maxParam, glm::uvec4 reso
                         m_unitParam[Parameter::X], settings.k_range.x, settings.k_range.y, m_unitParam[Parameter::K]));
         amplitudes.resize(resolution);
         amplitudes_nxt.resize(resolution);
-        m_environment = Environment("100x100box.png", .9);
+        //m_environment = Environment("100x100box.png", .9);
         //m_profileBuffer = std::make_unique<ProfileBuffer>(5);
 }
 
@@ -71,7 +71,7 @@ void WaveletGrid::advectionStep(float deltaTime) {
             std::array<unsigned int, 2> i_xy = {i_x, i_y};
             glm::vec2 pos = getPositionAtIndex(i_xy);
             // we need not compute the advection for points outside of the domain.
-            if (m_environment.inDomain(pos)) {
+            /* if (m_environment.inDomain(pos)) { */
                 for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++) {
                     for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
                         glm::vec4 pos = getPositionAtIndex({i_x, i_y, i_theta, i_k});
@@ -88,7 +88,7 @@ void WaveletGrid::advectionStep(float deltaTime) {
                                         i_theta, i_k);
                     }
                 }
-            }
+            /* } */
         }
     }
     std::swap(amplitudes, amplitudes_nxt);
@@ -103,7 +103,8 @@ void WaveletGrid::diffusionStep(float deltaTime) {
     for (unsigned int i_y = 0; i_y < amplitudes.getResolution(Parameter::Y); i_y++) {
 
         std::array<unsigned int, 2> i_xy = {i_x, i_y};
-        float distanceToBoundary = m_environment.levelSet(getPositionAtIndex(i_xy));
+        float distanceToBoundary = 0;
+            /* m_environment.levelSet(getPositionAtIndex(i_xy)); */
 
         for (unsigned int i_theta = 0; i_theta < amplitudes.getResolution(Parameter::THETA); i_theta++)
         for (unsigned int i_k = 0; i_k < amplitudes.getResolution(Parameter::K); i_k++) {
@@ -174,9 +175,11 @@ float WaveletGrid::amplitude(std::array<float, 4> pos) const{
     std::function<float(int,int,int,int)> f = std::bind(&WaveletGrid::lookup_amplitude, this,
         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-    return Math::interpolate4D(indexPos[Parameter::X], indexPos[Parameter::Y], indexPos[Parameter::THETA], indexPos[Parameter::K],
-        f, m_environment
-    );
+    return 0;
+
+    /* return Math::interpolate4D(indexPos[Parameter::X], indexPos[Parameter::Y], indexPos[Parameter::THETA], indexPos[Parameter::K], */
+    /*     f, m_environment */
+    /* ); */
 }
 
 float WaveletGrid::idxToPos(const unsigned int idx, Parameter p) const{
@@ -216,26 +219,27 @@ float WaveletGrid::ambientAmplitude(float x, float y, int i_theta, int i_k) cons
 glm::vec4 WaveletGrid::getReflected(glm::vec4 pos) const {
     glm::vec2 posxy = glm::vec2(pos);
 
-    float distanceToBoundary = m_environment.levelSet(posxy);
-    // 0 is on the boundary and we only simulate anything below 0, so we don't need
-    // to reflect if this is higher or equal
-    if (distanceToBoundary >= 0) {
-        return pos;
-    }
+    /* float distanceToBoundary = m_environment.levelSet(posxy); */
+    /* // 0 is on the boundary and we only simulate anything below 0, so we don't need */
+    /* // to reflect if this is higher or equal */
+    /* if (distanceToBoundary >= 0) { */
+    /*     return pos; */
+    /* } */
 
-    glm::vec2 normal = m_environment.levelSetGradient(posxy);
-    float theta = pos[Parameter::THETA];
-    glm::vec2 wavedirection = glm::vec2(std::cos(theta), std::sin(theta));
+    /* glm::vec2 normal = m_environment.levelSetGradient(posxy); */
+    /* float theta = pos[Parameter::THETA]; */
+    /* glm::vec2 wavedirection = glm::vec2(std::cos(theta), std::sin(theta)); */
 
-    glm::vec2 reflectedPos = posxy - 2.f * normal * distanceToBoundary;
-    glm::vec2 reflectedDirection = wavedirection - 2.f * (glm::dot(normal, wavedirection) * normal);
+    /* glm::vec2 reflectedPos = posxy - 2.f * normal * distanceToBoundary; */
+    /* glm::vec2 reflectedDirection = wavedirection - 2.f * (glm::dot(normal, wavedirection) * normal); */
 
-    float reflectedTheta = std::atan2(reflectedDirection.y, reflectedDirection.x);
+    /* float reflectedTheta = std::atan2(reflectedDirection.y, reflectedDirection.x); */
 
-    // this should be in the domain (like right on the edge)
-    assert(m_environment.inDomain(pos));
+    /* // this should be in the domain (like right on the edge) */
+    /* assert(m_environment.inDomain(pos)); */
 
-    return glm::vec4(reflectedPos.x, reflectedPos.y, reflectedTheta, pos[Parameter::K]);
+    /* return glm::vec4(reflectedPos.x, reflectedPos.y, reflectedTheta, pos[Parameter::K]); */
+    return glm::vec4(0);
 }
 
 float WaveletGrid::lookup_interpolated_amplitude(float x, float y, int i_theta, int i_k) {

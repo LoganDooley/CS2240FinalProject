@@ -19,7 +19,7 @@ public:
     void initialize3D(int width, int height, int depth,
         GLint internalFormat = GL_RGBA, GLint format = GL_RGBA, GLint dataType = GL_UNSIGNED_BYTE);
     void initialize2D(int width, int height, 
-        GLint internalFormat = GL_RGBA, GLint format = GL_RGBA, GLint dataType = GL_UNSIGNED_BYTE);
+        GLint internalFormat = GL_RGBA, GLint format = GL_RGBA, GLint dataType = GL_UNSIGNED_BYTE, const void* data = NULL);
 
     void setInterpolation(GLenum interpolationMode);
     void setWrapping(GLenum wrapMode);

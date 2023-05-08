@@ -178,7 +178,7 @@ class WaveletGrid {
         Amplitude amplitudes_nxt;
 
         GridSettings settings;
-        Environment m_environment;
+        /* Environment m_environment; */
 
         std::shared_ptr<Spectrum> m_spectrum;
 };

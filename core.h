@@ -36,6 +36,7 @@ private:
     std::shared_ptr<ProfileBuffer> m_profileBuffer;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;
     std::shared_ptr<CubeMap> m_cubemap;
+    std::shared_ptr<Environment> m_terrain;
 
 
     glm::ivec2 m_FBOSize = glm::ivec2(640, 480);

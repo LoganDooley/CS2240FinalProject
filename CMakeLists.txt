@@ -54,6 +54,7 @@ add_executable(${PROJECT_NAME}
     debug.h
     cubemap.h
     fullscreenquad.cpp
+    tiny_obj_loader.h
     wavelet/waveletgrid.cpp
     wavelet/amplitude.cpp
     wavelet/spectrum.cpp
