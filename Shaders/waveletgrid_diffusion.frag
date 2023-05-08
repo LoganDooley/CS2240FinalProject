@@ -15,7 +15,10 @@ const float surfaceTension = 72.8 / 1000; // of water
 uniform vec4 wavenumberValues;
 
 uniform sampler2D _Amplitude[8];
-uniform sampler2D _AtLeast2Away;
+uniform sampler2D _Height;
+uniform sampler2D _Gradient;
+uniform sampler2D _CloseToBoundary;
+uniform float waterLevel = 0.641;
 
 uniform vec2 windDirection;
 
@@ -57,11 +60,10 @@ vec4 dispersionSpeed(vec4 wavenumber) {
 
 float ambient(int itheta) {
     // all of this can be precomputed on the cpu
-
     float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
+
     vec2 wavedirection = vec2(cos(theta), sin(theta));
     float windSpeed = length(windDirection);
-
     float cosTheta = dot(wavedirection, windDirection) / windSpeed;
 
     return cosTheta < 0 ? 0 : cosTheta * cosTheta * 2 / pi;
@@ -88,10 +90,11 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // found on bottom of page 6
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
-    vec4 delta = 1e-4 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * abs(dispersionSpeed(wavenumber));
+    vec4 delta = 1e-3 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
+        abs(dispersionSpeed(wavenumber));
 
     // found on bottom of page 6
-    vec4 gamma = 0.0025 * aspeed * unitParam.z * unitParam.z / unitParam.x;
+    vec4 gamma = 0.025 * aspeed * unitParam.z * unitParam.z / unitParam.x;
 
     int h = 1; // step size
 
@@ -104,7 +107,6 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     vec4 lookup_x_yh_theta_k = lookup_amplitude(ix, iy + h, itheta);
     vec4 lookup_x_ynegh_theta_k = lookup_amplitude(ix, iy - h, itheta);
-
 
     // use central difference to obtain (k dot V_x)
     vec4 partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
@@ -130,18 +132,19 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // we are actually using a step size of h/2 here
     // use central difference to obtain d2A / dtheta^2 numerically
+    /* vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(ix, iy, itheta + h) */ 
+    /*     + lookup_amplitude(ix, iy, itheta - h) - 2 * amplitude) * inverseH2; */
     vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(ix, iy, itheta + h) 
-        + lookup_amplitude(ix, iy, itheta - h) - 2 * amplitude) * inverseH2;
+        + lookup_amplitude(ix, iy, itheta - h) - 2*amplitude) * inverseH2;
 
     // equation 18
     vec4 derivativeWRTt = vec4(0);
 
     derivativeWRTt += -aspeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude
     derivativeWRTt += delta * secondDirectionalDerivativeWRTK; // second term, dampen in k
-    derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion.
+    /* derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion. */
 
-
-    return derivativeWRTt * deltaTime;
+    return max(amplitude + derivativeWRTt * deltaTime, 0);
 }
 
 void main() {
@@ -162,14 +165,13 @@ void main() {
     outAmplitude7 = texelFetch(_Amplitude[7], ivec2(uv * NUM_POS), 0);
 
     if (atLeast2Away) {
-        outAmplitude0 += evaluate(ix, iy, 0, outAmplitude0);
-        outAmplitude1 += evaluate(ix, iy, 1, outAmplitude1);
-        outAmplitude2 += evaluate(ix, iy, 2, outAmplitude2);
-        outAmplitude3 += evaluate(ix, iy, 3, outAmplitude3);
-        outAmplitude4 += evaluate(ix, iy, 4, outAmplitude4);
-        outAmplitude5 += evaluate(ix, iy, 5, outAmplitude5);
-        outAmplitude6 += evaluate(ix, iy, 6, outAmplitude6);
-        outAmplitude7 += evaluate(ix, iy, 7, outAmplitude7);
+        outAmplitude0 = evaluate(ix, iy, 0, outAmplitude0);
+        outAmplitude1 = evaluate(ix, iy, 1, outAmplitude1);
+        outAmplitude2 = evaluate(ix, iy, 2, outAmplitude2);
+        outAmplitude3 = evaluate(ix, iy, 3, outAmplitude3);
+        outAmplitude4 = evaluate(ix, iy, 4, outAmplitude4);
+        outAmplitude5 = evaluate(ix, iy, 5, outAmplitude5);
+        outAmplitude6 = evaluate(ix, iy, 6, outAmplitude6);
+        outAmplitude7 = evaluate(ix, iy, 7, outAmplitude7);
     }
-
 }

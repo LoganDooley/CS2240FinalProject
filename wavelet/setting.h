@@ -9,6 +9,8 @@ struct Setting {
     float surfaceTension = 72.8 / 1000; // of water
     float gravity = 9.81;
 
+    float waterHeight = 0.641;
+
     float size = 100; // of the simulation square
     glm::vec4 kValues = glm::vec4(0.0045, 0.045, 0.45, 45);
 

@@ -5,11 +5,12 @@
 #include "fullscreenquad.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "shaderloader.h"
+#include "wavelet/environment.h"
 #include <glm/gtx/string_cast.hpp>
 #include <glm/ext.hpp>
 
-Simulator::Simulator(Setting setting) :
-    setting(setting) {
+Simulator::Simulator(Setting setting, std::shared_ptr<Environment> environment) :
+    setting(setting), environment(environment) {
     
     if (setting.simulationResolution[0] != setting.simulationResolution[1] || 
         setting.simulationResolution[2] != 8 ||
@@ -63,11 +64,12 @@ Simulator::~Simulator() {
 }
 
 void Simulator::takeStep(float dt) {
+    glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
     int thetaResolution = setting.simulationResolution[2];
 
-    int attachments[16] = {
+    int attachments[8] = {
         GL_TEXTURE0, 
         GL_TEXTURE1, 
         GL_TEXTURE2, 
@@ -75,15 +77,7 @@ void Simulator::takeStep(float dt) {
         GL_TEXTURE4, 
         GL_TEXTURE5, 
         GL_TEXTURE6, 
-        GL_TEXTURE7, 
-        GL_TEXTURE8, 
-        GL_TEXTURE9, 
-        GL_TEXTURE10, 
-        GL_TEXTURE11, 
-        GL_TEXTURE12, 
-        GL_TEXTURE13, 
-        GL_TEXTURE14, 
-        GL_TEXTURE15, 
+        GL_TEXTURE7
     };
 
     glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
@@ -94,11 +88,14 @@ void Simulator::takeStep(float dt) {
     glUniform1f(glGetUniformLocation(advectionShader, "deltaTime"), dt);
     advectionFBO->bind();
 
-
     fullScreenQuad->bind();
 
     for (int i = 0; i < thetaResolution; i++)
         amplitude[i]->bind(attachments[i]);
+    environment->heightMap->bind(GL_TEXTURE8);
+    environment->boundaryMap->bind(GL_TEXTURE9);
+    environment->gradientMap->bind(GL_TEXTURE10);
+
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -124,7 +121,12 @@ void Simulator::takeStep(float dt) {
     // this should bind the default framebuffer
     advectionFBO->unbind();
 
+    environment->heightMap->unbind(GL_TEXTURE8);
+    environment->boundaryMap->unbind(GL_TEXTURE9);
+    environment->gradientMap->unbind(GL_TEXTURE10);
+
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
     glUseProgram(0);
 
     timeElapsed += dt;
@@ -139,8 +141,8 @@ void Simulator::visualize(glm::ivec2 viewport) {
     amplitude[visualization_thetaIndex]->bind(GL_TEXTURE0);
 
     int n = std::min(viewport.x, viewport.y);
-    /* glViewport(0, 0, n, n); */
-    glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
+    glViewport(0, 0, n, n);
+    /* glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]); */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glad_glUniform1i(glGetUniformLocation(visualizationShader, "thetaIndex"), visualization_thetaIndex);
@@ -236,6 +238,11 @@ void Simulator::loadShadersWithData(GLuint shader) {
     std::cout << glm::to_string(setting.windDirection) << std::endl;
     glad_glUniform2fv(glGetUniformLocation(shader, "windDirection"), 1, glm::value_ptr(setting.windDirection));
 
+    glad_glUniform1i(glGetUniformLocation(shader, "_Height"), thetaResolution);
+    glad_glUniform1i(glGetUniformLocation(shader, "_Gradient"), thetaResolution + 1);
+    glad_glUniform1i(glGetUniformLocation(shader, "_CloseToBoundary"), thetaResolution + 2);
+    glad_glUniform1f(glGetUniformLocation(shader, "waterLevel"), environment->waterHeight);
+
     glad_glUniform4fv(glGetUniformLocation(shader, "minParam"), 1, glm::value_ptr(minParam));
     glad_glUniform4fv(glGetUniformLocation(shader, "maxParam"), 1, glm::value_ptr(maxParam));
     glad_glUniform4fv(glGetUniformLocation(shader, "unitParam"), 1, glm::value_ptr(unitParam));
@@ -250,10 +257,10 @@ std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
         textures[i]->initialize2D(
                 setting.simulationResolution[0], 
                 setting.simulationResolution[1], 
-                GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+                GL_RGBA32F, GL_RGBA, GL_FLOAT);
         textures[i]->setInterpolation(GL_LINEAR);
-        textures[i]->setWrapping(GL_CLAMP_TO_EDGE);
-        /* textures[i]->setBorderColor(glm::vec4(0,0,0,0)); */
+        textures[i]->setWrapping(GL_CLAMP_TO_BORDER);
+        textures[i]->setBorderColor(glm::vec4(0,0,0,0));
     }
 
     return textures;

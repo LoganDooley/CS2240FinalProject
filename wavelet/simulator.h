@@ -2,6 +2,7 @@
 
 #include "GLWrapper/framebuffer.h"
 #include "fullscreenquad.h"
+#include "wavelet/environment.h"
 #include "wavelet/setting.h"
 #include "wavelet/waveletgrid.h"
 #include <glm/glm.hpp>
@@ -9,7 +10,7 @@
 
 class Simulator {
 public:
-    Simulator(Setting settings);
+    Simulator(Setting settings, std::shared_ptr<Environment> environment);
     ~Simulator();
 
     void takeStep(float dt);
@@ -25,6 +26,7 @@ private:
     GLuint advectionShader;
     GLuint diffusionShader;
 
+    std::shared_ptr<Environment> environment;
     std::shared_ptr<Framebuffer> advectionFBO;
     std::shared_ptr<Framebuffer> diffusionFBO;
 

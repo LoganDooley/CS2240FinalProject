@@ -57,7 +57,7 @@ void Texture::initialize2D(int width, int height,
                            GLint internalFormat, GLint format, GLint dataType, const void* data) {
     bind();
     glTexImage2D(m_texTarget, 0, internalFormat, width, height, 0, format,
-                 dataType, NULL);
+                 dataType, data);
     unbind();
 }
 

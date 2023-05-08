@@ -7,7 +7,8 @@
 #include "tiny_obj_loader.h"
 #include <cfloat>
 
-Environment::Environment(std::string heightMapFilename, std::string meshFileName, float zBoundary) : zBoundary(zBoundary) {
+Environment::Environment(std::string heightMapFilename, std::string meshFileName, Setting setting) 
+    : waterHeight(setting.waterHeight) {
     int n;
     unsigned char *data = stbi_load(heightMapFilename.c_str(), &width, &height, &n, 0);
     if (data == NULL) {
@@ -33,20 +34,23 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
         j = std::clamp(j, 0, height-1);
         return heights[i * width + j];
     };
+    glm::vec2 unitDistance(setting.size / width, setting.size / height);
+    glm::vec2 inverseTwiceUnitDistance(2.0f/unitDistance.x, 2.0f/unitDistance.y);
+
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
-            float dx = (sample(i + 1, j) - sample(i - 1, j)) / 2;
-            float dy = (sample(i, j+1) - sample(i, j-1)) / 2;
+            float dx = (sample(i + 1, j) - sample(i - 1, j)) * inverseTwiceUnitDistance.x;
+            float dy = (sample(i, j+1) - sample(i, j-1)) * inverseTwiceUnitDistance.y;
 
-            gradients[i * width + j] = glm::normalize(glm::vec2(dx, dy));
+            gradients[i * width + j] = glm::vec2(dx, dy);
+
             closeToBoundary[i * width + j] = 0;
             for (int dx = -2; dx <= 2; dx++)
                 for (int dy = -2; dy <= 2; dy++)
-                    closeToBoundary[i * width + j] |= sample(i + dx, j + dy) < zBoundary;
+                    closeToBoundary[i * width + j] |= sample(i + dx, j + dy) > waterHeight;
         }
     }
     stbi_image_free(data);
-    this->zBoundary = zBoundary;
 
     // textures initialization and data loading
     {
@@ -85,12 +89,22 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
     getObjData(meshFileName);
 
     shader = ShaderLoader::createShaderProgram("Shaders/terrain.vert", "Shaders/terrain.frag");
+    Debug::checkGLError();
+
+    visualizationShader = ShaderLoader::createShaderProgram(
+        "Shaders/texture.vert",
+        "Shaders/texture.frag"
+    );
+    glUseProgram(visualizationShader);
+	glUniform1i(glGetUniformLocation(shader, "tex"), 1);
+    Debug::checkGLError();
 }
 
 Environment::~Environment() {
     if (shader) glDeleteProgram(shader);
     if (vao) glDeleteVertexArrays(1, &vao);
     if (vbo) glDeleteBuffers(1, &vbo);
+    if (visualizationShader) glDeleteProgram(visualizationShader);
 }
 
 void Environment::draw(glm::mat4 projection, glm::mat4 view) {
@@ -104,6 +118,21 @@ void Environment::draw(glm::mat4 projection, glm::mat4 view) {
     glDrawArrays(GL_TRIANGLES, 0, vaoSize);
     glBindVertexArray(0);
     glUseProgram(0);
+}
+    
+void Environment::visualize(glm::ivec2 viewport) {
+    glUseProgram(visualizationShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    heightMap->bind(GL_TEXTURE0);
+
+    int n = std::min(viewport.x, viewport.y);
+    glViewport(0, 0, n, n);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glUseProgram(0);
+
+    heightMap->unbind(GL_TEXTURE0);
 }
 
 bool Environment::inDomain(glm::vec2 pos) const {

@@ -22,12 +22,13 @@ Core::Core(int width, int height){
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 400);
     Debug::checkGLError();
 
-    m_simulator = std::make_unique<Simulator>(setting);
+    m_terrain = std::make_shared<Environment>("Blender/geometryHeight.png", "Blender/geometry.obj", setting);
+    Debug::checkGLError();
+
+    m_simulator = std::make_unique<Simulator>(setting, m_terrain);
     Debug::checkGLError();
     m_waveGeometry->setSimulator(m_simulator.get());
 
-    m_terrain = std::make_shared<Environment>("Blender/geometryHeight.png", "Blender/geometry.obj", 0.5);
-    Debug::checkGLError();
 
     m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
@@ -67,7 +68,7 @@ int Core::update(float seconds){
     */
     m_camera->move(m_keysDown, seconds);
 
-    const char* items[] = { "Wave geometry", "Advection / Diffusion" };
+    const char* items[] = { "Wave geometry", "Advection / Diffusion", "Height Map"};
     static const char* current_item = items[0];
 
     if (ImGui::BeginCombo("visualizer", current_item)) {
@@ -83,7 +84,9 @@ int Core::update(float seconds){
     }
 
     if (ImGui::Button("Reset Simulator"))      m_simulator->reset();
-    if (std::distance(items[0], current_item) == 0) {
+    int selection = std::distance(items[0], current_item);
+
+    if (current_item == items[0]) {
         glDisable(GL_BLEND);
         m_simulator->takeStep(seconds);
         m_fullscreenQuad->bind();
@@ -107,7 +110,7 @@ int Core::update(float seconds){
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
 
-    } else {
+    } else if (current_item == items[1]) {
         if (!simulationPaused) {
             m_simulator->takeStep(seconds);
             if (ImGui::Button("Pause"))     simulationPaused = true;
@@ -116,6 +119,9 @@ int Core::update(float seconds){
             if (ImGui::Button("Step"))      m_simulator->takeStep(seconds);
         }
         m_simulator->visualize(m_FBOSize);
+    } else if (current_item == items[2]) {
+        m_fullscreenQuad->bind();
+        m_terrain->visualize(m_FBOSize);
     }
 
     return 0;

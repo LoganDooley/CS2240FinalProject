@@ -18,6 +18,10 @@ uniform vec4 wavenumberValues;
 uniform vec2 windDirection;
 
 uniform sampler2D _Amplitude[8];
+uniform sampler2D _Height;
+uniform sampler2D _Gradient;
+uniform sampler2D _CloseToBoundary;
+uniform float waterLevel = 0.641;
 
 uniform float time;
 uniform float deltaTime;
@@ -62,6 +66,51 @@ float dispersionSpeed(float wavenumber) {
     return numerator / denom;
 }
 
+float heightDistanceToBoundary(vec2 uvPos) {
+    return texture(_Height, uvPos).r - waterLevel;
+}
+
+bool inDomain(vec2 uvPos) {
+    return heightDistanceToBoundary(uvPos) <= 0;
+}
+
+vec4 amplitude(vec2 uv, float thetaUV) {
+    float thetaTexCoord = (thetaUV * NUM_THETA) - 0.5;
+    if (thetaTexCoord < 0) thetaTexCoord += NUM_THETA;
+
+    int itheta_simulated = int(thetaTexCoord);
+    int itheta_simulated_p1 = (itheta_simulated + 1) % NUM_THETA;
+
+    vec4 v0 = texture(_Amplitude[itheta_simulated], uv);
+    vec4 v1 = texture(_Amplitude[itheta_simulated_p1], uv);
+
+    float t = thetaTexCoord - itheta_simulated;
+
+    return mix(v0, v1, vec4(t));
+}
+
+vec2 posToUV(vec2 pos) {
+    return (pos - minParam.xy) / (maxParam.xy - minParam.xy);
+}
+
+vec3 getReflected(vec2 pos, float theta) {
+    vec2 uvPos = posToUV(pos);
+    float distanceToBoundary = heightDistanceToBoundary(uvPos);
+    // still in water, no reflection
+    if (distanceToBoundary <= 0)
+        return vec3(pos, theta);
+
+    vec2 normal = texture(_Gradient, uvPos).rg;
+    vec2 wavedirection = vec2(cos(theta), sin(theta));
+
+    vec2 reflectedPos = pos - 2.0 * normal * distanceToBoundary;
+    vec2 reflectedDirection = wavedirection - 2.0 * dot(normal, wavedirection) * normal;
+
+    float reflectedTheta = atan(reflectedDirection.y, reflectedDirection.x);
+
+    return vec3(reflectedPos, reflectedTheta);
+}
+
 float ambient(int itheta) {
     // TEMPORARY: FOR RAIN
 //    return 0;
@@ -69,7 +118,6 @@ float ambient(int itheta) {
 
     // all of this can be precomputed on the cpu
     float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
-    theta = 2 * 3.14159 * itheta/NUM_THETA;
 
     vec2 wavedirection = vec2(cos(theta), sin(theta));
     float windSpeed = length(windDirection);
@@ -195,16 +243,34 @@ vec4 evaluate(int thetaIndex) {
 
         vec2 nxtPos = pos.xy - deltaTime * wavedirection * advectionSpeed(wavenumber);
 
-        vec2 nxtPosUV = (nxtPos - minParam.xy) / (maxParam.xy - minParam.xy);
+        vec2 nxtPosUV = posToUV(nxtPos);
+        float distanceToBoundary = heightDistanceToBoundary(nxtPosUV);
+
         vec2 nxtPosTexCoord = nxtPosUV * NUM_POS - 0.5;
 
         float interpolatedAmplitude =
             /* texture(_Amplitude[thetaIndex], nxtPosUV)[zetaIndex]; */
             interpolate2D(nxtPosTexCoord.x, nxtPosTexCoord.y, thetaIndex, zetaIndex);
 
+        /* vec2 uvPos = posToUV(pos); */
+        /* float distanceToBoundary = heightDistanceToBoundary(uvPos); */
+        /* // still in water, no reflection */
+        /* if (distanceToBoundary <= 0) */
+        /*     return vec3(pos, theta); */
+
+        /* vec2 normal = texture(_Gradient, uvPos).rg; */
+        /* vec2 wavedirection = vec2(cos(theta), sin(theta)); */
+
+        /* vec2 reflectedPos = pos - 2.0 * normal * distanceToBoundary; */
+        /* vec2 reflectedDirection = wavedirection - 2.0 * dot(normal, wavedirection) * normal; */
+
+        /* float reflectedTheta = atan(reflectedDirection.y, reflectedDirection.x); */
+
+        /* return vec3(reflectedPos, reflectedTheta); */
+
         // ambient amplitude if outside grid
-        if (nxtPos.x < minParam.x || nxtPos.x >= maxParam.x || 
-            nxtPos.y < minParam.y || nxtPos.y >= maxParam.y) {
+        if (nxtPos.x < minParam.x || nxtPos.x > maxParam.x || 
+            nxtPos.y < minParam.y || nxtPos.y > maxParam.y) {
 
             interpolatedAmplitude = ambient(thetaIndex);
         }
@@ -216,26 +282,37 @@ vec4 evaluate(int thetaIndex) {
 }
 
 void main() {
-    amplitude0 = evaluate(0);
-    amplitude1 = evaluate(1);
-    amplitude2 = evaluate(2);
-    amplitude3 = evaluate(3);
-    amplitude4 = evaluate(4);
-    amplitude5 = evaluate(5);
-    amplitude6 = evaluate(6);
-    amplitude7 = evaluate(7);
+    /* if (inDomain(uv)) { */
+        amplitude0 = evaluate(0);
+        amplitude1 = evaluate(1);
+        amplitude2 = evaluate(2);
+        amplitude3 = evaluate(3);
+        amplitude4 = evaluate(4);
+        amplitude5 = evaluate(5);
+        amplitude6 = evaluate(6);
+        amplitude7 = evaluate(7);
 
-    // TEMPORARY FOR RAIN: REMOVE LATER
-    if(rand(uv * time) > 0.999){
-        amplitude0 += vec4(0, 0, 0, 0.5);
-        amplitude1 += vec4(0, 0, 0, 0.5);
-        amplitude2 += vec4(0, 0, 0, 0.5);
-        amplitude3 += vec4(0, 0, 0, 0.5);
-        amplitude4 += vec4(0, 0, 0, 0.5);
-        amplitude5 += vec4(0, 0, 0, 0.5);
-        amplitude6 += vec4(0, 0, 0, 0.5);
-        amplitude7 += vec4(0, 0, 0, 0.5);
-    }
+        // TEMPORARY FOR RAIN: REMOVE LATER
+        if(rand(uv * time) > 0.999){
+            amplitude0 += vec4(0, 0, 0, 0.5);
+            amplitude1 += vec4(0, 0, 0, 0.5);
+            amplitude2 += vec4(0, 0, 0, 0.5);
+            amplitude3 += vec4(0, 0, 0, 0.5);
+            amplitude4 += vec4(0, 0, 0, 0.5);
+            amplitude5 += vec4(0, 0, 0, 0.5);
+            amplitude6 += vec4(0, 0, 0, 0.5);
+            amplitude7 += vec4(0, 0, 0, 0.5);
+        }
+    /* } else { */
+    /*     amplitude0 = vec4(0,0,0,0); */
+    /*     amplitude1 = vec4(0,0,0,0); */
+    /*     amplitude2 = vec4(0,0,0,0); */
+    /*     amplitude3 = vec4(0,0,0,0); */
+    /*     amplitude4 = vec4(0,0,0,0); */
+    /*     amplitude5 = vec4(0,0,0,0); */
+    /*     amplitude6 = vec4(0,0,0,0); */
+    /*     amplitude7 = vec4(0,0,0,0); */
+    /* } */
     //
     /* amplitude0 = vec4(ambient(0)); */
     /* amplitude1 = vec4(ambient(1)); */
