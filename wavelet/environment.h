@@ -43,7 +43,7 @@ private:
     GLuint vao, vbo;
 
     std::vector<float> heights; // we load both in cpu
-    std::vector<int> closeToBoundary; // in domain map in case needed
+    std::vector<float> closeToBoundary; // in domain map in case needed
     std::vector<glm::vec2> gradients;
 
     void getObjData(std::string filename);

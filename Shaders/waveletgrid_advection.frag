@@ -28,7 +28,6 @@ uniform vec4 minParam;
 uniform vec4 maxParam;
 uniform vec4 unitParam;
 
-
 layout (location = 0) out vec4 amplitude0;
 layout (location = 1) out vec4 amplitude1;
 layout (location = 2) out vec4 amplitude2;
@@ -204,6 +203,16 @@ void main() {
         amplitude5 = evaluate(5);
         amplitude6 = evaluate(6);
         amplitude7 = evaluate(7);
+    /* } else { */
+    /*     amplitude0 = vec4(0); */
+    /*     amplitude1 = vec4(0); */
+    /*     amplitude2 = vec4(0); */
+    /*     amplitude3 = vec4(0); */
+    /*     amplitude4 = vec4(0); */
+    /*     amplitude5 = vec4(0); */
+    /*     amplitude6 = vec4(0); */
+    /*     amplitude7 = vec4(0); */
+    /* } */
 
 //    // TEMPORARY FOR RAIN: REMOVE LATER
 //    if(rand(uv * time) > 0.999){

@@ -50,57 +50,43 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // found on bottom of page 6
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
-    vec4 delta = 1e-5 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
+    vec4 delta = 1e-2 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
         abs(dispersionSpeed);
 
     // found on bottom of page 6
-    vec4 gamma = 0.0025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
-
-    int h = 1; // step size
+    vec4 gamma = 0.025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
 
     // caching some values common to the calculations below
-    float inverseH2 = 1.0f / float(h*h);
-    float inverse2H = 1.0f / float(2*h);
+    vec4 lookup_xh_y_theta_k = lookup_amplitude(ix + 1, iy, itheta);
+    vec4 lookup_xnegh_y_theta_k = lookup_amplitude(ix - 1, iy, itheta);
 
-    vec4 lookup_xh_y_theta_k = lookup_amplitude(ix + h, iy, itheta);
-    vec4 lookup_xnegh_y_theta_k = lookup_amplitude(ix - h, iy, itheta);
-
-    vec4 lookup_x_yh_theta_k = lookup_amplitude(ix, iy + h, itheta);
-    vec4 lookup_x_ynegh_theta_k = lookup_amplitude(ix, iy - h, itheta);
+    vec4 lookup_x_yh_theta_k = lookup_amplitude(ix, iy + 1, itheta);
+    vec4 lookup_x_ynegh_theta_k = lookup_amplitude(ix, iy - 1, itheta);
 
     // use central difference to obtain (k dot V_x)
-    vec4 partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) * inverse2H;
-    vec4 partialDerivativeWRTY = (lookup_x_yh_theta_k - lookup_x_ynegh_theta_k) * inverse2H;
+    vec4 partialDerivativeWRTX = (lookup_xh_y_theta_k - lookup_xnegh_y_theta_k) / 2;
+    vec4 partialDerivativeWRTY = (lookup_x_yh_theta_k - lookup_x_ynegh_theta_k) / 2;
 
-    vec4 directionalDerivativeWRTK = vec4(
-        dot(wavedirection, vec2(partialDerivativeWRTX.r, partialDerivativeWRTY.r)),
-        dot(wavedirection, vec2(partialDerivativeWRTX.g, partialDerivativeWRTY.g)),
-        dot(wavedirection, vec2(partialDerivativeWRTX.b, partialDerivativeWRTY.b)),
-        dot(wavedirection, vec2(partialDerivativeWRTX.a, partialDerivativeWRTY.a))
-    );
+    vec4 directionalDerivativeWRTK = partialDerivativeWRTX * wavedirection.x + partialDerivativeWRTY * wavedirection.y;
 
     // central difference to obtain (k dot V_x)^2
-    vec4 secondPartialDerivativeWRTX = (lookup_xh_y_theta_k + lookup_xnegh_y_theta_k - 2 * amplitude) * inverseH2;
-    vec4 secondPartialDerivativeWRTY = (lookup_x_yh_theta_k + lookup_x_ynegh_theta_k - 2 * amplitude) * inverseH2;
+    vec4 secondPartialDerivativeWRTX = (lookup_xh_y_theta_k + lookup_xnegh_y_theta_k - 2 * amplitude);
+    vec4 secondPartialDerivativeWRTY = (lookup_x_yh_theta_k + lookup_x_ynegh_theta_k - 2 * amplitude);
 
-    vec4 secondDirectionalDerivativeWRTK = vec4(
-        dot(wavedirection * wavedirection, vec2(secondPartialDerivativeWRTX.r, secondPartialDerivativeWRTY.r)),
-        dot(wavedirection * wavedirection, vec2(secondPartialDerivativeWRTX.g, secondPartialDerivativeWRTY.g)),
-        dot(wavedirection * wavedirection, vec2(secondPartialDerivativeWRTX.b, secondPartialDerivativeWRTY.b)),
-        dot(wavedirection * wavedirection, vec2(secondPartialDerivativeWRTX.a, secondPartialDerivativeWRTY.a))
-    );
+    vec4 secondDirectionalDerivativeWRTK = 
+        secondPartialDerivativeWRTX * wavedirection.x * wavedirection.x + secondPartialDerivativeWRTY * wavedirection.y * wavedirection.y;
 
     // we are actually using a step size of h/2 here
     // use central difference to obtain d2A / dtheta^2 numerically
-    vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(ix, iy, itheta + h) 
-        + lookup_amplitude(ix, iy, itheta - h) - 2 * amplitude) * inverseH2;
+    vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(ix, iy, itheta + 1) 
+        + lookup_amplitude(ix, iy, itheta - 1) - 2 * amplitude);
 
     // equation 18
     vec4 derivativeWRTt = vec4(0);
 
-    /* derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude */
+    derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude
     derivativeWRTt += delta * secondDirectionalDerivativeWRTK; // second term, dampen in k
-    /* derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion. */
+    derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion.
 
     return max(amplitude + derivativeWRTt * deltaTime, 0);
 }
@@ -111,6 +97,7 @@ void main() {
     vec2 pos = mix(minParam.xy, maxParam.xy, uv);
 
     /* bool atLeast2Away = ix >= 2 && iy < NUM_POS - 2 && iy > 2 && iy < NUM_POS-2; */
+    /* bool atLeast2Away = texelFetch(_CloseToBoundary, ivec2(ix, iy), 0).r == 0; */
     bool atLeast2Away = true;
 
     outAmplitude0 = texelFetch(_Amplitude[0], ivec2(uv * NUM_POS), 0);

@@ -46,8 +46,10 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
 
             closeToBoundary[i * width + j] = 0;
             for (int dx = -2; dx <= 2; dx++)
-                for (int dy = -2; dy <= 2; dy++)
-                    closeToBoundary[i * width + j] |= sample(i + dx, j + dy) > waterHeight;
+            for (int dy = -2; dy <= 2; dy++) {
+                float close = sample(i + dx, j + dy) > waterHeight;
+                closeToBoundary[i * width + j] = std::max(close, closeToBoundary[i*width+j]);
+            }
         }
     }
     stbi_image_free(data);
@@ -67,7 +69,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
         boundaryMap->setInterpolation(GL_LINEAR);
         boundaryMap->setWrapping(GL_CLAMP_TO_EDGE);
         boundaryMap->initialize2D(width, height,
-            GL_R8, GL_RED, GL_INT, closeToBoundary.data());
+            GL_R8, GL_RED, GL_FLOAT, closeToBoundary.data());
         Debug::checkGLError();
 
         std::cout << ("initialize gradient map") << std::endl;
@@ -123,7 +125,8 @@ void Environment::draw(glm::mat4 projection, glm::mat4 view) {
 void Environment::visualize(glm::ivec2 viewport) {
     glUseProgram(visualizationShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    heightMap->bind(GL_TEXTURE0);
+    /* heightMap->bind(GL_TEXTURE0); */
+    boundaryMap->bind(GL_TEXTURE0);
 
     int n = std::min(viewport.x, viewport.y);
     glViewport(0, 0, n, n);
