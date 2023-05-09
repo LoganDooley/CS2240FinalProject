@@ -1,18 +1,15 @@
 #version 330 core
 
-const float tau = 6.28318530718f;
-const float pi = 3.141592653589793f;
-
 in vec2 uv;
 
 const int NUM_K = 4;
 uniform int NUM_POS = 2048;
 uniform int NUM_THETA = 8;
 
-const float gravity = 9.81;
-const float surfaceTension = 72.8 / 1000; // of water
-
 uniform vec4 wavenumberValues;
+uniform vec4 angularFrequency;
+uniform vec4 advectionSpeed;
+uniform vec4 dispersionSpeed;
 
 uniform sampler2D _Amplitude[8];
 uniform sampler2D _Height;
@@ -20,6 +17,8 @@ uniform sampler2D _Gradient;
 uniform sampler2D _CloseToBoundary;
 uniform float waterLevel = 0.641;
 
+uniform vec2 waveDirections[8];
+uniform vec4 ambient[8];
 uniform vec2 windDirection;
 
 uniform float time;
@@ -38,63 +37,24 @@ layout (location = 5) out vec4 outAmplitude5;
 layout (location = 6) out vec4 outAmplitude6;
 layout (location = 7) out vec4 outAmplitude7;
 
-vec4 angularFrequency(vec4 wavenumber) {
-    return pow(wavenumber * gravity + surfaceTension * wavenumber * wavenumber * wavenumber, vec4(0.5));
-}
-
-vec4 advectionSpeed(vec4 wavenumber) {
-    vec4 numerator = (gravity + 3 * surfaceTension * wavenumber * wavenumber);
-    vec4 denominator = 2 * angularFrequency(wavenumber);
-    return numerator / denominator;
-}
-
-vec4 dispersionSpeed(vec4 wavenumber) {
-    // courtesy of wolfram alpha
-    // https://www.wolframalpha.com/input?i=d%5E2%2Fdx%5E2%28sqrt%28ax%2Bbx%5E3%29%29
-    vec4 numerator =
-        (-2 * gravity + 6 * gravity * surfaceTension * wavenumber * wavenumber +
-         3 * surfaceTension * surfaceTension * wavenumber * wavenumber * wavenumber * wavenumber);
-    vec4 denom = 4 * pow(wavenumber * (gravity + surfaceTension * wavenumber * wavenumber), vec4(3 / 2.0));
-    return numerator / denom;
-}
-
-float ambient(int itheta) {
-    // all of this can be precomputed on the cpu
-    float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
-
-    vec2 wavedirection = vec2(cos(theta), sin(theta));
-    float windSpeed = length(windDirection);
-    float cosTheta = dot(wavedirection, windDirection) / windSpeed;
-
-    return cosTheta < 0 ? 0 : cosTheta * cosTheta * 2 / pi;
-}
-
 vec4 lookup_amplitude(int ix, int iy, int itheta) {
     itheta = (itheta + NUM_THETA) % NUM_THETA;
-
-    // wavefront unlikely to diverge here, and even if it does they dont diverge by that much
     if (ix < 0 || ix >= NUM_POS || iy < 0 || iy >= NUM_POS)
-        // we need an amplitude for a point outside of the simulation box
-        return vec4(ambient(itheta));
-
+        return ambient[itheta];
     return texelFetch(_Amplitude[itheta], ivec2(ix, iy), 0);
 }
 
 vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
-    float theta = mix(minParam.z, maxParam.z, (itheta + 0.5) / NUM_THETA);
-
     vec4 wavenumber = wavenumberValues;
-    vec2 wavedirection = vec2(cos(theta), sin(theta));
-
-    vec4 aspeed = advectionSpeed(wavenumber);
+    vec2 wavedirection = waveDirections[itheta];
 
     // found on bottom of page 6
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
-    vec4 delta = 1e-3 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
-        abs(dispersionSpeed(wavenumber));
+    vec4 delta = 1e-5 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
+        abs(dispersionSpeed);
 
     // found on bottom of page 6
-    vec4 gamma = 0.025 * aspeed * unitParam.z * unitParam.z / unitParam.x;
+    vec4 gamma = 0.0025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
 
     int h = 1; // step size
 
@@ -132,15 +92,13 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // we are actually using a step size of h/2 here
     // use central difference to obtain d2A / dtheta^2 numerically
-    /* vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(ix, iy, itheta + h) */ 
-    /*     + lookup_amplitude(ix, iy, itheta - h) - 2 * amplitude) * inverseH2; */
     vec4 secondPartialDerivativeWRTtheta = (lookup_amplitude(ix, iy, itheta + h) 
-        + lookup_amplitude(ix, iy, itheta - h) - 2*amplitude) * inverseH2;
+        + lookup_amplitude(ix, iy, itheta - h) - 2 * amplitude) * inverseH2;
 
     // equation 18
     vec4 derivativeWRTt = vec4(0);
 
-    derivativeWRTt += -aspeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude
+    /* derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude */
     derivativeWRTt += delta * secondDirectionalDerivativeWRTK; // second term, dampen in k
     /* derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion. */
 

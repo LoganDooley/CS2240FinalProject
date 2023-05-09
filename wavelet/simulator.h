@@ -40,7 +40,16 @@ private:
     // derived from resolution and simulation area
     glm::vec4 minParam, maxParam, unitParam;
 
+    // all precomputed data on the cpu to be loaded onto the cpu. 
+    // This only happens once, so hopefully it's not too expensive.
+    std::vector<glm::vec2> waveDirections;
+    std::vector<glm::vec4> ambientAmplitude;
+    glm::vec4 angularFrequencies;
+    glm::vec4 advectionSpeeds;
+    glm::vec4 dispersionSpeeds;
+
     // to recompute minParam, maxParam, unitParam
+    void computeParameters();
     void recomputeRanges();
     void recomputeFramebuffer();
     void loadShadersWithData(GLuint shader);

@@ -3,6 +3,7 @@
 #include "External/imgui/imgui.h"
 #include "GLWrapper/texture.h"
 #include "fullscreenquad.h"
+#include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "shaderloader.h"
 #include "wavelet/environment.h"
@@ -18,7 +19,7 @@ Simulator::Simulator(Setting setting, std::shared_ptr<Environment> environment) 
         std::cerr << "currently using unsupported resolution" << std::endl;
     }
     recomputeRanges();
-
+    computeParameters();
     amplitude = setup3DAmplitude();
     amplitude_intermediate = setup3DAmplitude();
 
@@ -232,10 +233,16 @@ void Simulator::loadShadersWithData(GLuint shader) {
     for (int i = 0; i < thetaResolution; i++) {
         std::string prop = "_Amplitude[" + std::to_string(i) + "]";
         glad_glUniform1i(glGetUniformLocation(shader, prop.c_str()), i);
+        std::string prop2 = "waveDirections[" + std::to_string(i) + "]";
+        glad_glUniform2fv(glGetUniformLocation(shader, prop2.c_str()), 1, glm::value_ptr(waveDirections[i]));
+        std::string prop3 = "ambient[" + std::to_string(i) + "]";
+        glad_glUniform4fv(glGetUniformLocation(shader, prop3.c_str()), 1, glm::value_ptr(ambientAmplitude[i]));
     }
 
     glad_glUniform4fv(glGetUniformLocation(shader, "wavenumberValues"), 1, glm::value_ptr(setting.kValues));
-    std::cout << glm::to_string(setting.windDirection) << std::endl;
+    glad_glUniform4fv(glGetUniformLocation(shader, "angularFrequency"), 1, glm::value_ptr(angularFrequencies));
+    glad_glUniform4fv(glGetUniformLocation(shader, "advectionSpeed"), 1, glm::value_ptr(advectionSpeeds));
+    glad_glUniform4fv(glGetUniformLocation(shader, "dispersionSpeed"), 1, glm::value_ptr(dispersionSpeeds));
     glad_glUniform2fv(glGetUniformLocation(shader, "windDirection"), 1, glm::value_ptr(setting.windDirection));
 
     glad_glUniform1i(glGetUniformLocation(shader, "_Height"), thetaResolution);
@@ -249,6 +256,49 @@ void Simulator::loadShadersWithData(GLuint shader) {
     glUseProgram(0);
 }
 
+void Simulator::computeParameters() {
+    auto angularFrequency = [this](glm::vec4 wavenumber) -> glm::vec4 {
+        return glm::pow(wavenumber * setting.gravity + setting.surfaceTension * wavenumber * wavenumber * wavenumber,
+                glm::vec4(0.5));
+    };
+
+    auto advectionSpeed = [this, &angularFrequency](glm::vec4 wavenumber) -> glm::vec4 {
+        glm::vec4 numerator = (setting.gravity + 3 * setting.surfaceTension * wavenumber * wavenumber);
+        glm::vec4 denominator = 2.0f * angularFrequency(wavenumber);
+        return numerator / denominator;
+    };
+
+    auto dispersionSpeed = [this, &angularFrequency, &advectionSpeed](glm::vec4 wavenumber) -> glm::vec4 {
+        // courtesy of wolfram alpha
+        // https://www.wolframalpha.com/input?i=d%5E2%2Fdx%5E2%28sqrt%28ax%2Bbx%5E3%29%29
+        glm::vec4 numerator =
+            (-2 * setting.gravity + 6 * setting.gravity * setting.surfaceTension * wavenumber * wavenumber +
+            3 * setting.surfaceTension * setting.surfaceTension * wavenumber * wavenumber * wavenumber * wavenumber);
+        glm::vec4 denom = 4.0f * glm::pow(wavenumber * (setting.gravity + setting.surfaceTension * wavenumber * wavenumber), 
+                glm::vec4(3 / 2.0));
+        return numerator / denom;
+    };
+
+    angularFrequencies = angularFrequency(setting.kValues);
+    advectionSpeeds = advectionSpeed(setting.kValues);
+    dispersionSpeeds = dispersionSpeed(setting.kValues);
+
+    waveDirections = std::vector<glm::vec2>(setting.simulationResolution[2]);
+    ambientAmplitude = std::vector<glm::vec4>(setting.simulationResolution[2]);
+
+    for (int i = 0; i < setting.simulationResolution[2]; i++) {
+        float theta = (i + 0.5f) * setting.tau / setting.simulationResolution[2];
+        glm::vec2 waveDirection(std::cos(theta), std::sin(theta));
+
+        float cosTheta = glm::dot(waveDirection, glm::normalize(setting.windDirection));
+
+        float ambientCoef = cosTheta < 0 ? 0 : cosTheta * cosTheta * 4.00f / setting.tau;
+
+        waveDirections[i] = waveDirection;
+        ambientAmplitude[i] = glm::vec4(ambientCoef);
+    }
+}
+
 std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
     int thetaResolution = setting.simulationResolution[2];
     std::vector<std::shared_ptr<Texture>> textures(thetaResolution);
@@ -260,7 +310,8 @@ std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
                 GL_RGBA32F, GL_RGBA, GL_FLOAT);
         textures[i]->setInterpolation(GL_LINEAR);
         textures[i]->setWrapping(GL_CLAMP_TO_BORDER);
-        textures[i]->setBorderColor(glm::vec4(0,0,0,0));
+        textures[i]->setBorderColor(ambientAmplitude[i]);
+        /* std::cout << i << " " << glm::to_string(ambientAmplitude[i]) << std::endl; */
     }
 
     return textures;

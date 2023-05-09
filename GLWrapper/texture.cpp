@@ -100,6 +100,7 @@ void Texture::unbind(GLenum texUnit) {
 void Texture::setBorderColor(glm::vec4 color) {
     bind();
     glTexParameterfv(m_texTarget, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(color));
+    Debug::checkGLError();
     unbind();
 }
 
