@@ -39,8 +39,13 @@ layout (location = 7) out vec4 outAmplitude7;
 
 vec4 lookup_amplitude(int ix, int iy, int itheta) {
     itheta = (itheta + NUM_THETA) % NUM_THETA;
-    if (ix < 0 || ix >= NUM_POS || iy < 0 || iy >= NUM_POS)
-        return ambient[itheta];
+    ix = clamp(ix, 0, NUM_POS - 1);
+    iy = clamp(iy, 0, NUM_POS - 1);
+    /* if (ix < 0 || ix >= NUM_POS || iy < 0 || iy >= NUM_POS) { */
+    /*     // clamp, so there's not a sharp discontinuety */
+    /*     ix = clamp(); */
+    /*     return ambient[itheta]; */
+    /* } */
     return texelFetch(_Amplitude[itheta], ivec2(ix, iy), 0);
 }
 
@@ -50,11 +55,11 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // found on bottom of page 6
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
-    vec4 delta = 1e-2 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
+    vec4 delta = 1e-3 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
         abs(dispersionSpeed);
 
     // found on bottom of page 6
-    vec4 gamma = 0.025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
+    vec4 gamma = 0.0025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
 
     // caching some values common to the calculations below
     vec4 lookup_xh_y_theta_k = lookup_amplitude(ix + 1, iy, itheta);
@@ -84,11 +89,11 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
     // equation 18
     vec4 derivativeWRTt = vec4(0);
 
-    derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude
+    /* derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude */
     derivativeWRTt += delta * secondDirectionalDerivativeWRTK; // second term, dampen in k
     derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion.
 
-    return max(amplitude + derivativeWRTt * deltaTime, 0);
+    return max(amplitude + derivativeWRTt * deltaTime, vec4(0));
 }
 
 void main() {

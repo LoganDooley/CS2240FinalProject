@@ -94,6 +94,15 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     glUseProgram(m_heightShader);
 
     // TODO: Move this to earlier
+
+    glUniform1i(glGetUniformLocation(m_heightShader, "resolution"), m_resolution);
+    glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
+    glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
+    glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
+    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 160);
+    glUniform1i(glGetUniformLocation(m_heightShader, "kResolution"), profileBuffer->getKResolution());
+    glUniform1f(glGetUniformLocation(m_heightShader, "windTheta"), 0);
+    profileBuffer->bindProfilebufferTexture();
     for (int i = 0; i < setting.simulationResolution[2]; i++) {
         std::string prop = "_Amplitudes[" + std::to_string(i) + "]";
         glUniform1i(glGetUniformLocation(m_heightShader, prop.c_str()), 1 + i);
@@ -103,14 +112,6 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
         if (simulator) for (auto texture : simulator->getAmplitudeTextures())
             texture->bind(GL_TEXTURE1 + (p++));
     }
-
-    glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
-    glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
-    glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
-    glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 160);
-    glUniform1i(glGetUniformLocation(m_heightShader, "kResolution"), profileBuffer->getKResolution());
-    glUniform1f(glGetUniformLocation(m_heightShader, "windTheta"), 0);
-    profileBuffer->bindProfilebufferTexture();
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_resolution, m_resolution);
     glClearColor(0, 0, 0, 1);

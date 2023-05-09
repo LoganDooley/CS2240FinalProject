@@ -3,9 +3,10 @@
 out float fragColor;
 
 const int NUM_THETA_SIMULATED = 8;
-uniform sampler2D _Amplitudes[8];
 
+uniform sampler2D _Amplitudes[8];
 uniform sampler2D profileBuffers;
+uniform int resolution = 400;
 uniform int pb_resolution = 4096;
 uniform vec2 gridSpacing;
 uniform vec2 bottomLeft;
@@ -67,6 +68,7 @@ float PositiveCosineSquaredDS(float theta){
 vec4 amplitude(vec2 uv, float thetaUV) {
     float thetaTexCoord = (thetaUV * NUM_THETA_SIMULATED) - 0.5;
     if (thetaTexCoord < 0) thetaTexCoord += NUM_THETA_SIMULATED;
+    if (thetaTexCoord > NUM_THETA_SIMULATED) thetaTexCoord -= NUM_THETA_SIMULATED;
 
     int itheta_simulated = int(thetaTexCoord);
     int itheta_simulated_p1 = (itheta_simulated + 1) % NUM_THETA_SIMULATED;
@@ -81,14 +83,14 @@ vec4 amplitude(vec2 uv, float thetaUV) {
 
 void main() {
     vec2 pos = bottomLeft + vec2((gl_FragCoord.x - 0.5), (gl_FragCoord.y - 0.5)) * gridSpacing;
-    vec2 uv = gl_FragCoord.xy / pb_resolution;
+    vec2 uv = gl_FragCoord.xy / resolution;
 
     float height = 0;
     int DIR_NUM = thetaResolution;
     float da = 6.28318530718 / DIR_NUM;
     for(int itheta = 0; itheta < DIR_NUM; itheta++){
 
-        float angle = itheta * da;
+        float angle = itheta * da + da / 2;
 
         vec4 amp = amplitude(uv, float(itheta + 0.5) / DIR_NUM);
 
@@ -97,9 +99,9 @@ void main() {
             float p = dot(kdir, pos) + getPeriod(ik) * rand( kdir );
 
             /* height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik); */
-            if(ik >= 0){
+            /* if(ik >= 0){ */
                 height += 100 * da * amp[ik] * pbValue(p, ik);
-            }
+            /* } */
             //height += da * amp[ik] * pbValue(p, ik);
             //height += da * 0.01 * pbValue(p, ik);
 
