@@ -14,6 +14,9 @@ uniform int thetaResolution;
 uniform int kResolution;
 uniform float windTheta = 0;
 
+uniform sampler1D backgroundProfileBuffer;
+uniform sampler1D dynamicProfileBuffer;
+
 float getPeriod(int ik){
     float value;
     if(ik == 0){
@@ -52,6 +55,20 @@ float pbValue(float p, int ik){
     if(ik == 3){
         return color.a;
     }
+}
+
+float backgroundProfileBufferValue(float p){
+    float D = 160;
+    float s = p / D;
+
+    return texture(backgroundProfileBuffer, s).r;
+}
+
+float dynamicProfileBufferValue(float p){
+    float D = 40;
+    float s = p / D;
+
+    return texture(dynamicProfileBuffer, s).r;
 }
 
 float PositiveCosineSquaredDS(float theta){
@@ -99,9 +116,9 @@ void main() {
             float p = dot(kdir, pos) + getPeriod(ik) * rand( kdir );
 
             /* height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik); */
-            /* if(ik >= 0){ */
-                height += 50 * da * amp[ik] * pbValue(p, ik);
-            /* } */
+             if(itheta >= 0){
+                height += da * 10 * PositiveCosineSquaredDS(angle) * backgroundProfileBufferValue(p);
+             }
             //height += da * amp[ik] * pbValue(p, ik);
             //height += da * 0.01 * pbValue(p, ik);
 

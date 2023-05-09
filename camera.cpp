@@ -98,7 +98,7 @@ void Camera::move(std::set<int>& keysDown, float dt){
     }
 
     if(moveDir != glm::vec3(0)){
-        float moveSpeed = 10;
+        float moveSpeed = 50;
         moveDir = glm::normalize(moveDir);
         translate(moveDir * dt * moveSpeed);
     }

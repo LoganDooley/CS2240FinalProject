@@ -16,10 +16,10 @@ Core::Core(int width, int height){
     m_heightShader = ShaderLoader::createShaderProgram("Shaders/heightEval.vert", "Shaders/heightEval.frag");
     Debug::checkGLError();
 
-    m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 100.f);
+    m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 500.f);
     Debug::checkGLError();
 
-    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 400);
+    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(1000, 1000), 800);
     Debug::checkGLError();
 
     m_terrain = std::make_shared<Environment>("Blender/geometryHeight.png", "Blender/geometry.obj", setting);
@@ -87,8 +87,11 @@ int Core::update(float seconds){
     int selection = std::distance(items[0], current_item);
 
     if (current_item == items[0]) {
+        Debug::checkGLError();
         glDisable(GL_BLEND);
+        Debug::checkGLError();
         m_simulator->takeStep(seconds);
+        Debug::checkGLError();
         m_fullscreenQuad->bind();
         Debug::checkGLError();
         m_profileBuffer->precomputeGPU(glfwGetTime());
@@ -106,9 +109,10 @@ int Core::update(float seconds){
         m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
 
-        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
+        //m_terrain->draw(m_camera->getProjection(), m_camera->getView());
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
+        Debug::checkGLError();
 
     } else if (current_item == items[1]) {
         if (!simulationPaused) {

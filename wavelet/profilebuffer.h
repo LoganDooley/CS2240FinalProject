@@ -26,14 +26,23 @@ public:
     std::vector<float> getPeriods();
     void bindProfilebufferTexture();
     void unbindProfilebufferTexture();
+
+    void bindBackgroundProfileBuffer();
+    void unbindBackgroundProfileBuffer();
+    void bindDynamicProfileBuffer();
+    void unbindDynamicProfileBuffer();
     void debugDraw();
 
 private:
     GLuint m_pbShader;
-    GLuint m_textureShader;
+    GLuint m_texture1DShader;
     GLuint m_texture;
     GLuint m_fbo;
     GLuint m_rbo;
+    GLuint m_backgroundProfileBuffer;
+    GLuint m_dynamicProfileBuffer;
+    GLuint m_profileBufferFBO;
+    GLuint m_profileBufferRBO;
     int m_kResolution;
     int m_pResolution;
     float m_kMin;
