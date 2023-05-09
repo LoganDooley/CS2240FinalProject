@@ -123,12 +123,12 @@ void ProfileBuffer::unbindBackgroundProfileBuffer(){
 }
 
 void ProfileBuffer::bindDynamicProfileBuffer(){
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, m_dynamicProfileBuffer);
 }
 
 void ProfileBuffer::unbindDynamicProfileBuffer(){
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, 0);
 }
 
@@ -136,8 +136,8 @@ void ProfileBuffer::debugDraw(){
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_texture1DShader);
-    bindBackgroundProfileBuffer();
+    bindDynamicProfileBuffer();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    unbindBackgroundProfileBuffer();
+    unbindDynamicProfileBuffer();
 }

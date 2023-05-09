@@ -102,27 +102,29 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 160);
     glUniform1i(glGetUniformLocation(m_heightShader, "kResolution"), profileBuffer->getKResolution());
     glUniform1f(glGetUniformLocation(m_heightShader, "windTheta"), 0);
+    glUniform1i(glGetUniformLocation(m_heightShader, "backgroundProfileBuffer"), 0);
+    glUniform1i(glGetUniformLocation(m_heightShader, "dynamicProfileBuffer"), 1);
     //profileBuffer->bindProfilebufferTexture();
     profileBuffer->bindBackgroundProfileBuffer();
     for (int i = 0; i < setting.simulationResolution[2]; i++) {
         std::string prop = "_Amplitudes[" + std::to_string(i) + "]";
-        glUniform1i(glGetUniformLocation(m_heightShader, prop.c_str()), 1 + i);
+        glUniform1i(glGetUniformLocation(m_heightShader, prop.c_str()), 2 + i);
     }
     {
         int p = 0;
         if (simulator) for (auto texture : simulator->getAmplitudeTextures())
-            texture->bind(GL_TEXTURE1 + (p++));
+            texture->bind(GL_TEXTURE2 + (p++));
     }
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_resolution, m_resolution);
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     {
         int p = 0;
         if (simulator) for (auto texture : simulator->getAmplitudeTextures())
-            texture->unbind(GL_TEXTURE1 + (p++));
+            texture->unbind(GL_TEXTURE2 + (p++));
     }
 }
 
@@ -142,7 +144,7 @@ void WaveGeometry::draw(std::shared_ptr<Camera> camera){
 }
 
 void WaveGeometry::debugDraw(){
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_textureShader);
     bindHeightMapTexture();
