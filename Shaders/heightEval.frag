@@ -114,18 +114,7 @@ void main() {
         for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
             float p = dot(kdir, pos) + getPeriod(ik) * rand( kdir );
-
-            /* height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik); */
-             if(itheta >= 0){
-                height += da * 10 * PositiveCosineSquaredDS(angle) * backgroundProfileBufferValue(p);
-             }
-            //height += da * amp[ik] * pbValue(p, ik);
-            //height += da * 0.01 * pbValue(p, ik);
-
-//            int interpolated_ik = int(round(4 * float(ik) / kResolution));
-//            interpolated_ik = clamp(interpolated_ik, 0, 3);
-
-//            height += da * amp[interpolated_ik] * pbValue(p, ik);
+            height += da * amp[ik] * backgroundProfileBufferValue(p);
         }
     }
 
