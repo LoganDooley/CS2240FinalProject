@@ -100,7 +100,7 @@ void main() {
 
             /* height += da * sqrt(da * 0.01 * PositiveCosineSquaredDS(angle)) * pbValue(p, ik); */
             /* if(ik >= 0){ */
-                height += 100 * da * amp[ik] * pbValue(p, ik);
+                height += 50 * da * amp[ik] * pbValue(p, ik);
             /* } */
             //height += da * amp[ik] * pbValue(p, ik);
             //height += da * 0.01 * pbValue(p, ik);

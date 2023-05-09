@@ -194,7 +194,7 @@ vec4 evaluate(int thetaIndex) {
 }
 
 void main() {
-    /* if (inDomain(uv)) { */
+    if (inDomain(uv)) {
         amplitude0 = evaluate(0);
         amplitude1 = evaluate(1);
         amplitude2 = evaluate(2);
@@ -203,16 +203,16 @@ void main() {
         amplitude5 = evaluate(5);
         amplitude6 = evaluate(6);
         amplitude7 = evaluate(7);
-    /* } else { */
-    /*     amplitude0 = vec4(0); */
-    /*     amplitude1 = vec4(0); */
-    /*     amplitude2 = vec4(0); */
-    /*     amplitude3 = vec4(0); */
-    /*     amplitude4 = vec4(0); */
-    /*     amplitude5 = vec4(0); */
-    /*     amplitude6 = vec4(0); */
-    /*     amplitude7 = vec4(0); */
-    /* } */
+    } else {
+        amplitude0 = vec4(0);
+        amplitude1 = vec4(0);
+        amplitude2 = vec4(0);
+        amplitude3 = vec4(0);
+        amplitude4 = vec4(0);
+        amplitude5 = vec4(0);
+        amplitude6 = vec4(0);
+        amplitude7 = vec4(0);
+    }
 
 //    // TEMPORARY FOR RAIN: REMOVE LATER
 //    if(rand(uv * time) > 0.999){

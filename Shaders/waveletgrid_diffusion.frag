@@ -55,11 +55,11 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
 
     // found on bottom of page 6
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
-    vec4 delta = 1e-3 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
+    vec4 delta = 1e-2 * unitParam.x * unitParam.x * wavenumberResolution * wavenumberResolution * 
         abs(dispersionSpeed);
 
     // found on bottom of page 6
-    vec4 gamma = 0.0025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
+    vec4 gamma = 0.025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
 
     // caching some values common to the calculations below
     vec4 lookup_xh_y_theta_k = lookup_amplitude(ix + 1, iy, itheta);
@@ -89,7 +89,7 @@ vec4 evaluate(int ix, int iy, int itheta, vec4 amplitude) {
     // equation 18
     vec4 derivativeWRTt = vec4(0);
 
-    /* derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude */
+    derivativeWRTt += -advectionSpeed * directionalDerivativeWRTK; // first term. resists the change in Amplitude
     derivativeWRTt += delta * secondDirectionalDerivativeWRTK; // second term, dampen in k
     derivativeWRTt += gamma * secondPartialDerivativeWRTtheta; // third term, angular diffusion.
 
@@ -102,8 +102,8 @@ void main() {
     vec2 pos = mix(minParam.xy, maxParam.xy, uv);
 
     /* bool atLeast2Away = ix >= 2 && iy < NUM_POS - 2 && iy > 2 && iy < NUM_POS-2; */
-    /* bool atLeast2Away = texelFetch(_CloseToBoundary, ivec2(ix, iy), 0).r == 0; */
-    bool atLeast2Away = true;
+    bool atLeast2Away = texelFetch(_CloseToBoundary, ivec2(ix, iy), 0).r == 0;
+    /* bool atLeast2Away = true; */
 
     outAmplitude0 = texelFetch(_Amplitude[0], ivec2(uv * NUM_POS), 0);
     outAmplitude1 = texelFetch(_Amplitude[1], ivec2(uv * NUM_POS), 0);

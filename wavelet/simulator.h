@@ -16,22 +16,23 @@ public:
     void takeStep(float dt);
     void visualize(glm::ivec2 viewportSize);
     void reset();
-    std::vector<std::shared_ptr<Texture>> getAmplitudeTextures() { return amplitude; }
+    std::vector<std::shared_ptr<Texture>> getAmplitudeTextures() { return amplitude[whichPass]; }
 
     void addRaindrop();
 
 private:
+    int whichPass = 0; // we use 2 intermediate textures and blit between them. 
+                       // So at any point, one of them is the one with outdated information.
+                       // This points to the "real" one.
+
     float timeElapsed = 0;
     GLuint visualizationShader;
-    GLuint advectionShader;
-    GLuint diffusionShader;
+    GLuint simulationShader;
 
     std::shared_ptr<Environment> environment;
-    std::shared_ptr<Framebuffer> advectionFBO;
-    std::shared_ptr<Framebuffer> diffusionFBO;
+    std::shared_ptr<Framebuffer> simulationFBO[2];
 
-    std::vector<std::shared_ptr<Texture>> amplitude;
-    std::vector<std::shared_ptr<Texture>> amplitude_intermediate;
+    std::vector<std::shared_ptr<Texture>> amplitude[2];
 
     std::shared_ptr<FullscreenQuad> fullScreenQuad;
 

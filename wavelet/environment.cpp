@@ -24,31 +24,33 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
             float r = data[index] / 255.0f;
             float g = data[index + 1] / 255.0f;
             float b = data[index + 2] / 255.0f;
-            float height = (r + g + b) / 3.0f;
-            heights[i * width + j] = height;
-            gradients[i * width + j] = glm::vec2(0, 0);
+            float heightVal = (r + g + b) / 3.0f;
+            heights[(width - 1 - i) + width * (height - 1 - j)] = heightVal;
+            gradients[(width - 1 - i) + width * (height - 1 - j)] = glm::vec2(0, 0);
         }
     }
     auto sample = [&](int i, int j) {
         i = std::clamp(i, 0, width-1);
         j = std::clamp(j, 0, height-1);
-        return heights[i * width + j];
+        return heights[i + j * width];
     };
     glm::vec2 unitDistance(setting.size / width, setting.size / height);
     glm::vec2 inverseTwiceUnitDistance(2.0f/unitDistance.x, 2.0f/unitDistance.y);
 
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
+            int index = i + j * width;
             float dx = (sample(i + 1, j) - sample(i - 1, j)) * inverseTwiceUnitDistance.x;
             float dy = (sample(i, j+1) - sample(i, j-1)) * inverseTwiceUnitDistance.y;
 
-            gradients[i * width + j] = glm::vec2(dx, dy);
+            gradients[index] = glm::vec2(dx, dy);
 
-            closeToBoundary[i * width + j] = 0;
-            for (int dx = -2; dx <= 2; dx++)
-            for (int dy = -2; dy <= 2; dy++) {
+            closeToBoundary[index] = 0;
+            int range = 2;
+            for (int dx = -range; dx <= range; dx++)
+            for (int dy = -range; dy <= range; dy++) {
                 float close = sample(i + dx, j + dy) > waterHeight;
-                closeToBoundary[i * width + j] = std::max(close, closeToBoundary[i*width+j]);
+                closeToBoundary[index] = std::max(close, closeToBoundary[i*width+j]);
             }
         }
     }
@@ -125,8 +127,8 @@ void Environment::draw(glm::mat4 projection, glm::mat4 view) {
 void Environment::visualize(glm::ivec2 viewport) {
     glUseProgram(visualizationShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    /* heightMap->bind(GL_TEXTURE0); */
-    boundaryMap->bind(GL_TEXTURE0);
+    heightMap->bind(GL_TEXTURE0);
+    /* boundaryMap->bind(GL_TEXTURE0); */
 
     int n = std::min(viewport.x, viewport.y);
     glViewport(0, 0, n, n);

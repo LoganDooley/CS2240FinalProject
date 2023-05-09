@@ -106,7 +106,7 @@ int Core::update(float seconds){
         m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
 
-        /* m_terrain->draw(m_camera->getProjection(), m_camera->getView()); */
+        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
 

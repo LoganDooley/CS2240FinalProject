@@ -20,23 +20,17 @@ Simulator::Simulator(Setting setting, std::shared_ptr<Environment> environment) 
     }
     recomputeRanges();
     computeParameters();
-    amplitude = setup3DAmplitude();
-    amplitude_intermediate = setup3DAmplitude();
+    amplitude[0] = setup3DAmplitude();
+    amplitude[1] = setup3DAmplitude();
 
     fullScreenQuad = std::make_shared<FullscreenQuad>();
 
     recomputeFramebuffer();
     Debug::checkGLError();
 
-    diffusionShader = ShaderLoader::createShaderProgram(
+    simulationShader = ShaderLoader::createShaderProgram(
         "Shaders/waveletgrid.vert",
-        "Shaders/waveletgrid_diffusion.frag"
-    );
-    Debug::checkGLError();
-
-    advectionShader = ShaderLoader::createShaderProgram(
-        "Shaders/waveletgrid.vert",
-        "Shaders/waveletgrid_advection.frag"
+        "Shaders/waveletgrid_simulationStep.frag"
     );
     Debug::checkGLError();
 
@@ -52,15 +46,12 @@ Simulator::Simulator(Setting setting, std::shared_ptr<Environment> environment) 
     glUseProgram(0);
     Debug::checkGLError();
 
-    loadShadersWithData(advectionShader);
-    Debug::checkGLError();
-    loadShadersWithData(diffusionShader);
+    loadShadersWithData(simulationShader);
     Debug::checkGLError();
 }
 
 Simulator::~Simulator() {
-    if (diffusionShader) glDeleteProgram(diffusionShader);
-    if (advectionShader) glDeleteProgram(advectionShader);
+    if (simulationShader) glDeleteProgram(simulationShader);
     if (visualizationShader) glDeleteProgram(visualizationShader);
 }
 
@@ -84,15 +75,13 @@ void Simulator::takeStep(float dt) {
     glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
 
     // advection step
-    glUseProgram(advectionShader);
-    glUniform1f(glGetUniformLocation(advectionShader, "time"), timeElapsed);
-    glUniform1f(glGetUniformLocation(advectionShader, "deltaTime"), dt);
-    advectionFBO->bind();
-
+    glUseProgram(simulationShader);
+    glUniform1f(glGetUniformLocation(simulationShader, "time"), timeElapsed);
+    glUniform1f(glGetUniformLocation(simulationShader, "deltaTime"), dt);
+    simulationFBO[whichPass]->bind();
     fullScreenQuad->bind();
-
     for (int i = 0; i < thetaResolution; i++)
-        amplitude[i]->bind(attachments[i]);
+        amplitude[whichPass][i]->bind(attachments[i]);
     environment->heightMap->bind(GL_TEXTURE8);
     environment->boundaryMap->bind(GL_TEXTURE9);
     environment->gradientMap->bind(GL_TEXTURE10);
@@ -102,25 +91,7 @@ void Simulator::takeStep(float dt) {
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     for (int i = 0; i < thetaResolution; i++)
-        amplitude[i]->unbind(attachments[i]);
-
-    /* // diffusion step */
-    glUseProgram(diffusionShader);
-    glUniform1f(glGetUniformLocation(diffusionShader, "time"), timeElapsed);
-    glUniform1f(glGetUniformLocation(diffusionShader, "deltaTime"), dt);
-    diffusionFBO->bind();
-
-    for (int i = 0; i < thetaResolution; i++)
-        amplitude_intermediate[i]->bind(attachments[i]);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    for (int i = 0; i < thetaResolution; i++)
-        amplitude_intermediate[i]->unbind(attachments[i]);
-
-    // this should bind the default framebuffer
-    advectionFBO->unbind();
+        amplitude[whichPass][i]->unbind(attachments[i]);
 
     environment->heightMap->unbind(GL_TEXTURE8);
     environment->boundaryMap->unbind(GL_TEXTURE9);
@@ -131,6 +102,7 @@ void Simulator::takeStep(float dt) {
     glUseProgram(0);
 
     timeElapsed += dt;
+    whichPass ^= 1;
 }
 
 void Simulator::visualize(glm::ivec2 viewport) {
@@ -139,7 +111,7 @@ void Simulator::visualize(glm::ivec2 viewport) {
     glUseProgram(visualizationShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     fullScreenQuad->bind();
-    amplitude[visualization_thetaIndex]->bind(GL_TEXTURE0);
+    amplitude[whichPass][visualization_thetaIndex]->bind(GL_TEXTURE0);
 
     int n = std::min(viewport.x, viewport.y);
     glViewport(0, 0, n, n);
@@ -152,7 +124,7 @@ void Simulator::visualize(glm::ivec2 viewport) {
 
     glUseProgram(0);
 
-    amplitude[visualization_thetaIndex]->unbind(GL_TEXTURE0);
+    amplitude[whichPass][visualization_thetaIndex]->unbind(GL_TEXTURE0);
 }
 
 void Simulator::recomputeRanges() {
@@ -185,19 +157,20 @@ void Simulator::recomputeFramebuffer() {
         GL_COLOR_ATTACHMENT15, 
     };
 
-    advectionFBO = std::make_shared<Framebuffer>( setting.simulationResolution[0], setting.simulationResolution[1] );
+    simulationFBO[0] = std::make_shared<Framebuffer>( setting.simulationResolution[0], setting.simulationResolution[1] );
     Debug::checkGLError();
-    diffusionFBO = std::make_shared<Framebuffer>( setting.simulationResolution[0], setting.simulationResolution[1] );
+
+    simulationFBO[1] = std::make_shared<Framebuffer>( setting.simulationResolution[0], setting.simulationResolution[1] );
     Debug::checkGLError();
 
     for (int i = 0; i < thetaResolution; i++)
-        advectionFBO->attachTexture(amplitude_intermediate[i],  attachments[i]);
+        simulationFBO[0]->attachTexture(amplitude[1][i],  attachments[i]);
     for (int i = 0; i < thetaResolution; i++)
-        diffusionFBO->attachTexture(amplitude[i],               attachments[i]);
+        simulationFBO[1]->attachTexture(amplitude[0][i],  attachments[i]);
 
     // here we dont need depth nor stencil because we're not going to do depth testing
-    advectionFBO->verifyStatus();
-    diffusionFBO->verifyStatus();
+    simulationFBO[0]->verifyStatus();
+    simulationFBO[1]->verifyStatus();
 
     reset();
 }
@@ -208,12 +181,12 @@ void Simulator::reset() {
 
     glViewport(0,0, setting.simulationResolution[0], setting.simulationResolution[1]);
 
-    glBindFramebuffer(GL_FRAMEBUFFER,advectionFBO->getHandle());
+    glBindFramebuffer(GL_FRAMEBUFFER, simulationFBO[0]->getHandle());
     glClear(GL_COLOR_BUFFER_BIT);
     /* glClearBufferuiv(GL_COLOR, 0, clearColor); */
     Debug::checkGLError();
 
-    glBindFramebuffer(GL_FRAMEBUFFER,diffusionFBO->getHandle());
+    glBindFramebuffer(GL_FRAMEBUFFER, simulationFBO[1]->getHandle());
     glClear(GL_COLOR_BUFFER_BIT);
     /* glClearBufferuiv(GL_COLOR, 0, clearColor); */
     Debug::checkGLError();
@@ -282,6 +255,7 @@ void Simulator::computeParameters() {
     angularFrequencies = angularFrequency(setting.kValues);
     advectionSpeeds = advectionSpeed(setting.kValues);
     dispersionSpeeds = dispersionSpeed(setting.kValues);
+    std::cout << "ADVECTION: " << advectionSpeeds[0] << std::endl;
 
     waveDirections = std::vector<glm::vec2>(setting.simulationResolution[2]);
     ambientAmplitude = std::vector<glm::vec4>(setting.simulationResolution[2]);
