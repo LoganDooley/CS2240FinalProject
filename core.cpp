@@ -54,6 +54,7 @@ Core::~Core(){
 }
 
 int Core::update(float seconds){
+    seconds = 0.01;
     /*
     m_camera->move(m_keysDown, seconds);
     if (timeSinceLastUpdate += seconds >= 1.0f/FPS) {
@@ -65,7 +66,7 @@ int Core::update(float seconds){
     m_camera->move(m_keysDown, seconds);
 
     const char* items[] = { "Wave geometry", "Advection / Diffusion", "Height Map"};
-    static const char* current_item = items[0];
+    static const char* current_item = items[2];
 
     if (ImGui::BeginCombo("visualizer", current_item)) {
         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
@@ -108,7 +109,7 @@ int Core::update(float seconds){
         m_skybox->draw(m_camera->getProjection(), m_camera->getView());
         Debug::checkGLError();
 
-        //m_terrain->draw(m_camera->getProjection(), m_camera->getView());
+        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
         Debug::checkGLError();

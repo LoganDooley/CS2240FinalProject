@@ -5,6 +5,7 @@
 #include "shaderloader.h"
 #include <string>
 #include <glad/glad.h>
+#include <memory>
 
 class Skybox {
 public:

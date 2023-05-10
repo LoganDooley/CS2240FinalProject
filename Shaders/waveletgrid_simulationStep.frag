@@ -34,6 +34,8 @@ uniform float angularDiffusionMultiplier = 0.025;
 
 layout (location = 0) out vec4 outAmplitude[8];
 
+vec4 intermediateAmplitude[8];
+
 vec2 toUV(vec2 pos) { return (pos - minParam.xy) / (maxParam.xy - minParam.xy); }
 vec2 toPos(vec2 uv) { return mix(minParam.xy, maxParam.xy, uv); }
 float heightDistanceToBoundary(vec2 uvPos) { return texture(_Height, uvPos).r - waterLevel; }
@@ -42,37 +44,7 @@ bool inDomain(vec2 uvPos) { return heightDistanceToBoundary(uvPos) <= 0; }
 vec4 sample(vec2 uv, int itheta) {
     vec3 data = texture(_Height, uv).rgb;
     float levelSet = data.r - waterLevel;
-    if (levelSet > 0) {
-        uv = data.gb; // we now project out of surface
-        /* return vec4(0); */
-
-        vec2 normal = normalize(texture(_Gradient, uv)).rg;
-
-        vec2 dir = waveDirections[itheta];
-
-        // if not opposite to normal direction
-        if (dot(dir, normal) >= 0)
-            return texture(_Amplitude[itheta], uv);
-
-        dir = reflect(dir, normal);
-        float theta_reflected = atan(dir.y, dir.x);
-
-        float itheta_reflected = (theta_reflected / tau * NUM_THETA - 0.5);
-        if (itheta_reflected < 0) itheta_reflected += NUM_THETA;
-
-        int itheta_ireflected = int(itheta_reflected);
-        int itheta_ireflectedNext = itheta_ireflected+1;
-        if (itheta_ireflectedNext >= NUM_THETA) itheta_ireflectedNext -= NUM_THETA;
-
-        /* return vec4(1); */
-
-        return mix(
-            texture(_Amplitude[itheta_ireflected], uv),
-            texture(_Amplitude[itheta_ireflectedNext], uv),
-            itheta_reflected - itheta_ireflected
-        );
-    }
-    // TODO: account for reflections
+    if (levelSet > 0) uv = data.gb; // we now project out of surface
     return texture(_Amplitude[itheta], uv);
 }
 
@@ -139,10 +111,11 @@ vec4 evaluate(int itheta) {
 
     vec4 amplitude;
 
+#pragma openNV (unroll all)
     for (int ik = 0; ik < NUM_K; ik++) {
         float p_prime = deltaTime * advectionSpeed[ik];
 
-        float samplingDistance = max(unitParam.x, 2 * p_prime);
+        float samplingDistance = max(unitParam.x / 4, p_prime);
 
         float p[6];
         for (int pi = 0; pi < 6; pi++) {
@@ -166,28 +139,84 @@ vec4 evaluate(int itheta) {
     return amplitude;
 }
 
-void main() {
-    vec4 intermediateAmplitude[8];
-    if (inDomain(uv)) {
-        for (int itheta = 0; itheta < NUM_THETA; itheta++)
-            intermediateAmplitude[itheta] = evaluate(itheta);
-    } else {
-        for (int itheta = 0; itheta < NUM_THETA; itheta++)
-            intermediateAmplitude[itheta] = vec4(0);
-    }
+void advectionPass() {
+#pragma openNV (unroll all)
+    for (int itheta = 0; itheta < NUM_THETA; itheta++)
+        outAmplitude[itheta] = evaluate(itheta);
+}
 
+void angularDiffusionPass() {
     float thetaResolution = unitParam.z;
 
     vec4 gamma = angularDiffusionMultiplier * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
     vec4 g = gamma * deltaTime / thetaResolution / thetaResolution;
 
+#pragma openNV (unroll all)
     for (int itheta = 0; itheta < NUM_THETA; itheta++) {
         int ineg1theta = itheta - 1;
         int ipos1theta = itheta + 1;
         if (ineg1theta < 0) ineg1theta += NUM_THETA;
         if (ipos1theta >= NUM_THETA) ipos1theta -= NUM_THETA;
 
-        outAmplitude[itheta] = (1 - 2*g) * intermediateAmplitude[itheta] + 
-            g * (intermediateAmplitude[ineg1theta] + intermediateAmplitude[ipos1theta]);
+        intermediateAmplitude[itheta] = (1 - 2*g) * outAmplitude[itheta] + 
+            g * (outAmplitude[ineg1theta] + outAmplitude[ipos1theta]);
     }
+}
+
+void reflectionPass() {
+#pragma openNV (unroll all)
+    for (int itheta = 0; itheta < NUM_THETA; itheta++)
+        outAmplitude[itheta] = intermediateAmplitude[itheta];
+
+    bool onBoundary = texture(_CloseToBoundary, uv).r > 0.5;
+    if (!onBoundary) return;
+
+#pragma openNV (unroll all)
+    for (int itheta = 0; itheta < NUM_THETA; itheta++) {
+        // reflection
+        float gradientThetaUV = texture(_Gradient, uv).r;
+        float dirUV = (0.5 + itheta) / NUM_THETA;
+
+        // for stuff facing into the boundary
+        if (onBoundary && abs(dirUV - gradientThetaUV) >= 0.5) {
+
+            float reflectedThetaUV = fract(dirUV + 2*(gradientThetaUV - dirUV) + 2);
+            float reflectedThetaTexCoord = reflectedThetaUV * NUM_THETA - 0.5;
+            if (reflectedThetaTexCoord < 0) reflectedThetaTexCoord += NUM_THETA;
+
+            int itheta_refl = int(reflectedThetaTexCoord);
+            int itheta_reflNext = int(reflectedThetaTexCoord) + 1;
+            if (itheta_reflNext >= NUM_THETA)
+                itheta_reflNext -= NUM_THETA;
+
+
+            float t = fract(reflectedThetaTexCoord);
+            float reflectance = 0.5;
+            outAmplitude[itheta_refl] += reflectance * t * intermediateAmplitude[itheta];
+            outAmplitude[itheta_reflNext] += reflectance * (1 - t) * intermediateAmplitude[itheta];
+            outAmplitude[itheta] *= 1 - reflectance;
+
+            /* outAmplitude[itheta] += mix( */
+            /*     intermediateAmplitude[itheta_refl], */
+            /*     intermediateAmplitude[itheta_reflNext], */
+            /*     fract(reflectedThetaTexCoord) */
+            /* ); */
+
+            /* outAmplitude[itheta] = vec4(1); */
+            /* outAmplitude[itheta] = intermediateAmplitude[(itheta + 4) % NUM_THETA]; */
+        }
+    }
+}
+
+void main() {
+    if (!inDomain(uv)) {
+        for (int itheta = 0; itheta < NUM_THETA; itheta++)
+            outAmplitude[itheta] = vec4(0);
+        return;
+    }
+
+    advectionPass();
+    angularDiffusionPass();
+    reflectionPass();
+
 }

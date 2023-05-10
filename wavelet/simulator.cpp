@@ -88,8 +88,8 @@ void Simulator::takeStep(float dt) {
     for (int i = 0; i < thetaResolution; i++)
         amplitude[whichPass][i]->bind(attachments[i]);
     environment->heightMap->bind(GL_TEXTURE8);
-    environment->boundaryMap->bind(GL_TEXTURE9);
-    environment->gradientMap->bind(GL_TEXTURE10);
+    environment->gradientMap->bind(GL_TEXTURE9);
+    environment->boundaryMap->bind(GL_TEXTURE10);
 
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -99,8 +99,8 @@ void Simulator::takeStep(float dt) {
         amplitude[whichPass][i]->unbind(attachments[i]);
 
     environment->heightMap->unbind(GL_TEXTURE8);
-    environment->boundaryMap->unbind(GL_TEXTURE9);
-    environment->gradientMap->unbind(GL_TEXTURE10);
+    environment->gradientMap->unbind(GL_TEXTURE9);
+    environment->boundaryMap->unbind(GL_TEXTURE10);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -223,9 +223,9 @@ void Simulator::loadShadersWithData(GLuint shader) {
     glad_glUniform4fv(glGetUniformLocation(shader, "dispersionSpeed"), 1, glm::value_ptr(dispersionSpeeds));
     glad_glUniform2fv(glGetUniformLocation(shader, "windDirection"), 1, glm::value_ptr(setting.windDirection));
 
-    glad_glUniform1i(glGetUniformLocation(shader, "_Height"), thetaResolution);
-    glad_glUniform1i(glGetUniformLocation(shader, "_Gradient"), thetaResolution + 1);
-    glad_glUniform1i(glGetUniformLocation(shader, "_CloseToBoundary"), thetaResolution + 2);
+    glad_glUniform1i(glGetUniformLocation(shader, "_Height"), 8);
+    glad_glUniform1i(glGetUniformLocation(shader, "_Gradient"), 9);
+    glad_glUniform1i(glGetUniformLocation(shader, "_CloseToBoundary"), 10);
     glad_glUniform1f(glGetUniformLocation(shader, "waterLevel"), environment->waterHeight);
 
     glad_glUniform4fv(glGetUniformLocation(shader, "minParam"), 1, glm::value_ptr(minParam));
