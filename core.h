@@ -6,6 +6,7 @@
 #include "wavelet/simulator.h"
 #include "wavelet/wavegeometry.h"
 #include "cubemap.h"
+#include "skybox.h"
 #include "shaderloader.h"
 #include "fullscreenquad.h"
 
@@ -35,8 +36,8 @@ private:
     std::shared_ptr<WaveletGrid> m_waveletGrid;
     std::shared_ptr<ProfileBuffer> m_profileBuffer;
     std::shared_ptr<FullscreenQuad> m_fullscreenQuad;
-    std::shared_ptr<CubeMap> m_cubemap;
     std::shared_ptr<Environment> m_terrain;
+    std::shared_ptr<Skybox> m_skybox;
 
 
     glm::ivec2 m_FBOSize = glm::ivec2(640, 480);

@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "wavelet/setting.h"
 #include "wavelet/simulator.h"
-#include "cubemap.h"
+#include "skybox.h"
 #include "imgui.h"
 
 Core::Core(int width, int height){
@@ -44,12 +44,8 @@ Core::Core(int width, int height){
     m_fullscreenQuad = std::make_shared<FullscreenQuad>();
     m_fullscreenQuad->bind();
 
-    std::vector<std::string> filenames = {"envs/skybox_nx.jpg", "envs/skybox_ny.jpg", "envs/skybox_nz.jpg", "envs/skybox_px.jpg", "envs/skybox_py.jpg", "envs/skybox_pz.jpg"};
-    std::vector<GLenum> faces = {GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 
-        GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_POSITIVE_Z};
+    m_skybox = std::make_shared<Skybox>();
 
-    m_cubemap = std::make_shared<CubeMap>(filenames, faces);
-    m_cubemap->bind();
     Debug::checkGLError();
 }
 
@@ -107,6 +103,9 @@ int Core::update(float seconds){
 
         glEnable(GL_BLEND);
         m_waveGeometry->draw(m_camera);
+        Debug::checkGLError();
+
+        m_skybox->draw(m_camera->getProjection(), m_camera->getView());
         Debug::checkGLError();
 
         //m_terrain->draw(m_camera->getProjection(), m_camera->getView());

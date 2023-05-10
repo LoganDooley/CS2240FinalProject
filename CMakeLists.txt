@@ -38,6 +38,8 @@ add_executable(${PROJECT_NAME}
     core.cpp
     camera.cpp
     cubemap.cpp
+    skybox.h
+    skybox.cpp
     fullscreenquad.h
     wavelet/waveletgrid.h
     wavelet/amplitude.h
