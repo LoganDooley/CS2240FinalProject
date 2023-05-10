@@ -129,7 +129,7 @@ float computeDynamicProfileBuffer(float p){
 
 void main() {
     float backgroundP = 160 * floor(gl_FragCoord.x) / pResolution;
-    float dynamicP = floor(gl_FragCoord.x) / 40;
+    float dynamicP = 40 * floor(gl_FragCoord.x) / pResolution;
 
     backgroundProfileBuffer = vec4(computeBackgroundProfileBuffer(backgroundP), 0, 0, 0);
     dynamicProfileBuffer = vec4(computeDynamicProfileBuffer(dynamicP), 0, 0, 0);
