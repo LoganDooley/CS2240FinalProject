@@ -260,7 +260,6 @@ void Simulator::computeParameters() {
     angularFrequencies = angularFrequency(setting.kValues);
     advectionSpeeds = advectionSpeed(setting.kValues);
     dispersionSpeeds = dispersionSpeed(setting.kValues);
-    std::cout << "ADVECTION: " << advectionSpeeds[0] << std::endl;
 
     waveDirections = std::vector<glm::vec2>(setting.simulationResolution[2]);
     ambientAmplitude = std::vector<glm::vec4>(setting.simulationResolution[2]);

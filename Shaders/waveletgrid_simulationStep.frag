@@ -64,13 +64,13 @@ vec4 sample(vec2 uv, int itheta) {
         int itheta_ireflectedNext = itheta_ireflected+1;
         if (itheta_ireflectedNext >= NUM_THETA) itheta_ireflectedNext -= NUM_THETA;
 
-        return vec4(1);
+        /* return vec4(1); */
 
-        /* return mix( */
-        /*     texture(_Amplitude[itheta_ireflected], uv), */
-        /*     texture(_Amplitude[itheta_ireflectedNext], uv), */
-        /*     itheta_reflected - itheta_ireflected */
-        /* ); */
+        return mix(
+            texture(_Amplitude[itheta_ireflected], uv),
+            texture(_Amplitude[itheta_ireflectedNext], uv),
+            itheta_reflected - itheta_ireflected
+        );
     }
     // TODO: account for reflections
     return texture(_Amplitude[itheta], uv);
