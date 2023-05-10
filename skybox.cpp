@@ -62,7 +62,7 @@ Skybox::Skybox() {
     );
     int verts = 6*6;
     for (int i = 0; i < verts*3; i++) {
-        pos[i] = skyboxVertices[i] * 12000;
+        pos[i] = skyboxVertices[i];
     }
     shaderId = ShaderLoader::createShaderProgram("Shaders/skybox.vert", "Shaders/skybox.frag");
 }
