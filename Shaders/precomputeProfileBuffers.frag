@@ -11,7 +11,7 @@ layout (location = 0) out vec4 backgroundProfileBuffer;
 layout (location = 1) out vec4 dynamicProfileBuffer;
 
 uniform float t;
-uniform int pResolution = 4096;
+uniform int pResolution = 8192;
 uniform float windSpeed;
 
 const int integration_nodes = 90;
@@ -128,12 +128,14 @@ float computeDynamicProfileBuffer(float p){
 }
 
 void main() {
-    float backgroundP = floor(gl_FragCoord.x) / 160;
+    float backgroundP = 160 * floor(gl_FragCoord.x) / pResolution;
     float dynamicP = floor(gl_FragCoord.x) / 40;
 
     backgroundProfileBuffer = vec4(computeBackgroundProfileBuffer(backgroundP), 0, 0, 0);
     dynamicProfileBuffer = vec4(computeDynamicProfileBuffer(dynamicP), 0, 0, 0);
-//    int ip = int(floor(gl_FragCoord.x)); // Get column of texture corresponding to p index
+
+    //backgroundProfileBuffer = vec4(floor(gl_FragCoord.x) / pResolution);
+    //    int ip = int(floor(gl_FragCoord.x)); // Get column of texture corresponding to p index
 
 //    float k_min = 0.001;
 //    float k_max = 0.01;

@@ -67,7 +67,7 @@ ProfileBuffer::ProfileBuffer(float windSpeed, int p_resolution, float kMin, int 
 void ProfileBuffer::precomputeGPU(float t){
     glUseProgram(m_pbShader);
     glUniform1f(glGetUniformLocation(m_pbShader, "t"), t);
-    glUniform1i(glGetUniformLocation(m_pbShader, "pResolution"), m_pResolution);
+    //glUniform1i(glGetUniformLocation(m_pbShader, "pResolution"), m_pResolution);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_pResolution, 1);
@@ -79,7 +79,7 @@ void ProfileBuffer::precomputeGPU(float t){
     // New Implementation
     glUseProgram(m_pbShader);
     glUniform1f(glGetUniformLocation(m_pbShader, "t"), t);
-    glUniform1i(glGetUniformLocation(m_pbShader, "pResolution"), m_pResolution);
+    //glUniform1i(glGetUniformLocation(m_pbShader, "pResolution"), m_pResolution);
     glUniform1f(glGetUniformLocation(m_pbShader, "windSpeed"), m_windSpeed);
     glBindFramebuffer(GL_FRAMEBUFFER, m_profileBufferFBO);
     GLenum buffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
@@ -123,12 +123,12 @@ void ProfileBuffer::unbindBackgroundProfileBuffer(){
 }
 
 void ProfileBuffer::bindDynamicProfileBuffer(){
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, m_dynamicProfileBuffer);
 }
 
 void ProfileBuffer::unbindDynamicProfileBuffer(){
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, 0);
 }
 
@@ -136,8 +136,11 @@ void ProfileBuffer::debugDraw(){
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_texture1DShader);
-    bindDynamicProfileBuffer();
+    Debug::checkGLError();
+    bindBackgroundProfileBuffer();
+    Debug::checkGLError();
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    Debug::checkGLError();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    unbindDynamicProfileBuffer();
+    unbindBackgroundProfileBuffer();
 }
