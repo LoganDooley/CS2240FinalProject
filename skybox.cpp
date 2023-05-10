@@ -94,3 +94,6 @@ void Skybox::draw(glm::mat4 projection, glm::mat4 view) {
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
 }
+
+
+
