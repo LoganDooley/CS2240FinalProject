@@ -56,6 +56,9 @@ Simulator::~Simulator() {
 }
 
 void Simulator::takeStep(float dt) {
+    ImGui::SliderFloat("angular diffusion scale", &setting.angularDiffusionMultiplier, 0.0f, 0.1f);
+    ImGui::SliderFloat("spacial diffusion scale", &setting.spatialDiffusionMultiplier, 0.0f, 400.0f);
+
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
@@ -78,6 +81,8 @@ void Simulator::takeStep(float dt) {
     glUseProgram(simulationShader);
     glUniform1f(glGetUniformLocation(simulationShader, "time"), timeElapsed);
     glUniform1f(glGetUniformLocation(simulationShader, "deltaTime"), dt);
+    glUniform1f(glGetUniformLocation(simulationShader, "angularDiffusionMultiplier"), setting.angularDiffusionMultiplier);
+    glUniform1f(glGetUniformLocation(simulationShader, "spatialDiffusionMultiplier"), setting.spatialDiffusionMultiplier);
     simulationFBO[whichPass]->bind();
     fullScreenQuad->bind();
     for (int i = 0; i < thetaResolution; i++)

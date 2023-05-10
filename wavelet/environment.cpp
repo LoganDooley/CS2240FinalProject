@@ -6,8 +6,10 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 #include <cfloat>
+#include <queue>
+#include <imgui.h>
 
-Environment::Environment(std::string heightMapFilename, std::string meshFileName, Setting setting) 
+Environment::Environment(std::string heightMapFilename, std::string meshFileName, Setting setting)
     : waterHeight(setting.waterHeight) {
     int n;
     unsigned char *data = stbi_load(heightMapFilename.c_str(), &width, &height, &n, 0);
@@ -17,7 +19,11 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
     }
     heights.resize(width * height);
     gradients.resize(width * height);
+    gradientTheta.resize(width * height);
     closeToBoundary.resize(width * height);
+    closestOnBoundary.resize(width * height);
+    heightWithSampleLocationInDomain.resize(width * height);
+
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
             int index = (i + j * width) * n;
@@ -37,23 +43,80 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
     glm::vec2 unitDistance(setting.size / width, setting.size / height);
     glm::vec2 inverseTwiceUnitDistance(2.0f/unitDistance.x, 2.0f/unitDistance.y);
 
+    float kernel[3][3] = {
+        {-1, -2, -1},
+        {0, 0, 0},
+        {1, 2, 1}
+    };
+
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
             int index = i + j * width;
-            float dx = (sample(i + 1, j) - sample(i - 1, j)) * inverseTwiceUnitDistance.x;
-            float dy = (sample(i, j+1) - sample(i, j-1)) * inverseTwiceUnitDistance.y;
 
-            gradients[index] = glm::vec2(dx, dy);
+            float gx = 0, gy = 0;
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    gx += kernel[dy+1][dx+1] * sample(dx + i, dy + j);
+                    gy += kernel[dx+1][dy+1] * sample(dx + i, dy + j);
+                }
+            }
+
+            glm::vec2 grad = glm::normalize(glm::vec2(gx, gy));
+            gradients[index] = grad;
 
             closeToBoundary[index] = 0;
             int range = 2;
             for (int dx = -range; dx <= range; dx++)
-            for (int dy = -range; dy <= range; dy++) {
-                float close = sample(i + dx, j + dy) > waterHeight;
-                closeToBoundary[index] = std::max(close, closeToBoundary[i*width+j]);
-            }
+                for (int dy = -range; dy <= range; dy++) {
+                    float close = sample(i + dx, j + dy) > waterHeight;
+                    closeToBoundary[index] = std::max(close, closeToBoundary[i*width+j]);
+                }
         }
     }
+
+    { // compute closest to boundary
+        std::fill(closestOnBoundary.begin(), closestOnBoundary.end(), glm::ivec2(-1,-1));
+        // we shall bfs
+        std::queue<glm::ivec2> candidatePositions;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (sample(i,j) <= waterHeight) {
+                    candidatePositions.push(glm::ivec2(i,j));
+                    closestOnBoundary[i + j*width] = glm::ivec2(i,j);
+                }
+            }
+        }
+
+        int di[] = {-1, 1, 0, 0};
+        int dj[] = {0, 0, -1, 1};
+
+        while (candidatePositions.size()) {
+            glm::ivec2 canPosition = candidatePositions.front();
+            candidatePositions.pop();
+            int i = canPosition.x,  j = canPosition.y;
+
+            for (int k = 0; k < 4; k++) {
+                int ni = canPosition.x + di[k], nj = canPosition.y + dj[k];
+                if (ni >= 0 && ni < width && nj >= 0 && nj < height 
+                        && closestOnBoundary[ni + nj * width] == glm::ivec2(-1,-1)) {
+
+                    closestOnBoundary[ni + nj * width] = closestOnBoundary[i + j * width];
+                    candidatePositions.push(glm::ivec2(ni,nj));
+                }
+            }
+        }
+
+        for (int i = 0; i < width * height; i++) {
+            heightWithSampleLocationInDomain[i] = glm::vec3(
+                heights[i],
+                (closestOnBoundary[i].x + 0.5f) / width,
+                (closestOnBoundary[i].y + 0.5f) / height
+            );
+        }
+    }
+
     stbi_image_free(data);
 
     // textures initialization and data loading
@@ -63,7 +126,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
         heightMap->setInterpolation(GL_LINEAR);
         heightMap->setWrapping(GL_CLAMP_TO_EDGE);
         heightMap->initialize2D(width, height,
-            GL_R16F, GL_RED, GL_FLOAT, heights.data());
+                                GL_RGB16F, GL_RGB, GL_FLOAT, heightWithSampleLocationInDomain.data()); // TODO: MUST BE FIXED
         Debug::checkGLError();
 
         std::cout << ("initialize boundary map") << std::endl;
@@ -71,7 +134,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
         boundaryMap->setInterpolation(GL_LINEAR);
         boundaryMap->setWrapping(GL_CLAMP_TO_EDGE);
         boundaryMap->initialize2D(width, height,
-            GL_R8, GL_RED, GL_FLOAT, closeToBoundary.data());
+                                  GL_R8, GL_RED, GL_FLOAT, closeToBoundary.data());
         Debug::checkGLError();
 
         std::cout << ("initialize gradient map") << std::endl;
@@ -85,59 +148,67 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
         gradientMap->setInterpolation(GL_LINEAR);
         gradientMap->setWrapping(GL_CLAMP_TO_EDGE);
         gradientMap->initialize2D(width, height,
-            GL_RG16F, GL_RG, GL_FLOAT, data.data());
+                                  GL_RG8, GL_RG, GL_FLOAT, data.data());
         Debug::checkGLError();
     }
 
     // loading geometry mesh
     getObjData(meshFileName);
 
-    shader = ShaderLoader::createShaderProgram("Shaders/terrain.vert", "Shaders/terrain.frag");
+    terrainShader = ShaderLoader::createShaderProgram("Shaders/terrain.vert", "Shaders/terrain.frag");
     Debug::checkGLError();
 
     visualizationShader = ShaderLoader::createShaderProgram(
-        "Shaders/texture.vert",
-        "Shaders/texture.frag"
-    );
+                              "Shaders/texture.vert",
+                              "Shaders/environment_visualization.frag"
+                          );
     glUseProgram(visualizationShader);
-	glUniform1i(glGetUniformLocation(shader, "tex"), 1);
+    glUniform1i(glGetUniformLocation(visualizationShader, "heightMap"), 0);
+    glUniform1i(glGetUniformLocation(visualizationShader, "boundaryMap"), 1);
+    glUniform1i(glGetUniformLocation(visualizationShader, "gradientMap"), 2);
     Debug::checkGLError();
 }
 
 Environment::~Environment() {
-    if (shader) glDeleteProgram(shader);
+    if (terrainShader) glDeleteProgram(terrainShader);
     if (vao) glDeleteVertexArrays(1, &vao);
     if (vbo) glDeleteBuffers(1, &vbo);
     if (visualizationShader) glDeleteProgram(visualizationShader);
 }
 
 void Environment::draw(glm::mat4 projection, glm::mat4 view) {
+
     glm::mat4 model = glm::mat4(1); // identity lol
-    glUseProgram(shader);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUseProgram(terrainShader);
+    glUniformMatrix4fv(glGetUniformLocation(terrainShader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(terrainShader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(terrainShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, vaoSize);
     glBindVertexArray(0);
     glUseProgram(0);
 }
-    
+
 void Environment::visualize(glm::ivec2 viewport) {
+    ImGui::SliderInt("which visualization", &toVisualize, 0, 3);
     glUseProgram(visualizationShader);
+    glUniform1i(glGetUniformLocation(visualizationShader, "whichVisualization"), toVisualize);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     heightMap->bind(GL_TEXTURE0);
-    /* boundaryMap->bind(GL_TEXTURE0); */
+    boundaryMap->bind(GL_TEXTURE1);
+    gradientMap->bind(GL_TEXTURE2);
 
     int n = std::min(viewport.x, viewport.y);
     glViewport(0, 0, n, n);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
 
     heightMap->unbind(GL_TEXTURE0);
+    boundaryMap->unbind(GL_TEXTURE1);
+    gradientMap->unbind(GL_TEXTURE2);
 }
 
 bool Environment::inDomain(glm::vec2 pos) const {
@@ -161,7 +232,7 @@ glm::vec2 Environment::levelSetGradient(glm::vec2 pos) const {
     /* return gradients[(int)((pos.x))][(int)((pos.y))]; */
 }
 
-void Environment::getObjData(std::string filepath){
+void Environment::getObjData(std::string filepath) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -199,7 +270,7 @@ void Environment::getObjData(std::string filepath){
     }
     std::vector<float> data;
     data.resize(18 * faces.size());
-    for(int i = 0; i<faces.size(); i++){
+    for(int i = 0; i<faces.size(); i++) {
         glm::vec3 v0 = vertices[static_cast<int>(faces[i][0].vertex_index)];
         glm::vec3 v1 = vertices[static_cast<int>(faces[i][1].vertex_index)];
         glm::vec3 v2 = vertices[static_cast<int>(faces[i][2].vertex_index)];
@@ -240,15 +311,15 @@ void Environment::getObjData(std::string filepath){
     // positions
     glEnableVertexAttribArray(0);
     Debug::checkGLError();
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GLfloat), 
-        reinterpret_cast<void*>(0*sizeof(GLfloat)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GLfloat),
+                          reinterpret_cast<void*>(0*sizeof(GLfloat)));
     Debug::checkGLError();
 
     // normals
     glEnableVertexAttribArray(1);
     Debug::checkGLError();
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GLfloat), 
-        reinterpret_cast<void*>(3*sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GLfloat),
+                          reinterpret_cast<void*>(3*sizeof(GLfloat)));
     Debug::checkGLError();
 
     glBindVertexArray(0);
@@ -257,4 +328,3 @@ void Environment::getObjData(std::string filepath){
 
     vaoSize = data.size() / 6;
 }
-

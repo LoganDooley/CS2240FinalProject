@@ -36,15 +36,20 @@ public:
     // get private set please
     std::shared_ptr<Texture> heightMap, boundaryMap, gradientMap;
 private:
+    int toVisualize = 0;
     int vaoSize;
     int width, height;
-    GLuint shader;
+    GLuint terrainShader;
     GLuint visualizationShader;
     GLuint vao, vbo;
 
     std::vector<float> heights; // we load both in cpu
+    std::vector<glm::ivec2> closestOnBoundary;
+    std::vector<glm::vec3> heightWithSampleLocationInDomain;
     std::vector<float> closeToBoundary; // in domain map in case needed
     std::vector<glm::vec2> gradients;
+    std::vector<float> gradientTheta;
 
     void getObjData(std::string filename);
 };
+

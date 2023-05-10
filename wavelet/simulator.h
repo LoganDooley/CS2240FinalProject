@@ -36,7 +36,7 @@ private:
 
     std::shared_ptr<FullscreenQuad> fullScreenQuad;
 
-    const Setting setting;
+    Setting setting;
     int visualization_thetaIndex = 0;
     // derived from resolution and simulation area
     glm::vec4 minParam, maxParam, unitParam;

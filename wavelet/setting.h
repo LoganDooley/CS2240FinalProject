@@ -28,6 +28,9 @@ struct Setting {
     float profileBuffer_kMin = 0.1;
     int profileBuffer_kResolution = 4;
 
+    float spatialDiffusionMultiplier = 126.5625;
+    float angularDiffusionMultiplier = 0.025;
+
     // for height field evaluation
     int heightField_resolution = 400;
 

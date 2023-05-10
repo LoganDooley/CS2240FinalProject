@@ -2,6 +2,8 @@
 
 in vec2 uv;
 
+const float tau = 6.28318530718f;
+
 const int NUM_K = 4;
 uniform int NUM_POS = 2048;
 uniform int NUM_THETA = 8;
@@ -27,6 +29,9 @@ uniform vec4 minParam;
 uniform vec4 maxParam;
 uniform vec4 unitParam;
 
+uniform float spatialDiffusionMultiplier = 126.5625;
+uniform float angularDiffusionMultiplier = 0.025;
+
 layout (location = 0) out vec4 outAmplitude[8];
 
 vec2 toUV(vec2 pos) { return (pos - minParam.xy) / (maxParam.xy - minParam.xy); }
@@ -35,8 +40,38 @@ float heightDistanceToBoundary(vec2 uvPos) { return texture(_Height, uvPos).r - 
 bool inDomain(vec2 uvPos) { return heightDistanceToBoundary(uvPos) <= 0; }
 
 vec4 sample(vec2 uv, int itheta) {
-    if (inDomain(uv))
-        return texture(_Amplitude[itheta], uv);
+    vec3 data = texture(_Height, uv).rgb;
+    float levelSet = data.r - waterLevel;
+    if (levelSet > 0) {
+        uv = data.gb; // we now project out of surface
+        /* return vec4(0); */
+
+        vec2 normal = normalize(texture(_Gradient, uv)).rg;
+
+        vec2 dir = waveDirections[itheta];
+
+        // if not opposite to normal direction
+        if (dot(dir, normal) >= 0)
+            return texture(_Amplitude[itheta], uv);
+
+        dir = reflect(dir, normal);
+        float theta_reflected = atan(dir.y, dir.x);
+
+        float itheta_reflected = (theta_reflected / tau * NUM_THETA - 0.5);
+        if (itheta_reflected < 0) itheta_reflected += NUM_THETA;
+
+        int itheta_ireflected = int(itheta_reflected);
+        int itheta_ireflectedNext = itheta_ireflected+1;
+        if (itheta_ireflectedNext >= NUM_THETA) itheta_ireflectedNext -= NUM_THETA;
+
+        return vec4(1);
+
+        /* return mix( */
+        /*     texture(_Amplitude[itheta_ireflected], uv), */
+        /*     texture(_Amplitude[itheta_ireflectedNext], uv), */
+        /*     itheta_reflected - itheta_ireflected */
+        /* ); */
+    }
     // TODO: account for reflections
     return texture(_Amplitude[itheta], uv);
 }
@@ -98,7 +133,7 @@ vec4 evaluate(int itheta) {
     float wavenumberResolution = (wavenumber.w - wavenumber.x) / 4;
     float inverseSpatialResolutionSquared = 1/(spatialResolution * spatialResolution);
 
-    vec4 delta = 1e-5 * spatialResolution * spatialResolution * wavenumberResolution * wavenumberResolution * 
+    vec4 delta = 1e-5 * spatialResolution * spatialResolution * spatialDiffusionMultiplier * 
         abs(dispersionSpeed);
     vec4 g = delta * deltaTime * inverseSpatialResolutionSquared;
 
@@ -143,7 +178,7 @@ void main() {
 
     float thetaResolution = unitParam.z;
 
-    vec4 gamma = 0.025 * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
+    vec4 gamma = angularDiffusionMultiplier * advectionSpeed * unitParam.z * unitParam.z / unitParam.x;
     vec4 g = gamma * deltaTime / thetaResolution / thetaResolution;
 
     for (int itheta = 0; itheta < NUM_THETA; itheta++) {
