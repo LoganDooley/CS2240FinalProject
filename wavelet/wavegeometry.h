@@ -7,6 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+#include "cubemap.h"
+
 #include <vector>
 
 #define _USE_MATH_DEFINES
@@ -96,6 +98,15 @@ private:
     GLuint m_heightShader;
     GLuint m_waveShader;
     GLuint m_textureShader;
+    std::shared_ptr<CubeMap> skyTexture;
+    std::vector<GLenum> facesType = {
+    GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+    GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+    GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+    GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+};
 
     GLuint m_heightMap;
     GLuint m_fbo;

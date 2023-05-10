@@ -30,7 +30,7 @@ Core::Core(int width, int height){
     m_waveGeometry->setSimulator(m_simulator.get());
 
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 4096, 0.1, 49, 4);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 8192, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_DEPTH_TEST);
@@ -106,7 +106,9 @@ int Core::update(float seconds){
         m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
 
-        m_skybox->draw(m_camera->getProjection(), m_camera->getView());
+        glm::mat3 view = glm::mat3(m_camera->getView());
+        glm::mat4 newView = glm::mat4(view);
+        m_skybox->draw(m_camera->getProjection(), newView);
         Debug::checkGLError();
 
         m_terrain->draw(m_camera->getProjection(), m_camera->getView());

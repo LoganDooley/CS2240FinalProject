@@ -38,6 +38,7 @@ void main() {
         // vec3 dPE = worldSpace_pos - vec3(0,0,0);
         // float dist = length(dPE) * Kdiffuse;
         // dist = exp(-dist);
+        // sky = texture(envmap, nN).rgb;
         float dist = .5;
         fragColor = vec4(dist * (reflectivity * sky + (1 - reflectivity) * upwelling)
             + (1 - dist) * air, 1);
