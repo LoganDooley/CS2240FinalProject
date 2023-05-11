@@ -46,7 +46,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
     float kernel[3][3] = {
         {-1, -2, -1},
         {0, 0, 0},
-        {1, 2, 1}
+        {1, 2, 1},
     };
 
     /* float kernel[3][3] = { */
@@ -63,8 +63,8 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
 
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
-                    gx += kernel[dx+1][dy+1] * sample(dx + i, dy + j);
                     gy += kernel[dy+1][dx+1] * sample(dx + i, dy + j);
+                    gx += kernel[dx+1][dy+1] * sample(dx + i, dy + j);
                 }
             }
 
@@ -78,7 +78,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
             if (gradientTheta[index] < 0) gradientTheta[index]++;
 
             closeToBoundary[index] = 0;
-            int range = 5;
+            int range = 1;
             for (int dx = -range; dx <= range; dx++)
                 for (int dy = -range; dy <= range; dy++) {
                     float close = sample(i + dx, j + dy) > waterHeight;
@@ -135,7 +135,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
     {
         std::cout << ("initialize height map") << std::endl;
         heightMap = std::make_shared<Texture>();
-        heightMap->setInterpolation(GL_LINEAR);
+        heightMap->setInterpolation(GL_NEAREST);
         heightMap->setWrapping(GL_CLAMP_TO_EDGE);
         heightMap->initialize2D(width, height,
                                 GL_RGB16F, GL_RGB, GL_FLOAT, heightWithSampleLocationInDomain.data()); // TODO: MUST BE FIXED
@@ -143,7 +143,7 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
 
         std::cout << ("initialize boundary map") << std::endl;
         boundaryMap = std::make_shared<Texture>();
-        boundaryMap->setInterpolation(GL_LINEAR);
+        boundaryMap->setInterpolation(GL_NEAREST);
         boundaryMap->setWrapping(GL_CLAMP_TO_EDGE);
         boundaryMap->initialize2D(width, height,
                                   GL_R8, GL_RED, GL_FLOAT, closeToBoundary.data());
@@ -151,16 +151,16 @@ Environment::Environment(std::string heightMapFilename, std::string meshFileName
 
         std::cout << ("initialize gradient map") << std::endl;
 
-        /* std::vector<float> data(gradients.size() * 2); */
-        /* for (int i = 0; i < gradients.size(); i++) { */
-        /*     data[i<<1|0] = gradients[i].r; */
-        /*     data[i<<1|1] = gradients[i].g; */
-        /* } */
+        std::vector<float> data(gradients.size() * 2);
+        for (int i = 0; i < gradients.size(); i++) {
+            data[i<<1|0] = gradients[i].r;
+            data[i<<1|1] = gradients[i].g;
+        }
         gradientMap = std::make_shared<Texture>();
-        gradientMap->setInterpolation(GL_LINEAR);
+        gradientMap->setInterpolation(GL_NEAREST);
         gradientMap->setWrapping(GL_CLAMP_TO_EDGE);
         gradientMap->initialize2D(width, height,
-                                  GL_R32F, GL_RED, GL_FLOAT, gradientTheta.data());
+                                  GL_RG32F, GL_RG, GL_FLOAT, data.data());
         Debug::checkGLError();
     }
 
@@ -203,7 +203,7 @@ void Environment::draw(glm::mat4 projection, glm::mat4 view) {
 }
 
 void Environment::visualize(glm::ivec2 viewport) {
-    ImGui::SliderInt("which visualization", &toVisualize, 0, 4);
+    ImGui::SliderInt("which visualization", &toVisualize, 0, 5);
     glUseProgram(visualizationShader);
     glUniform1i(glGetUniformLocation(visualizationShader, "whichVisualization"), toVisualize);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

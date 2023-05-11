@@ -114,7 +114,7 @@ void main() {
         for(int ik = 0; ik < kResolution; ik++){
             vec2 kdir = vec2(cos(angle), sin(angle));
             float p = dot(kdir, pos) + 160 * rand( kdir );
-            height += da * amp[ik] * backgroundProfileBufferValue(p);
+            height += 5 * da * amp[ik] * backgroundProfileBufferValue(p);
         }
     }
 

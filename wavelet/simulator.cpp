@@ -56,6 +56,7 @@ Simulator::~Simulator() {
 }
 
 void Simulator::takeStep(float dt) {
+    if (!dt) dt = 0.0001;
     ImGui::SliderFloat("angular diffusion scale", &setting.angularDiffusionMultiplier, 0.0f, 0.1f);
     ImGui::SliderFloat("spacial diffusion scale", &setting.spatialDiffusionMultiplier, 0.0f, 400.0f);
 

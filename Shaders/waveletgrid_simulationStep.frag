@@ -44,7 +44,7 @@ bool inDomain(vec2 uvPos) { return heightDistanceToBoundary(uvPos) <= 0; }
 vec4 sample(vec2 uv, int itheta) {
     vec3 data = texture(_Height, uv).rgb;
     float levelSet = data.r - waterLevel;
-    if (levelSet > 0) uv = data.gb; // we now project out of surface
+    if (levelSet > 0) return texelFetch(_Amplitude[itheta], ivec2(data.gb * NUM_POS), 0);
     return texture(_Amplitude[itheta], uv);
 }
 
@@ -133,7 +133,7 @@ vec4 evaluate(int itheta) {
 
         p_prime /= samplingDistance;
 
-        amplitude[ik] = guaranteeMonotonicInterpolate(tilda_p, p_prime);
+        amplitude[ik] = max(guaranteeMonotonicInterpolate(tilda_p, p_prime), 0.0);
     }
 
     return amplitude;
@@ -168,43 +168,57 @@ void reflectionPass() {
     for (int itheta = 0; itheta < NUM_THETA; itheta++)
         outAmplitude[itheta] = intermediateAmplitude[itheta];
 
-    bool onBoundary = texture(_CloseToBoundary, uv).r > 0.5;
+    bool onBoundary = texture(_CloseToBoundary, uv).r > 0;
     if (!onBoundary) return;
+
+    vec2 normal = normalize( texture(_Gradient, uv).rg);
+    /* float gradientThetaUV = texture(_Gradient, uv).r; */
 
 #pragma openNV (unroll all)
     for (int itheta = 0; itheta < NUM_THETA; itheta++) {
-        // reflection
-        float gradientThetaUV = texture(_Gradient, uv).r;
-        float dirUV = (0.5 + itheta) / NUM_THETA;
+        vec2 wavedir = waveDirections[itheta];
 
-        // for stuff facing into the boundary
-        if (onBoundary && abs(dirUV - gradientThetaUV) >= 0.5) {
+        // if we are sampling inside of the boundary
+        if (dot(wavedir, normal) >= 0) {
+            vec2 wavedir_refl = reflect(wavedir, normal);
 
-            float reflectedThetaUV = fract(dirUV + 2*(gradientThetaUV - dirUV) + 2);
-            float reflectedThetaTexCoord = reflectedThetaUV * NUM_THETA - 0.5;
-            if (reflectedThetaTexCoord < 0) reflectedThetaTexCoord += NUM_THETA;
+            float angle = fract(atan(wavedir_refl.y, wavedir_refl.x) / tau);
+            float angleTexCoord = fract(angle - 0.5/NUM_THETA) * NUM_THETA;
 
-            int itheta_refl = int(reflectedThetaTexCoord);
-            int itheta_reflNext = int(reflectedThetaTexCoord) + 1;
-            if (itheta_reflNext >= NUM_THETA)
-                itheta_reflNext -= NUM_THETA;
+            int itheta_refl = int(floor(angleTexCoord));
+            int itheta_reflNext = int(ceil(angleTexCoord));
+            if (itheta_reflNext == NUM_THETA) itheta_reflNext -= NUM_THETA;
 
-
-            float t = fract(reflectedThetaTexCoord);
+            float t = angleTexCoord - itheta_refl;
+            /* t = 0.5; */
             float reflectance = 0.5;
             outAmplitude[itheta_refl] += reflectance * t * intermediateAmplitude[itheta];
             outAmplitude[itheta_reflNext] += reflectance * (1 - t) * intermediateAmplitude[itheta];
-            outAmplitude[itheta] *= 1 - reflectance;
-
-            /* outAmplitude[itheta] += mix( */
-            /*     intermediateAmplitude[itheta_refl], */
-            /*     intermediateAmplitude[itheta_reflNext], */
-            /*     fract(reflectedThetaTexCoord) */
-            /* ); */
-
-            /* outAmplitude[itheta] = vec4(1); */
-            /* outAmplitude[itheta] = intermediateAmplitude[(itheta + 4) % NUM_THETA]; */
+            outAmplitude[itheta] = reflectance * outAmplitude[itheta];
         }
+
+        // reflection
+        /* float dirUV = fract((0.5 + itheta) / float(NUM_THETA)); */
+
+        /* float diff = abs(gradientThetaUV - dirUV); */
+        /* if (diff > 0.5) diff = 1-diff; */
+
+        /* // for stuff facing into the boundary */
+        /* if (diff < 0.25) { */
+        /*     float reflectedThetaUV = fract(gradientThetaUV + (gradientThetaUV - dirUV)); // [0-1) */
+
+        /*     float reflectedThetaTexCoord = fract(reflectedThetaUV - 0.5 / NUM_THETA) * NUM_THETA; // [0, NUM_THETA) */
+
+        /*     int itheta_refl = int(floor(reflectedThetaTexCoord)); */
+        /*     int itheta_reflNext = int(ceil(reflectedThetaTexCoord)); */
+        /*     if (itheta_reflNext == NUM_THETA) itheta_reflNext -= NUM_THETA; */
+
+        /*     float t = reflectedThetaTexCoord - itheta_refl; */
+        /*     outAmplitude[itheta_refl] += t * intermediateAmplitude[itheta]; */
+        /*     outAmplitude[itheta_reflNext] += (1 - t) * intermediateAmplitude[itheta]; */
+        /*     outAmplitude[itheta] = vec4(0); */
+        /*     /1* outAmplitude[itheta] = vec4(1); *1/ */
+        /* } */
     }
 }
 
@@ -214,9 +228,9 @@ void main() {
             outAmplitude[itheta] = vec4(0);
         return;
     }
-
     advectionPass();
     angularDiffusionPass();
     reflectionPass();
-
+    for (int itheta = 0; itheta < NUM_THETA; itheta++)
+        outAmplitude[itheta] = clamp(outAmplitude[itheta], 0.0, 1.0);
 }
