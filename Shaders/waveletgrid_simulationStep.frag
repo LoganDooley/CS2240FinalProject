@@ -191,10 +191,10 @@ void reflectionPass() {
 
             float t = angleTexCoord - itheta_refl;
             /* t = 0.5; */
-            float reflectance = 0.5;
+            float reflectance = 1;
             outAmplitude[itheta_refl] += reflectance * t * intermediateAmplitude[itheta];
             outAmplitude[itheta_reflNext] += reflectance * (1 - t) * intermediateAmplitude[itheta];
-            outAmplitude[itheta] = reflectance * outAmplitude[itheta];
+            outAmplitude[itheta] = (1 - reflectance) * outAmplitude[itheta];
         }
 
         // reflection

@@ -106,12 +106,13 @@ int Core::update(float seconds){
         m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
 
+        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
+
         glm::mat3 view = glm::mat3(m_camera->getView());
         glm::mat4 newView = glm::mat4(view);
         m_skybox->draw(m_camera->getProjection(), newView);
         Debug::checkGLError();
 
-        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
         //m_waveGeometry->debugDraw();
         //m_profileBuffer->debugDraw();
         Debug::checkGLError();
