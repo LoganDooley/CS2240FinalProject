@@ -19,7 +19,7 @@ struct Setting {
     // resolution x,y,theta,k of the simulator
     std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
 
-    float ambientStrength = 1;
+    float ambientStrength = 5;
 
     // random angle i've chosen, feel free to change
     glm::vec2 windDirection = 0.4f * glm::vec2(0, 1);
