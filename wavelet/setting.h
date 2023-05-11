@@ -9,7 +9,7 @@ struct Setting {
     constexpr static float tau = 6.28318530718f;
     float surfaceTension = 72.8 / 1000; // of water
     float gravity = 9.81;
-    float waterViscosity = 1e-6;
+    float waterViscosity = 1e-5;
 
     float waterHeight = 0.641;
 
@@ -18,6 +18,8 @@ struct Setting {
 
     // resolution x,y,theta,k of the simulator
     std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
+
+    float ambientStrength = 1;
 
     // random angle i've chosen, feel free to change
     glm::vec2 windDirection = 0.4f * glm::vec2(0, 1);

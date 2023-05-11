@@ -290,7 +290,7 @@ std::vector<std::shared_ptr<Texture>> Simulator::setup3DAmplitude() {
                 GL_RGBA32F, GL_RGBA, GL_FLOAT);
         textures[i]->setInterpolation(GL_LINEAR);
         textures[i]->setWrapping(GL_CLAMP_TO_BORDER);
-        textures[i]->setBorderColor(ambientAmplitude[i]);
+        textures[i]->setBorderColor(ambientAmplitude[i] * setting.ambientStrength);
         /* std::cout << i << " " << glm::to_string(ambientAmplitude[i]) << std::endl; */
     }
 

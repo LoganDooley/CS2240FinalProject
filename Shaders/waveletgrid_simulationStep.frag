@@ -37,6 +37,8 @@ layout (location = 0) out vec4 outAmplitude[8];
 
 vec4 intermediateAmplitude[8];
 
+// Temporary randomness for raindrops
+float rand(vec2 seed) { return fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453); }
 vec2 toUV(vec2 pos) { return (pos - minParam.xy) / (maxParam.xy - minParam.xy); }
 vec2 toPos(vec2 uv) { return mix(minParam.xy, maxParam.xy, uv); }
 float heightDistanceToBoundary(vec2 uvPos) { return texture(_Height, uvPos).r - waterLevel; }
@@ -44,8 +46,8 @@ bool inDomain(vec2 uvPos) { return heightDistanceToBoundary(uvPos) <= 0; }
 
 vec4 sample(vec2 uv, int itheta) {
     vec3 data = texture(_Height, uv).rgb;
-    float levelSet = data.r - waterLevel;
-    if (levelSet > 0) return texelFetch(_Amplitude[itheta], ivec2(data.gb * NUM_POS), 0);
+    /* float levelSet = data.r - waterLevel; */
+    /* if (levelSet > 0) return texelFetch(_Amplitude[itheta], ivec2(data.gb * NUM_POS), 0); */
     return texture(_Amplitude[itheta], uv);
 }
 
@@ -169,7 +171,14 @@ void reflectionPass() {
     for (int itheta = 0; itheta < NUM_THETA; itheta++)
         outAmplitude[itheta] = intermediateAmplitude[itheta];
 
-    bool onBoundary = texture(_CloseToBoundary, uv).r > 0;
+    float maxHeight = 0;
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            maxHeight = max(maxHeight, texture(_Height, uv + vec2(dx, dy) / NUM_POS).r);
+        }
+    }
+
+    bool onBoundary = maxHeight > waterLevel;
     if (!onBoundary) return;
 
     vec2 normal = normalize( texture(_Gradient, uv).rg);
@@ -190,12 +199,13 @@ void reflectionPass() {
             int itheta_reflNext = int(ceil(angleTexCoord));
             if (itheta_reflNext == NUM_THETA) itheta_reflNext -= NUM_THETA;
 
-            float t = angleTexCoord - itheta_refl;
+            float t = fract(angleTexCoord);
             /* t = 0.5; */
             float reflectance = 1;
-            outAmplitude[itheta_refl] += reflectance * t * intermediateAmplitude[itheta];
-            outAmplitude[itheta_reflNext] += reflectance * (1 - t) * intermediateAmplitude[itheta];
-            outAmplitude[itheta] = (1 - reflectance) * outAmplitude[itheta];
+            outAmplitude[itheta_refl] += t * intermediateAmplitude[itheta];
+            outAmplitude[itheta_reflNext] += (1 - t) * intermediateAmplitude[itheta];
+            outAmplitude[itheta] = vec4(0);
+            /* outAmplitude[itheta] = (1 - reflectance) * outAmplitude[itheta]; */
         }
 
         // reflection
@@ -225,8 +235,8 @@ void reflectionPass() {
 
 void viscosityPass() {
     // TODO: precompute this on the cpu, but honestly im too lazy
-    vec4 g = 2 * waterViscosity * wavenumberValues * wavenumberValues 
-        - 0.5 * waterViscosity * sqrt(angularFrequency / (2*waterViscosity)) * wavenumberValues;
+    vec4 g = clamp(2 * waterViscosity * wavenumberValues * wavenumberValues 
+        + 0.5 * waterViscosity * sqrt(angularFrequency / (2*waterViscosity)) * wavenumberValues, 0, 1);
 #pragma openNV (unroll all)
     for (int itheta = 0; itheta < NUM_THETA; itheta++)
         outAmplitude[itheta] = (1 - g) * outAmplitude[itheta];
@@ -242,7 +252,17 @@ void main() {
     angularDiffusionPass();
     reflectionPass();
     viscosityPass();
-#pragma openNV (unroll all)
-    for (int itheta = 0; itheta < NUM_THETA; itheta++)
-        outAmplitude[itheta] = clamp(outAmplitude[itheta], 0.0, 1.0);
+
+    /* // TEMPORARY FOR RAIN: REMOVE LATER */
+    /* if(rand(uv * time) > 0.999){ */
+/* #pragma openNV (unroll all) */
+    /* for (int itheta = 0; itheta < NUM_THETA; itheta++) */
+    /*     /1* outAmplitude[itheta] += vec4(0, 0, 0, 0.5); *1/ */
+    /*     outAmplitude[itheta] += vec4(0.05, 0.1, 0.2, 0.5); */
+    /* } */
+
+/* #pragma openNV (unroll all) */
+/*     for (int itheta = 0; itheta < NUM_THETA; itheta++) */
+/*         outAmplitude[itheta] = clamp(outAmplitude[itheta], 0.0, 5); // arbitrary number to stop explosions */
+
 }
