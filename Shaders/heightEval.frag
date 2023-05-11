@@ -65,7 +65,7 @@ float backgroundProfileBufferValue(float p){
 }
 
 float dynamicProfileBufferValue(float p){
-    float D = 40;
+    float D = 2;
     float s = p / D;
 
     return texture(dynamicProfileBuffer, s).r;
@@ -107,17 +107,12 @@ void main() {
     float da = 6.28318530718 / DIR_NUM;
 #pragma openNV (unroll all)
     for(int itheta = 0; itheta < DIR_NUM; itheta++){
-
         float angle = itheta * da + da / 2;
-
         vec4 amp = amplitude(uv, float(itheta + 0.5) / DIR_NUM);
-
-#pragma openNV (unroll all)
-        for(int ik = 0; ik < kResolution; ik++){
-            vec2 kdir = vec2(cos(angle), sin(angle));
-            float p = dot(kdir, pos) + 160 * rand( kdir );
-            height += 5 * da * amp[ik] * backgroundProfileBufferValue(p);
-        }
+        vec2 kdir = vec2(cos(angle), sin(angle));
+        float p = dot(kdir, pos) + 160 * rand( kdir );
+        height += 10 * da * amp[0] * (backgroundProfileBufferValue(p) + dynamicProfileBufferValue(p));
+        height += 10 * da * amp[1] * dynamicProfileBufferValue(p);
     }
 
     fragColor = height;

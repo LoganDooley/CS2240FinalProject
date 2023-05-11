@@ -30,7 +30,7 @@ Core::Core(int width, int height){
     m_waveGeometry->setSimulator(m_simulator.get());
 
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(1, 8192, 0.1, 49, 4);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(10, 8192, 0.1, 49, 4);
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_DEPTH_TEST);

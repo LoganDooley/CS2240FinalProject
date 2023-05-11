@@ -7,14 +7,16 @@
 
 //out vec4 fragColor;
 
-layout (location = 0) out vec4 backgroundProfileBuffer;
-layout (location = 1) out vec4 dynamicProfileBuffer;
+out vec4 profileBuffer;
 
 uniform float t;
-uniform int pResolution = 8192;
+uniform int pResolution = 512;
 uniform float windSpeed;
+uniform float D;
+uniform float kMax;
+uniform float kMin;
 
-const int integration_nodes = 90;
+const int integration_nodes = 100;
 const float tau = 6.28318531;
 const float pi = 3.1415926;
 
@@ -72,35 +74,7 @@ float psiBarIntegrand(float k, float p, float dk){
     return waveLength * cos(k * p - w * t);
 }
 
-float psiBar(float p, int integration_nodes, float k_min, float k_max){
-    float dk = (k_max - k_min)/integration_nodes;
-    float k = k_min;
-
-    float result = 0;
-    for(int i = 0; i<integration_nodes; i++){
-        result += psiBarIntegrand(k, p, dk) * dk;
-        k += dk;
-    }
-
-    return result;
-}
-
-float backgroundPsiBar(float p){
-    float kMin = tau / 80;
-    float kMax = tau / 0.04;
-    float dk = (kMax - kMin)/integration_nodes;
-    float k = kMin;
-    float result = 0;
-    for(int i = 0; i<integration_nodes; i++){
-        result += psiBarIntegrand(k, p, dk) * dk;
-        k += dk;
-    }
-    return 0.01 * result;
-}
-
-float dynamicPsiBar(float p){
-    float kMin = tau / 13;
-    float kMax = tau / 0.02;
+float psiBar(float p){
     float dk = (kMax - kMin)/integration_nodes;
     float k = kMin;
     float result = 0;
@@ -111,28 +85,17 @@ float dynamicPsiBar(float p){
     return result;
 }
 
-float computeBackgroundProfileBuffer(float p){
-    float D = 160;
+float computeProfileBuffer(float p){
     float s = p / D;
     float h00 = 2 * pow(s, 3) - 3 * pow(s, 2) + 1;
     float h01 = -2 * pow(s, 3) + 3 * pow(s, 2);
-    return 0.5 * (backgroundPsiBar(p) + h00 * backgroundPsiBar(p + D) + h01 * backgroundPsiBar(p - D));
-}
-
-float computeDynamicProfileBuffer(float p){
-    float D = 40;
-    float s = p / D;
-    float h00 = 2 * pow(s, 3) - 3 * pow(s, 2) + 1;
-    float h01 = -2 * pow(s, 3) + 3 * pow(s, 2);
-    return 0.5 * (dynamicPsiBar(p) + h00 * dynamicPsiBar(p + D) + h01 * dynamicPsiBar(p - D));
+    return 0.5 * (psiBar(p) + h00 * psiBar(p + D) + h01 * psiBar(p - D));
 }
 
 void main() {
-    float backgroundP = 160 * floor(gl_FragCoord.x) / pResolution;
-    float dynamicP = 40 * floor(gl_FragCoord.x) / pResolution;
+    float p = D * floor(gl_FragCoord.x) / pResolution;
 
-    backgroundProfileBuffer = vec4(computeBackgroundProfileBuffer(backgroundP), 0, 0, 0);
-    dynamicProfileBuffer = vec4(computeDynamicProfileBuffer(dynamicP), 0, 0, 0);
+    profileBuffer = vec4(computeProfileBuffer(p), 0, 0, 0);
 
     //backgroundProfileBuffer = vec4(floor(gl_FragCoord.x) / pResolution);
     //    int ip = int(floor(gl_FragCoord.x)); // Get column of texture corresponding to p index

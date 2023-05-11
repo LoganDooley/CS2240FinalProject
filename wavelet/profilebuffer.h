@@ -36,13 +36,10 @@ public:
 private:
     GLuint m_pbShader;
     GLuint m_texture1DShader;
-    GLuint m_texture;
-    GLuint m_fbo;
-    GLuint m_rbo;
     GLuint m_backgroundProfileBuffer;
     GLuint m_dynamicProfileBuffer;
-    GLuint m_profileBufferFBO;
-    GLuint m_profileBufferRBO;
+    GLuint m_backgroundProfileBufferFBO;
+    GLuint m_dynamicProfileBufferFBO;
     int m_kResolution;
     int m_pResolution;
     float m_kMin;
