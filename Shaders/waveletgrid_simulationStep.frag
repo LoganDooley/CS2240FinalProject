@@ -12,6 +12,7 @@ uniform vec4 wavenumberValues;
 uniform vec4 angularFrequency;
 uniform vec4 advectionSpeed;
 uniform vec4 dispersionSpeed;
+uniform float waterViscosity;
 
 uniform sampler2D _Amplitude[8];
 uniform sampler2D _Height;
@@ -222,6 +223,15 @@ void reflectionPass() {
     }
 }
 
+void viscosityPass() {
+    // TODO: precompute this on the cpu, but honestly im too lazy
+    vec4 g = 2 * waterViscosity * wavenumberValues * wavenumberValues 
+        - 0.5 * waterViscosity * sqrt(angularFrequency / (2*waterViscosity)) * wavenumberValues;
+#pragma openNV (unroll all)
+    for (int itheta = 0; itheta < NUM_THETA; itheta++)
+        outAmplitude[itheta] = (1 - g) * outAmplitude[itheta];
+}
+
 void main() {
     if (!inDomain(uv)) {
         for (int itheta = 0; itheta < NUM_THETA; itheta++)
@@ -231,6 +241,8 @@ void main() {
     advectionPass();
     angularDiffusionPass();
     reflectionPass();
+    viscosityPass();
+#pragma openNV (unroll all)
     for (int itheta = 0; itheta < NUM_THETA; itheta++)
         outAmplitude[itheta] = clamp(outAmplitude[itheta], 0.0, 1.0);
 }

@@ -9,6 +9,7 @@ struct Setting {
     constexpr static float tau = 6.28318530718f;
     float surfaceTension = 72.8 / 1000; // of water
     float gravity = 9.81;
+    float waterViscosity = 1e-6;
 
     float waterHeight = 0.641;
 

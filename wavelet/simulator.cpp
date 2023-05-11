@@ -223,6 +223,7 @@ void Simulator::loadShadersWithData(GLuint shader) {
     glad_glUniform4fv(glGetUniformLocation(shader, "advectionSpeed"), 1, glm::value_ptr(advectionSpeeds));
     glad_glUniform4fv(glGetUniformLocation(shader, "dispersionSpeed"), 1, glm::value_ptr(dispersionSpeeds));
     glad_glUniform2fv(glGetUniformLocation(shader, "windDirection"), 1, glm::value_ptr(setting.windDirection));
+    glad_glUniform1f(glGetUniformLocation(shader, "waterViscosity"), setting.waterViscosity);
 
     glad_glUniform1i(glGetUniformLocation(shader, "_Height"), 8);
     glad_glUniform1i(glGetUniformLocation(shader, "_Gradient"), 9);
