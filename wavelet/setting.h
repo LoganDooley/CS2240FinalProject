@@ -14,12 +14,12 @@ struct Setting {
     float waterHeight = 0.641;
 
     float size = 100; // of the simulation square
-    glm::vec4 kValues = glm::vec4(0.0045, 0.045, 0.45, 45);
+    glm::vec4 kValues = glm::vec4(tau/60, tau/60/60, 0.45, 45);
 
     // resolution x,y,theta,k of the simulator
     std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
 
-    float ambientStrength = 5;
+    float ambientStrength = 1;
 
     // random angle i've chosen, feel free to change
     glm::vec2 windDirection = 0.4f * glm::vec2(0, 1);

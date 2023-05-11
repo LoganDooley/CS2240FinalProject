@@ -4,7 +4,7 @@ in vec2 uv;
 
 const float tau = 6.28318530718f;
 
-const int NUM_K = 4;
+const int NUM_K = 2;
 uniform int NUM_POS = 2048;
 uniform int NUM_THETA = 8;
 
@@ -66,7 +66,7 @@ vec4 sample(vec2 uv, int itheta) {
         if (dot(wavedir, uv) >= 0) {
             int itheta_refl, itheta_reflNext;
             float t = getReflectedInfo(wavedir, normal, itheta_refl, itheta_reflNext);
-            float reflectance = 0.5; // dont make this too high
+            float reflectance = 0.3; // dont make this too high
             return reflectance * (t * texture(_Amplitude[itheta_refl], data.gb) + (1 - t) * texture(_Amplitude[itheta_reflNext], data.gb));
         }
         /* return texelFetch(_Amplitude[itheta], ivec2(data.gb * NUM_POS), 0); */
@@ -255,7 +255,8 @@ void main() {
 #pragma openNV (unroll all)
     for (int itheta = 0; itheta < NUM_THETA; itheta++)
         /* outAmplitude[itheta] += vec4(0, 0, 0, 0.5); */
-        outAmplitude[itheta] += vec4(0.05, 0.1, 0.2, 0.5);
+        /* outAmplitude[itheta] += vec4(0.05, 0.1, 0.2, 0.5); */
+        outAmplitude[itheta] += vec4(0, 1, 0, 0);
     }
 
 /* #pragma openNV (unroll all) */
