@@ -251,7 +251,7 @@ void main() {
     viscosityPass();
 
     // TEMPORARY FOR RAIN: REMOVE LATER
-    if(rand(uv * time) > 0.999){
+    if(rand(uv * time) > 0.9999){
 #pragma openNV (unroll all)
     for (int itheta = 0; itheta < NUM_THETA; itheta++)
         /* outAmplitude[itheta] += vec4(0, 0, 0, 0.5); */

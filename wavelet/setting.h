@@ -25,8 +25,8 @@ struct Setting {
     glm::vec2 windDirection = 0.4f * glm::vec2(0, 1);
 
     // for profile buffer computation
-    int integrationNodes = 49;
-    int pResolution = 1024;
+    int integrationNodes = 100;
+    int pResolution = 512;
 
     float profileBuffer_kMin = 0.1;
     int profileBuffer_kResolution = 4;

@@ -19,7 +19,7 @@ Core::Core(int width, int height){
     m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 1000.f);
     Debug::checkGLError();
 
-    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(1000, 1000), 800);
+    m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(100, 100), 1000);
     Debug::checkGLError();
 
     m_terrain = std::make_shared<Environment>("Blender/geometryHeight.png", "Blender/geometry.obj", setting);
@@ -30,7 +30,7 @@ Core::Core(int width, int height){
     m_waveGeometry->setSimulator(m_simulator.get());
 
 
-    m_profileBuffer = std::make_shared<ProfileBuffer>(10, 8192, 0.1, 49, 4);
+    m_profileBuffer = std::make_shared<ProfileBuffer>(10, 8192, 0.1, 100, 4);
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_DEPTH_TEST);
@@ -38,7 +38,7 @@ Core::Core(int width, int height){
     glViewport(0, 0, width, height);
     Debug::checkGLError();
     m_waveletGrid = std::make_shared<WaveletGrid>(glm::vec4(-50, -50, 0, 1), glm::vec4(50, 50, WaveletGrid::tau, 2), 
-            glm::uvec4(100, 100, 16, 4));
+            glm::uvec4(1000, 1000, 16, 4));
     //m_waveletGrid->takeStep(0);
     //m_waveGeometry->update(m_waveletGrid);
     m_fullscreenQuad = std::make_shared<FullscreenQuad>();
@@ -103,18 +103,18 @@ int Core::update(float seconds){
         Debug::checkGLError();
 
         glEnable(GL_BLEND);
-        m_waveGeometry->draw(m_camera);
+        //m_waveGeometry->draw(m_camera);
         Debug::checkGLError();
 
-        m_terrain->draw(m_camera->getProjection(), m_camera->getView());
+        //m_terrain->draw(m_camera->getProjection(), m_camera->getView());
 
         glm::mat3 view = glm::mat3(m_camera->getView());
         glm::mat4 newView = glm::mat4(view);
-        m_skybox->draw(m_camera->getProjection(), newView);
+        //m_skybox->draw(m_camera->getProjection(), newView);
         Debug::checkGLError();
 
         //m_waveGeometry->debugDraw();
-        //m_profileBuffer->debugDraw();
+        m_profileBuffer->debugDraw();
         Debug::checkGLError();
 
     } else if (current_item == items[1]) {
