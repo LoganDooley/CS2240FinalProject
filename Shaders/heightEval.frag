@@ -111,11 +111,11 @@ void main() {
         vec4 amp = amplitude(uv, float(itheta + 0.5) / DIR_NUM);
 
         vec2 kdir = vec2(cos(angle), sin(angle));
-        float p = dot(kdir, pos) + 160 * rand( kdir );
+        float pBackground = dot(kdir, pos) + 160 * rand( kdir );
         float pDynamic = dot(kdir, pos) + 2 * rand( kdir );
-        height += da * 100 * PositiveCosineSquaredDS(angle) * (backgroundProfileBufferValue(p) + dynamicProfileBufferValue(pDynamic));
-        //height += da * amp[0] * (backgroundProfileBufferValue(p) + dynamicProfileBufferValue(p));
-        //height += da * amp[1] * dynamicProfileBufferValue(pDynamic);
+        //height += da * 3 * PositiveCosineSquaredDS(angle) * (backgroundProfileBufferValue(pBackground) + dynamicProfileBufferValue(pDynamic));
+        height += da * amp[0] * (backgroundProfileBufferValue(pBackground) + dynamicProfileBufferValue(pDynamic));
+        height += da * amp[1] * dynamicProfileBufferValue(pDynamic);
     }
 
     fragColor = height;

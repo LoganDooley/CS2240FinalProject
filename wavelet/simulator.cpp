@@ -275,7 +275,7 @@ void Simulator::computeParameters() {
         float ambientCoef = cosTheta < 0 ? 0 : cosTheta * cosTheta * 4.00f / setting.tau;
 
         waveDirections[i] = waveDirection;
-        ambientAmplitude[i] = glm::vec4(ambientCoef);
+        ambientAmplitude[i] = glm::vec4(5 * ambientCoef);
     }
 }
 

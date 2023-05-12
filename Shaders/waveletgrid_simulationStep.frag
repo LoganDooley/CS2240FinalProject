@@ -239,7 +239,7 @@ void viscosityPass() {
 void main() {
     if (!inDomain(uv)) {
         for (int itheta = 0; itheta < NUM_THETA; itheta++)
-            outAmplitude[itheta] = vec4(0);
+            //outAmplitude[itheta] = vec4(0);
         return;
     }
 
@@ -251,13 +251,14 @@ void main() {
     viscosityPass();
 
     // TEMPORARY FOR RAIN: REMOVE LATER
-    if(rand(uv * time) > 0.9999){
-#pragma openNV (unroll all)
-    for (int itheta = 0; itheta < NUM_THETA; itheta++)
-        /* outAmplitude[itheta] += vec4(0, 0, 0, 0.5); */
-        /* outAmplitude[itheta] += vec4(0.05, 0.1, 0.2, 0.5); */
-        outAmplitude[itheta] += vec4(0, 1, 0, 0);
-    }
+//    if(rand(uv * time) > 0.999 && rand(uv * time * 2) > 0.99){
+//        #pragma openNV (unroll all)
+//        for (int itheta = 0; itheta < NUM_THETA; itheta++){
+//            /* outAmplitude[itheta] += vec4(0, 0, 0, 0.5); */
+//            /* outAmplitude[itheta] += vec4(0.05, 0.1, 0.2, 0.5); */
+//            outAmplitude[itheta] += vec4(0, 100, 0, 0);
+//        }
+//    }
 
 /* #pragma openNV (unroll all) */
 /*     for (int itheta = 0; itheta < NUM_THETA; itheta++) */

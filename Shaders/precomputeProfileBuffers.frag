@@ -95,5 +95,5 @@ float computeProfileBuffer(float p){
 void main() {
     float p = D * floor(gl_FragCoord.x) / pResolution;
 
-    profileBuffer = vec4(computeProfileBuffer(p), 0, 0, 0);
+    profileBuffer = 100 * vec4(computeProfileBuffer(p), 0, 0, 0);
 }

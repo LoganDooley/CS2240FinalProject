@@ -14,7 +14,7 @@ struct Setting {
     float waterHeight = 0.641;
 
     float size = 100; // of the simulation square
-    glm::vec4 kValues = glm::vec4(tau/60, tau/60/60, 0.45, 45);
+    glm::vec4 kValues = glm::vec4(tau/60, tau, 0.45, 45);
 
     // resolution x,y,theta,k of the simulator
     std::array<int,4> simulationResolution = {2048, 2048, 8, 4};
