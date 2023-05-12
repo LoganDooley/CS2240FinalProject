@@ -55,7 +55,7 @@ float skyboxVertices[] = {
 };
 
 Skybox::Skybox() {
-    std::vector<std::string> filenames = {"envs/skybox_px.jpg", "envs/skybox_nx.jpg", "envs/skybox_py.jpg", "envs/skybox_ny.jpg", "envs/skybox_pz.jpg", "envs/skybox_nz.jpg"};
+    std::vector<std::string> filenames = {"envs/px.png", "envs/nx.png", "envs/py.png", "envs/ny.png", "envs/pz.png", "envs/nz.png"};
     skyTexture = std::make_shared<CubeMap>(
         filenames,
         facesType
