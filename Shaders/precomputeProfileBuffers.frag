@@ -71,7 +71,7 @@ float psiBarIntegrand(float k, float p, float dk){
     float waveLength = tau / k;
     float w = w(k);
 
-    return waveLength * cos(k * p - w * t);
+    return JONSWAP(w) * cos(k * p - w * t) * k;
 }
 
 float psiBar(float p){
@@ -96,37 +96,4 @@ void main() {
     float p = D * floor(gl_FragCoord.x) / pResolution;
 
     profileBuffer = vec4(computeProfileBuffer(p), 0, 0, 0);
-
-    //backgroundProfileBuffer = vec4(floor(gl_FragCoord.x) / pResolution);
-    //    int ip = int(floor(gl_FragCoord.x)); // Get column of texture corresponding to p index
-
-//    float k_min = 0.001;
-//    float k_max = 0.01;
-//    float dk = (k_max - k_min)/integration_nodes;
-//    float period = 6.28318530718 / dk;
-//    float p = (ip * period) / pResolution;
-//    fragColor.r = psiBar(p, integration_nodes, k_min, k_max);
-
-//    k_min = 0.01;
-//    k_max = 0.1;
-//    dk = (k_max - k_min)/integration_nodes;
-//    period = 6.28318530718 / dk;
-//    p = (ip * period) / pResolution;
-//    fragColor.g = psiBar(p, integration_nodes, k_min, k_max);
-
-//    k_min = 0.1;
-//    k_max = 1;
-//    dk = (k_max - k_min)/integration_nodes;
-//    period = 6.28318530718 / dk;
-//    p = (ip * period) / pResolution;
-//    fragColor.b = psiBar(p, integration_nodes, k_min, k_max);
-
-//    k_min = 1;
-//    k_max = 100;
-//    dk = (k_max - k_min)/integration_nodes;
-//    period = 6.28318530718 / dk;
-//    p = (ip * period) / pResolution;
-//    fragColor.a = psiBar(p, integration_nodes, k_min, k_max);
-
-//    //fragColor = vec4(1);
 }

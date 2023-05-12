@@ -112,7 +112,7 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     // TODO: Move this to earlier
 
     glUniform1i(glGetUniformLocation(m_heightShader, "resolution"), m_resolution);
-    glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 4096);
+    glUniform1i(glGetUniformLocation(m_heightShader, "pb_resolution"), 512);
     glUniform2f(glGetUniformLocation(m_heightShader, "gridSpacing"), m_size.x/m_resolution, m_size.y/m_resolution);
     glUniform2f(glGetUniformLocation(m_heightShader, "bottomLeft"), -m_size.x/2, -m_size.y/2);
     glUniform1i(glGetUniformLocation(m_heightShader, "thetaResolution"), 160);
@@ -122,6 +122,7 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
     glUniform1i(glGetUniformLocation(m_heightShader, "dynamicProfileBuffer"), 1);
     //profileBuffer->bindProfilebufferTexture();
     profileBuffer->bindBackgroundProfileBuffer();
+    profileBuffer->bindDynamicProfileBuffer();
     for (int i = 0; i < setting.simulationResolution[2]; i++) {
         std::string prop = "_Amplitudes[" + std::to_string(i) + "]";
         glUniform1i(glGetUniformLocation(m_heightShader, prop.c_str()), 2 + i);
@@ -142,6 +143,8 @@ void WaveGeometry::precomputeHeightField(std::shared_ptr<ProfileBuffer> profileB
         if (simulator) for (auto texture : simulator->getAmplitudeTextures())
             texture->unbind(GL_TEXTURE2 + (p++));
     }
+    profileBuffer->unbindBackgroundProfileBuffer();
+    profileBuffer->unbindDynamicProfileBuffer();
 }
 
 void WaveGeometry::draw(std::shared_ptr<Camera> camera){

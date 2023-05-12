@@ -7,7 +7,7 @@ const int NUM_THETA_SIMULATED = 8;
 uniform sampler2D _Amplitudes[8];
 uniform sampler2D profileBuffers;
 uniform int resolution = 400;
-uniform int pb_resolution = 4096;
+uniform int pb_resolution = 512;
 uniform vec2 gridSpacing;
 uniform vec2 bottomLeft;
 uniform int thetaResolution;
@@ -109,10 +109,13 @@ void main() {
     for(int itheta = 0; itheta < DIR_NUM; itheta++){
         float angle = itheta * da + da / 2;
         vec4 amp = amplitude(uv, float(itheta + 0.5) / DIR_NUM);
+
         vec2 kdir = vec2(cos(angle), sin(angle));
         float p = dot(kdir, pos) + 160 * rand( kdir );
-        height += 10 * da * amp[0] * (backgroundProfileBufferValue(p) + dynamicProfileBufferValue(p));
-        height += 10 * da * amp[1] * dynamicProfileBufferValue(p);
+        float pDynamic = dot(kdir, pos) + 2 * rand( kdir );
+        height += da * 100 * PositiveCosineSquaredDS(angle) * (backgroundProfileBufferValue(p) + dynamicProfileBufferValue(pDynamic));
+        //height += da * amp[0] * (backgroundProfileBufferValue(p) + dynamicProfileBufferValue(p));
+        //height += da * amp[1] * dynamicProfileBufferValue(pDynamic);
     }
 
     fragColor = height;

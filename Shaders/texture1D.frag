@@ -8,5 +8,6 @@ in vec2 uv;
 void main() {
     vec4 color = texture(tex, uv.x);
     float value = color.r;
+    value = 2 * (atan(value) + 3.14159/2)/3.14159;
     fragColor = vec4(vec3(value), 1);
 }
