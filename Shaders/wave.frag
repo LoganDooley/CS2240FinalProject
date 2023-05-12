@@ -8,7 +8,7 @@ in vec3 surfaceNormal;
 in vec3 incidentDirection;
 in float useShader;
 
-uniform samplerCube envmap;
+uniform samplerCube Envmap;
 
 out vec4 fragColor;
 
@@ -38,7 +38,7 @@ void main() {
         // vec3 dPE = worldSpace_pos - vec3(0,0,0);
         // float dist = length(dPE) * Kdiffuse;
         // dist = exp(-dist);
-        // sky = texture(envmap, nN).rgb;
+        sky = texture(Envmap,nN).rgb;
         float dist = .5;
         fragColor = vec4(dist * (reflectivity * sky + (1 - reflectivity) * upwelling)
             + (1 - dist) * air, 1);

@@ -4,9 +4,9 @@ out vec4 outColor;
 
 in vec3 cubemap_uvw;
 
-uniform samplerCube Skybox;
+uniform samplerCube skybox;
 uniform float exposure = 1;
 
 void main() {
-    outColor = vec4(texture(Skybox, cubemap_uvw).rgb * exposure, 1);
+    outColor = vec4(texture(skybox, cubemap_uvw).rgb * exposure, 1);
 }

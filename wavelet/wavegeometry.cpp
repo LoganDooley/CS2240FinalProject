@@ -10,6 +10,14 @@ WaveGeometry::WaveGeometry(glm::vec2 size, unsigned int resolution):
 {
 
     std::vector<std::string> filenames = {"envs/skybox_px.jpg", "envs/skybox_nx.jpg", "envs/skybox_py.jpg", "envs/skybox_ny.jpg", "envs/skybox_pz.jpg", "envs/skybox_nz.jpg"};
+    std::vector<GLenum> facesType = {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    };
     skyTexture = std::make_shared<CubeMap>(
         filenames,
         facesType
@@ -142,17 +150,18 @@ void WaveGeometry::draw(std::shared_ptr<Camera> camera){
     glUseProgram(m_waveShader);
 
     glActiveTexture(GL_TEXTURE3);
-
     skyTexture->bind();
+
     glUniformMatrix4fv(glGetUniformLocation(m_waveShader, "view"), 1, GL_FALSE, glm::value_ptr(camera->getView()));
     glUniformMatrix4fv(glGetUniformLocation(m_waveShader, "projection"), 1, GL_FALSE, glm::value_ptr(camera->getProjection()));
     glUniform2f(glGetUniformLocation(m_waveShader, "lowerLeft"), - m_size.x/2, - m_size.y/2);
     glUniform2f(glGetUniformLocation(m_waveShader, "upperRight"), m_size.x/2, m_size.y/2);
-    glUniform1i(glGetUniformLocation(m_waveShader, "envmap"), 3);
-    skyTexture->unbind();
+    glUniform1i(glGetUniformLocation(m_waveShader, "Envmap"), 3);
+
     bindHeightMapTexture();
     glBindVertexArray(m_vao);
     glDrawArrays(GL_TRIANGLES, 0, m_numVerts);
+    skyTexture->unbind();
     glBindVertexArray(0);
     glUseProgram(0);
 }
