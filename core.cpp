@@ -16,7 +16,7 @@ Core::Core(int width, int height){
     m_heightShader = ShaderLoader::createShaderProgram("Shaders/heightEval.vert", "Shaders/heightEval.frag");
     Debug::checkGLError();
 
-    m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 500.f);
+    m_camera = std::make_shared<Camera>(width, height, glm::vec3(0, 5, -5), glm::vec3(0, -1, 1), glm::vec3(0, 1, 0), 1.f, 0.1f, 1000.f);
     Debug::checkGLError();
 
     m_waveGeometry = std::make_unique<WaveGeometry>(glm::vec2(1000, 1000), 800);
